@@ -60,7 +60,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           souvenirs: String(e.souvenirs || ""),
           host_mc: String(e.host_mc || "")
         };
-        return mapped as unknown as Event;
+        // Use unknown cast to resolve TS2352 overlap error
+        return (mapped as unknown) as Event;
       });
       
       setEvents(typedData);

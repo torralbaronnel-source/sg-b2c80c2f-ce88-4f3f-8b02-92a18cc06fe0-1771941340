@@ -18,7 +18,12 @@ import {
   User,
   Building2,
   Terminal,
-  ShieldCheck
+  ShieldCheck,
+  CreditCard,
+  ChevronsUpDown,
+  Check,
+  PlusCircle,
+  ChevronDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

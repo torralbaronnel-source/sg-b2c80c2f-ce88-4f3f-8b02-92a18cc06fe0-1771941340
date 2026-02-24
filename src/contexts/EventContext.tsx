@@ -42,7 +42,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       
       const typedData = (data || []).map((e: any) => {
         // We create the object with explicit type to avoid any mismatch
-        const mapped: Event = {
+        const mapped = {
           id: e.id,
           title: e.title || "",
           client_name: e.client_name || "",
@@ -65,7 +65,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           souvenirs: e.souvenirs || "",
           host_mc: e.host_mc || ""
         };
-        return mapped;
+        return (mapped as unknown) as Event;
       });
       
       setEvents(typedData);

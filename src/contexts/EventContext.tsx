@@ -42,6 +42,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       
       const typedData: Event[] = (data || []).map((e: any) => {
         // Explicitly defining the object to match the Event interface structure
+        // We include all required fields to satisfy the interface, even with the unknown cast fallback
         const mappedObject = {
           id: String(e.id || ""),
           title: String(e.title || ""),

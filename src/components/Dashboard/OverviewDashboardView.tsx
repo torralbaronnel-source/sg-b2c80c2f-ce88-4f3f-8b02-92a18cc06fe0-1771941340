@@ -1,102 +1,126 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { 
-  ArrowUpRight, 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle 
+} from "@/components/ui/card";
+import { 
+  LayoutDashboard, 
   Users, 
   Calendar, 
-  TrendingUp, 
   MessageSquare,
-  Sparkles
+  TrendingUp,
+  Clock,
+  ArrowUpRight
 } from "lucide-react";
+import { useEvent } from "@/contexts/EventContext";
+import { useAuth } from "@/contexts/AuthContext";
+import Link from "next/link";
 
 export function OverviewDashboardView() {
+  const { events } = useEvent();
+  const { activeOrg } = useAuth();
+
+  const stats = [
+    {
+      title: "Live Events",
+      value: events.filter(e => e.status === "live").length,
+      icon: Clock,
+      color: "text-rose-500",
+      bg: "bg-rose-50"
+    },
+    {
+      title: "Active Projects",
+      value: events.length,
+      icon: Calendar,
+      color: "text-blue-500",
+      bg: "bg-blue-50"
+    },
+    {
+      title: "Total Guests",
+      value: events.reduce((acc, curr) => acc + (curr.guest_count || 0), 0).toLocaleString(),
+      icon: Users,
+      color: "text-emerald-500",
+      bg: "bg-emerald-50"
+    },
+    {
+      title: "Team Comms",
+      value: "11",
+      icon: MessageSquare,
+      color: "text-purple-500",
+      bg: "bg-purple-50"
+    }
+  ];
+
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-serif font-bold tracking-tight text-slate-900">Welcome, Orchestrix Leader.</h1>
-          <p className="text-slate-500 mt-2 text-lg">Your production empire is currently managing 12 events across the PH.</p>
-        </div>
-        <Button className="bg-amber-100 text-amber-900 hover:bg-amber-200 border-none font-bold gap-2">
-          <Sparkles className="w-4 h-4" />
-          AI Insights: 3 Critical To-dos
-        </Button>
+    <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Welcome back, {activeOrg?.name || "Coordinator"}
+        </h1>
+        <p className="text-muted-foreground">
+          Here is a quick snapshot of your production environment today.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[
-          { label: "Active Clients", value: "24", icon: Users, change: "+12%", color: "text-blue-600" },
-          { label: "Booked Events", value: "82", icon: Calendar, change: "+5%", color: "text-amber-600" },
-          { label: "Total Revenue", value: "₱4.2M", icon: TrendingUp, change: "+24%", color: "text-emerald-600" },
-          { label: "Unread Messages", value: "14", icon: MessageSquare, change: "Hot", color: "text-rose-600" }
-        ].map((stat, i) => (
-          <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className={cn("p-2 rounded-lg bg-slate-50", stat.color)}>
-                  <stat.icon className="w-5 h-5" />
-                </div>
-                <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                  {stat.change}
-                  <ArrowUpRight className="w-3 h-3" />
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                <p className="text-2xl font-bold mt-1">{stat.value}</p>
-              </div>
-            </CardContent>
-          </Card>
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <div key={stat.title} className="p-6 bg-white border rounded-xl shadow-sm space-y-3">
+            <div className={`p-2 w-fit rounded-lg ${stat.bg} ${stat.color}`}>
+              <stat.icon size={20} />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+              <h3 className="text-2xl font-bold">{stat.value}</h3>
+            </div>
+          </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 border-none shadow-sm">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-xl font-serif">Recent Intelligence</CardTitle>
-            <Button variant="ghost" size="sm" className="text-blue-600 font-bold">View History</Button>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {[1, 2, 3].map((_, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer group">
-                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
-                  <MessageSquare className="w-5 h-5 text-slate-400" />
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Quick Actions */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Quick Actions</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <Link 
+              href="/events"
+              className="flex flex-col items-center justify-center p-6 bg-white border rounded-xl hover:border-primary/50 transition-colors gap-3"
+            >
+              <Calendar className="text-primary" size={24} />
+              <span className="text-sm font-medium">Production Hub</span>
+            </Link>
+            <Link 
+              href="/whatsapp"
+              className="flex flex-col items-center justify-center p-6 bg-white border rounded-xl hover:border-primary/50 transition-colors gap-3"
+            >
+              <MessageSquare className="text-emerald-500" size={24} />
+              <span className="text-sm font-medium">Communication</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Recent Activity Placeholder */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold">Upcoming Deadlines</h2>
+          <div className="bg-white border rounded-xl p-4 space-y-4">
+            {events.slice(0, 3).map((event) => (
+              <div key={event.id} className="flex items-center justify-between border-b last:border-0 pb-3 last:pb-0">
+                <div className="space-y-1">
+                  <p className="font-medium text-sm">{event.title}</p>
+                  <p className="text-xs text-muted-foreground">{event.event_date ? new Date(event.event_date).toLocaleDateString() : 'TBD'}</p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-slate-900">Inquiry from Maria Clara</p>
-                  <p className="text-sm text-slate-500 truncate">Interested in Garden Wedding Package • 200 Guests</p>
-                </div>
-                <span className="text-xs font-medium text-slate-400">2h ago</span>
+                <Link href="/events" className="text-xs text-primary hover:underline flex items-center">
+                  Manage <ArrowUpRight size={12} className="ml-1" />
+                </Link>
               </div>
             ))}
-          </CardContent>
-        </Card>
-
-        <Card className="border-none shadow-sm bg-slate-900 text-white">
-          <CardHeader>
-            <CardTitle className="text-xl font-serif text-amber-400">AI Taskmaster</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <p className="text-slate-300 text-sm leading-relaxed">Based on your upcoming schedule, I've prioritized these actions:</p>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer">
-                <div className="mt-1 w-2 h-2 rounded-full bg-amber-400" />
-                <p className="text-sm font-medium">Follow up with Palacio de Memoria for Santos wedding permit.</p>
-              </div>
-              <div className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer">
-                <div className="mt-1 w-2 h-2 rounded-full bg-blue-400" />
-                <p className="text-sm font-medium">Send remaining balance invoice to Sofia Rodriguez (Debut).</p>
-              </div>
-            </div>
-            <Button className="w-full bg-amber-400 text-slate-900 hover:bg-amber-300 font-bold">
-              Run Morning Briefing
-            </Button>
-          </CardContent>
-        </Card>
+            {events.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">No upcoming events yet.</p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-
-const cn = (...classes: any[]) => classes.filter(Boolean).join(" ");

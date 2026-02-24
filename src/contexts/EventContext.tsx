@@ -41,7 +41,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       const typedData: Event[] = (data || []).map((e: any) => {
-        // Explicitly defining the object to match the Event interface structure
+        // Explicitly defining the object with all required and optional properties
+        // This ensures the object shape is predictable for the compiler
         const mappedObject = {
           id: String(e.id || ""),
           title: String(e.title || ""),
@@ -56,18 +57,18 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           organization_id: String(e.organization_id || ""),
           created_by: String(e.created_by || ""),
           description: String(e.description || ""),
-          hmu_artist: String(e.hmu_artist || ""),
-          lights_sounds: String(e.lights_sounds || ""),
-          catering: String(e.catering || ""),
-          photo_video: String(e.photo_video || ""),
-          coordination_team: String(e.coordination_team || ""),
-          backdrop_styling: String(e.backdrop_styling || ""),
-          souvenirs: String(e.souvenirs || ""),
-          host_mc: String(e.host_mc || ""),
-          event_notes: String(e.event_notes || "")
+          hmu_artist: e.hmu_artist ? String(e.hmu_artist) : undefined,
+          lights_sounds: e.lights_sounds ? String(e.lights_sounds) : undefined,
+          catering: e.catering ? String(e.catering) : undefined,
+          photo_video: e.photo_video ? String(e.photo_video) : undefined,
+          coordination_team: e.coordination_team ? String(e.coordination_team) : undefined,
+          backdrop_styling: e.backdrop_styling ? String(e.backdrop_styling) : undefined,
+          souvenirs: e.souvenirs ? String(e.souvenirs) : undefined,
+          host_mc: e.host_mc ? String(e.host_mc) : undefined,
+          event_notes: e.event_notes ? String(e.event_notes) : undefined
         };
         
-        // Two-step cast to satisfy strict structural overlap check
+        // Final double-cast to resolve structural overlap error
         return (mappedObject as unknown) as Event;
       });
       
@@ -110,7 +111,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           title: "Success",
           description: "Event scheduled successfully!",
         });
-        return newEvent as Event;
+        return (newEvent as unknown) as Event;
       }
       return null;
     } catch (error: any) {
@@ -132,7 +133,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       if (activeEvent?.id === id) {
         const updated = events.find(e => e.id === id);
         if (updated) {
-          setActiveEvent({ ...updated, ...updates } as Event);
+          setActiveEvent(({ ...updated, ...updates } as unknown) as Event);
         }
       }
 

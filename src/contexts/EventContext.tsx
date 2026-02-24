@@ -33,22 +33,30 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       const data = await eventService.getEvents(activeOrg.id);
-      // Map database results to ensure mandatory fields exist and fix TS2352 conversion error
-      const typedData = (data || []).map((e: any) => ({
-        ...e,
-        call_time: e.call_time || "",
-        description: e.description || "",
+      // Map database results to ensure mandatory fields exist and satisfy strict TypeScript requirements
+      const typedData: Event[] = (data || []).map((e: any) => ({
+        id: String(e.id),
+        title: String(e.title || ""),
+        client_name: String(e.client_name || ""),
+        event_date: String(e.event_date || ""),
+        call_time: String(e.call_time || ""),
+        venue: String(e.venue || ""),
+        status: (e.status || "planning") as Event["status"],
         guest_count: Number(e.guest_count) || 0,
         budget: Number(e.budget) || 0,
-        hmu_artist: e.hmu_artist || "",
-        lights_sounds: e.lights_sounds || "",
-        catering: e.catering || "",
-        photo_video: e.photo_video || "",
-        coordination_team: e.coordination_team || "",
-        backdrop_styling: e.backdrop_styling || "",
-        souvenirs: e.souvenirs || "",
-        host_mc: e.host_mc || ""
-      })) as unknown as Event[];
+        created_at: String(e.created_at || ""),
+        organization_id: String(e.organization_id || ""),
+        created_by: String(e.created_by || ""),
+        description: String(e.description || ""),
+        hmu_artist: String(e.hmu_artist || ""),
+        lights_sounds: String(e.lights_sounds || ""),
+        catering: String(e.catering || ""),
+        photo_video: String(e.photo_video || ""),
+        coordination_team: String(e.coordination_team || ""),
+        backdrop_styling: String(e.backdrop_styling || ""),
+        souvenirs: String(e.souvenirs || ""),
+        host_mc: String(e.host_mc || "")
+      }));
       setEvents(typedData);
     } catch (error) {
       console.error("Error fetching events:", error);

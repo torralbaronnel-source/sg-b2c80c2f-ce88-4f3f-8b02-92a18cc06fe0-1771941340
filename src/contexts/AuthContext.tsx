@@ -10,6 +10,7 @@ interface AuthContextType {
   activeOrg: any | null;
   setActiveOrg: (org: any) => void;
   organizations: any[];
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -28,6 +29,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [organizations, setOrganizations] = useState<any[]>([]);
   const [activeOrg, setActiveOrg] = useState<any | null>(null);
+
+  const signOut = async () => {
+    await authService.signOut();
+    setUser(null);
+    setProfile(null);
+    setOrganizations([]);
+    setActiveOrg(null);
+  };
 
   const fetchProfileAndOrgs = async (userId: string) => {
     try {
@@ -91,7 +100,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, activeOrg, setActiveOrg, organizations }}>
+    <AuthContext.Provider value={{ user, profile, loading, activeOrg, setActiveOrg, organizations, signOut }}>
       {children}
     </AuthContext.Provider>
   );

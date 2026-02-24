@@ -31,101 +31,13 @@ import {
   Activity, 
   ChevronRight, 
   Search,
-  Filter,
-  Pin,
-  PinOff
+  Filter
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useEvent } from "@/contexts/EventContext";
 
 const ITEMS_PER_PAGE = 6;
-
-const INITIAL_EVENTS = [
-  {
-    id: "1",
-    title: "The Santos-Cruz Nuptials",
-    client: "Juan & Maria",
-    date: "2026-06-15",
-    time: "15:00",
-    venue: "Palacio de Memoria, Manila",
-    guests: 250,
-    status: "UPCOMING",
-    type: "Wedding",
-    isPinned: true
-  },
-  {
-    id: "2",
-    title: "Tech Summit 2026",
-    client: "Global Innovations Inc.",
-    date: "2026-02-24",
-    time: "09:00",
-    venue: "SMX Convention Center",
-    guests: 1200,
-    status: "LIVE",
-    type: "Corporate",
-    isPinned: false
-  },
-  {
-    id: "3",
-    title: "18th Birthday: Sofia's Grand Debut",
-    client: "Sofia Rodriguez",
-    date: "2026-02-24",
-    time: "18:00",
-    venue: "Shangri-La at the Fort",
-    guests: 350,
-    status: "SETUP",
-    type: "Debut",
-    isPinned: false
-  },
-  {
-    id: "4",
-    title: "Arroyo-Tan Anniversary",
-    client: "David & Elena Arroyo",
-    date: "2026-03-10",
-    time: "17:00",
-    venue: "The Farm at San Benito",
-    guests: 80,
-    status: "UPCOMING",
-    type: "Anniversary",
-    isPinned: false
-  },
-  {
-    id: "5",
-    title: "Corporate Gala Dinner",
-    client: "Bank of Philippines",
-    date: "2026-02-23",
-    time: "19:00",
-    venue: "Marriott Grand Ballroom",
-    guests: 500,
-    status: "COMPLETED",
-    type: "Corporate",
-    isPinned: false
-  },
-  {
-    id: "6",
-    title: "Project Launch: Aqua-Marine",
-    client: "Villar Group",
-    date: "2026-04-12",
-    time: "10:00",
-    venue: "Conrad Manila",
-    guests: 150,
-    status: "UPCOMING",
-    type: "Launch",
-    isPinned: false
-  },
-  {
-    id: "7",
-    title: "Legacy Awards 2026",
-    client: "National Arts Council",
-    date: "2026-05-20",
-    time: "18:30",
-    venue: "CCP Main Theater",
-    guests: 800,
-    status: "UPCOMING",
-    type: "Award Show",
-    isPinned: false
-  }
-];
 
 const STATUS_PRIORITY = {
   "LIVE": 1,
@@ -134,13 +46,12 @@ const STATUS_PRIORITY = {
   "COMPLETED": 4
 };
 
-const EventCard = ({ event, onPin }: { event: any; onPin: (id: string) => void }) => {
+const EventCard = ({ event }: { event: any }) => {
   const isLive = event.status === "LIVE";
   const isSetup = event.status === "SETUP";
 
   return (
-    <Card className={`group transition-all duration-300 border-slate-200 hover:border-slate-300 hover:shadow-xl relative overflow-hidden ${event.pinned ? 'ring-1 ring-amber-400 shadow-md' : ''}`}>
-      {/* Visual Header */}
+    <Card className={`group transition-all duration-300 border-slate-200 hover:border-slate-300 hover:shadow-xl relative overflow-hidden ${event.isPinned ? 'ring-1 ring-amber-400 shadow-md' : ''}`}>
       <div className={`h-2 w-full ${
         isLive ? "bg-rose-500" : isSetup ? "bg-amber-500" : "bg-slate-200"
       }`} />
@@ -152,15 +63,16 @@ const EventCard = ({ event, onPin }: { event: any; onPin: (id: string) => void }
             {event.status}
           </Badge>
         </div>
+        <CardTitle className="text-lg font-serif line-clamp-1">{event.title}</CardTitle>
+        <p className="text-xs text-slate-500">{event.client}</p>
       </CardHeader>
       
       <CardContent>
         <div className="space-y-4">
-          {/* Details Grid */}
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-2 rounded-lg">
               <Users className="h-4 w-4 text-slate-400 shrink-0" />
-              <span className="font-medium truncate">{event.guestCount} Guests</span>
+              <span className="font-medium truncate">{event.guests} Guests</span>
             </div>
             <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-2 rounded-lg">
               <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
@@ -189,8 +101,8 @@ const EventCard = ({ event, onPin }: { event: any; onPin: (id: string) => void }
 };
 
 export function EventsDashboardView() {
-  const [events, setEvents] = useState(INITIAL_EVENTS);
-  const [searchQuery, setSearchQuery] = useState("");
+  const { events, loading, setEvents } = useEvent();
+  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -203,9 +115,9 @@ export function EventsDashboardView() {
   const filteredAndSortedEvents = useMemo(() => {
     const result = events.filter(event => {
       const matchesSearch = 
-        event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.client.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        event.venue.toLowerCase().includes(searchQuery.toLowerCase());
+        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.venue.toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesStatus = statusFilter === "all" || event.status === statusFilter;
       
@@ -216,15 +128,15 @@ export function EventsDashboardView() {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
 
-      const priorityA = STATUS_PRIORITY[a.status as keyof typeof STATUS_PRIORITY];
-      const priorityB = STATUS_PRIORITY[b.status as keyof typeof STATUS_PRIORITY];
+      const priorityA = STATUS_PRIORITY[a.status as keyof typeof STATUS_PRIORITY] || 99;
+      const priorityB = STATUS_PRIORITY[b.status as keyof typeof STATUS_PRIORITY] || 99;
       if (priorityA !== priorityB) return priorityA - priorityB;
 
       const dateA = new Date(`${a.date}T${a.time}`).getTime();
       const dateB = new Date(`${b.date}T${b.time}`).getTime();
       return dateA - dateB;
     });
-  }, [events, searchQuery, statusFilter]);
+  }, [events, searchTerm, statusFilter]);
 
   const totalPages = Math.ceil(filteredAndSortedEvents.length / ITEMS_PER_PAGE);
   const paginatedEvents = useMemo(() => {
@@ -243,15 +155,9 @@ export function EventsDashboardView() {
     setCurrentPage(page);
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "LIVE": return "bg-rose-500 hover:bg-rose-600 text-white animate-pulse";
-      case "SETUP": return "bg-amber-500 hover:bg-amber-600 text-white";
-      case "UPCOMING": return "bg-blue-500 hover:bg-blue-600 text-white";
-      case "COMPLETED": return "bg-slate-500 hover:bg-slate-600 text-white";
-      default: return "bg-slate-100 text-slate-800";
-    }
-  };
+  if (loading) {
+    return <div className="p-8">Loading events...</div>;
+  }
 
   return (
     <div className="p-6 space-y-8 bg-slate-50/50 min-h-full">
@@ -290,9 +196,9 @@ export function EventsDashboardView() {
             <Input 
               placeholder="Search events, clients, venues..." 
               className="pl-9 bg-white border-slate-200 focus-visible:ring-blue-500"
-              value={searchQuery}
+              value={searchTerm}
               onChange={(e) => {
-                setSearchQuery(e.target.value);
+                setSearchTerm(e.target.value);
                 setCurrentPage(1);
               }}
             />
@@ -331,7 +237,6 @@ export function EventsDashboardView() {
               <EventCard 
                 key={event.id} 
                 event={event} 
-                onPin={togglePin}
               />
             ))}
           </div>
@@ -391,7 +296,7 @@ export function EventsDashboardView() {
           <Button 
             variant="outline" 
             onClick={() => {
-              setSearchQuery("");
+              setSearchTerm("");
               setStatusFilter("all");
               setCurrentPage(1);
             }}

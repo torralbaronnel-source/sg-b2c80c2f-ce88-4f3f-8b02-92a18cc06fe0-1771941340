@@ -11,8 +11,8 @@ export function FinanceDashboardView() {
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
+    <div className="flex-1 space-y-4 p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
         <h1 className="text-2xl font-bold text-slate-900">Finance & Budget</h1>
         <p className="text-slate-500 text-sm">Track payments, expenses, and profitability.</p>
       </div>

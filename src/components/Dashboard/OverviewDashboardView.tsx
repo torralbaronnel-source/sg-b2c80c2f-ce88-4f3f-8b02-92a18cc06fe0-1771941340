@@ -12,7 +12,7 @@ import {
 
 export function OverviewDashboardView() {
   return (
-    <div className="p-8 space-y-8 animate-in fade-in duration-500">
+    <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-4xl font-serif font-bold tracking-tight text-slate-900">Welcome, Orchestrix Leader.</h1>

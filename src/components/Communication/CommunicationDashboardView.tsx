@@ -15,6 +15,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const CHATS = [
   { id: 1, name: "Santos-Cruz Wedding", platform: "WhatsApp", lastMsg: "Did the florist arrive yet?", time: "5m ago", unread: 3, type: "Client" },
@@ -27,7 +28,7 @@ export function CommunicationDashboardView() {
   const [activeTab, setActiveTab] = useState("all");
 
   return (
-    <div className="flex h-[calc(100vh-64px)] overflow-hidden">
+    <div className="flex-1 space-y-4 p-8 pt-6">
       {/* Thread List */}
       <div className="w-96 border-r border-slate-100 flex flex-col bg-slate-50/30">
         <div className="p-6 pb-2">

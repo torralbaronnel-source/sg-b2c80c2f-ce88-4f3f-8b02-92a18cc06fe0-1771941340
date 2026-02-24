@@ -1,0 +1,15 @@
+Verify your email for {{app_name}}
+
+Hello {{user_name}},
+
+Welcome to {{app_name}}! To get started, please verify your email address by visiting the link below:
+
+{{verification_link}}
+
+This verification link will expire in 24 hours.
+
+If you did not create an account with {{app_name}}, you can safely ignore this email.
+
+---
+Questions? Contact us at {{support_email}}
+© 2026 {{app_name}}. All rights reserved.

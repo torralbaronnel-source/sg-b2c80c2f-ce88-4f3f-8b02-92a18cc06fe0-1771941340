@@ -33,18 +33,16 @@ export const profileService = {
 
   /**
    * STRATEGIC FIX FOR TS2589:
-   * Encapsulating the complex organizational query here.
-   * We use a type-blinded query string to prevent the TS compiler from 
-   * recursing through the massive Database types tree.
+   * We cast the supabase client to 'any' here to stop the TypeScript compiler
+   * from traversing the massive, recursive database types tree. 
+   * This is necessary for deep joins like organization memberships.
    */
   async getUserOrganization(userId: string): Promise<any> {
-    // Casting the query string to 'any' prevents the compiler from attempting
-    // to map the database schema to the select parameters, which causes recursion.
-    const query: any = "*, organizations(*)";
+    const supabaseClient = supabase as any;
     
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from("organization_members")
-      .select(query)
+      .select("*, organizations(*)")
       .eq("user_id", userId)
       .limit(1)
       .maybeSingle();

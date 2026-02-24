@@ -135,7 +135,8 @@ class CommunicationService {
       sender_name: 'Coordinator',
       sender_type: 'coordinator' as const,
       content,
-      direction: 'outbound' as const
+      message_type: 'text' as const,
+      external_id: null
     };
 
     const result = await this.createMessage(messageData);
@@ -154,7 +155,8 @@ class CommunicationService {
       sender_name: user.user_metadata?.full_name || 'Coordinator',
       sender_type: 'coordinator' as const,
       content,
-      direction: 'outbound' as const
+      message_type: 'text' as const,
+      external_id: channelId
     };
 
     const result = await this.createMessage(messageData);
@@ -170,7 +172,8 @@ class CommunicationService {
       sender_name: 'Coordinator',
       sender_type: 'coordinator' as const,
       content: `Subject: ${subject}\n\n${content}`,
-      direction: 'outbound' as const
+      message_type: 'text' as const,
+      external_id: recipientEmail
     };
 
     const result = await this.createMessage(messageData);
@@ -185,7 +188,8 @@ class CommunicationService {
       sender_name: 'Coordinator',
       sender_type: 'coordinator' as const,
       content: `Call duration: ${duration} minutes\n\nNotes: ${notes}`,
-      direction: 'outbound' as const
+      message_type: 'call' as const,
+      external_id: null
     };
 
     const result = await this.createMessage(messageData);

@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Mail, Lock, CheckCircle2, XCircle } from "lucide-react";
 
+// Minimum 8 characters, at least one uppercase, one lowercase, one number, one symbol.
 const passwordRegex =
   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
 
@@ -100,7 +101,7 @@ const SignupPage: NextPage = () => {
               Create a team account
             </CardTitle>
             <p className="text-sm text-gray-600">
-              For Orchestrix coordinators and internal team members.
+              For Orchestrix coordinators and internal team members only.
             </p>
           </CardHeader>
           <CardContent>
@@ -172,10 +173,7 @@ const SignupPage: NextPage = () => {
                   </button>
                 </div>
                 <div className="mt-1 space-y-1">
-                  {renderRequirement(
-                    passwordMeetsLength,
-                    "At least 8 characters"
-                  )}
+                  {renderRequirement(passwordMeetsLength, "At least 8 characters")}
                   {renderRequirement(
                     passwordHasUpper,
                     "At least one uppercase letter"
@@ -184,14 +182,8 @@ const SignupPage: NextPage = () => {
                     passwordHasLower,
                     "At least one lowercase letter"
                   )}
-                  {renderRequirement(
-                    passwordHasNumber,
-                    "At least one number"
-                  )}
-                  {renderRequirement(
-                    passwordHasSymbol,
-                    "At least one symbol"
-                  )}
+                  {renderRequirement(passwordHasNumber, "At least one number")}
+                  {renderRequirement(passwordHasSymbol, "At least one symbol")}
                 </div>
               </div>
 

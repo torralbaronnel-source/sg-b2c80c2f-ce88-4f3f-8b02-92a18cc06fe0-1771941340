@@ -33,15 +33,20 @@ const LoginPage: NextPage = () => {
       return;
     }
 
+    // If user selected Client / Vendor, block this flow for now.
     if (userRole === "external") {
       setExternalNoteVisible(true);
-    } else {
-      setExternalNoteVisible(false);
+      setError(
+        "This sign-in is for Orchestrix team members only. The Client / Vendor portal will have its own dedicated login link shared by your coordinator."
+      );
+      return;
     }
 
+    setExternalNoteVisible(false);
     setIsSubmitting(true);
 
     try {
+      // Defensive: clear any existing session before new login
       const session = await authService.getCurrentSession();
       if (session) {
         await authService.signOut();
@@ -55,6 +60,7 @@ const LoginPage: NextPage = () => {
         return;
       }
 
+      // Enforce email verification explicitly. Many builders skip this.
       if (!user.user_metadata || user.user_metadata.email_confirmed_at === undefined) {
         setIsSubmitting(false);
         await authService.signOut();
@@ -77,6 +83,7 @@ const LoginPage: NextPage = () => {
       setExternalNoteVisible(true);
     } else {
       setExternalNoteVisible(false);
+      setError(null);
     }
   };
 
@@ -89,7 +96,7 @@ const LoginPage: NextPage = () => {
               Sign in to Orchestrix
             </CardTitle>
             <p className="text-sm text-gray-600">
-              Access your event coordination workspace.
+              Access the internal coordination workspace for your team.
             </p>
           </CardHeader>
           <CardContent>
@@ -102,18 +109,16 @@ const LoginPage: NextPage = () => {
             {externalNoteVisible && (
               <Alert className="mb-4">
                 <AlertDescription className="text-sm text-gray-700">
-                  Client / Vendor access is being rolled out. If you were invited
-                  as a client or vendor, please follow the link provided by your
-                  coordinator. For internal staff, select “Team Member”.
+                  <span className="font-medium">Client / Vendor access</span> will use a{" "}
+                  dedicated external portal. Once it is live, your coordinator will send you
+                  a separate login link. This page is only for Orchestrix team members.
                 </AlertDescription>
               </Alert>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-gray-700">
-                  Sign in as
-                </Label>
+                <Label className="text-sm font-medium text-gray-700">Sign in as</Label>
                 <RadioGroup
                   value={userRole}
                   onValueChange={handleRoleChange}
@@ -193,7 +198,7 @@ const LoginPage: NextPage = () => {
 
               <div className="flex items-center justify-between text-sm">
                 <div className="text-gray-600">
-                  New staff?{" "}
+                  New team member?{" "}
                   <Link
                     href="/signup"
                     className="text-blue-600 hover:text-blue-700 font-medium"

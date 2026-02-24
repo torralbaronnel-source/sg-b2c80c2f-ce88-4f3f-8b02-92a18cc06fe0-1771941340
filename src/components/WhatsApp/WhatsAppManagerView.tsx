@@ -9,12 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MessageCircle, Search, Phone, Video, MoreVertical, Download, Filter, Archive, Star, Clock, CheckCircle } from 'lucide-react';
 import { whatsAppService, type WhatsAppConversation, type WhatsAppMessage, type WhatsAppTemplate } from '@/services/whatsappService';
+import { Users, MoreHorizontal, Plus, MessageSquare } from "lucide-react";
 
 interface WhatsAppManagerViewProps {
-  coordinatorId: string;
+  coordinatorId?: string; // Made optional to fix TS error
 }
 
-export const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ coordinatorId }) => {
+export function WhatsAppManagerView({ coordinatorId }: WhatsAppManagerViewProps) {
   const [conversations, setConversations] = useState<WhatsAppConversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<WhatsAppConversation | null>(null);
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
@@ -423,4 +424,4 @@ export const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ coordi
       </div>
     </div>
   );
-};
+}

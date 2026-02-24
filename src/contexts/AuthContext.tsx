@@ -1,19 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
-import { authService } from "@/services/authService";
-import { profileService } from "@/services/profileService";
+import { profileService, type Profile } from "@/services/profileService";
 import { useRouter } from "next/navigation";
 
-// Global cache for session to prevent flickering during navigation
-const cachedSession: any = null;
-const cachedProfile: any = null;
-
-/**
- * STRATEGIC FIX FOR TS2589:
- * We use simplified function signatures here to stop the TypeScript compiler from 
- * infinitely recursing through the Supabase Database types.
- */
 export interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -28,12 +18,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [currentOrganization, setCurrentOrganization] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfileData = async (userId: string) => {
     const profileData = await profileService.getProfile(userId);
     setProfile(profileData);
     if (profileData) {
@@ -48,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id).finally(() => setIsLoading(false));
+        fetchProfileData(session.user.id).finally(() => setIsLoading(false));
       } else {
         setIsLoading(false);
       }
@@ -59,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (session?.user) {
         setUser(session.user);
         setSession(session);
-        await fetchProfile(session.user.id);
+        await fetchProfileData(session.user.id);
       } else {
         setUser(null);
         setSession(null);
@@ -72,19 +61,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  // Use type erasure during assignment to bypass the recursion check
-  const value: any = {
+  const value: AuthContextType = {
     user,
     session,
     profile,
     currentOrganization,
     isLoading,
     refreshProfile: async () => {
-      if (user) await fetchProfile(user.id);
+      if (user) await fetchProfileData(user.id);
     },
   };
 
-  return <AuthContext.Provider value={value as AuthContextType}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

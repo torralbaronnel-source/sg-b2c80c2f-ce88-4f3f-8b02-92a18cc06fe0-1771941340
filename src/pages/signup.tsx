@@ -9,14 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
+import { authService } from "@/services/authService";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2, ShieldCheck, Mail, User, Building2, CheckCircle2, Circle } from "lucide-react";
 import { SEO } from "@/components/SEO";
-import { authService } from "@/services/authService";
 
 const SignupPage: NextPage = () => {
   const router = useRouter();
-  const { signUp } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   
   const [email, setEmail] = useState("");
@@ -82,7 +82,7 @@ const SignupPage: NextPage = () => {
         return;
       }
 
-      const { error } = await signUp(email, password, fullName);
+      const { error } = await authService.signUp(email, password, fullName);
       if (error) throw error;
       
       toast({

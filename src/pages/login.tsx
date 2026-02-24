@@ -9,14 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
+import { authService } from "@/services/authService";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2, ShieldCheck, Lock, Mail, User, Building2 } from "lucide-react";
-import { authService } from "@/services/authService";
 import { SEO } from "@/components/SEO";
 
 const LoginPage: NextPage = () => {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   
   const [email, setEmail] = useState("");
@@ -31,8 +31,6 @@ const LoginPage: NextPage = () => {
   // Security: Brute Force Prevention
   const [attempts, setAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState(0);
-
-  const { user, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     if (user && !authLoading) {

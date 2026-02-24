@@ -25,22 +25,26 @@ export interface WhatsAppMessage {
 }
 
 export interface WhatsAppConversation {
-  vendor: {
-    id: string;
-    name: string;
-    phone_number: string;
-    company?: string;
-    role: string;
-  };
+  vendor: WhatsAppVendor;
   last_message: {
     content: string;
     timestamp: string;
     direction: 'inbound' | 'outbound';
     status: string;
+    priority?: 'low' | 'normal' | 'urgent' | 'critical';
   };
   unread_count: number;
   event_id: string;
   event_name: string;
+}
+
+export interface WhatsAppVendor {
+  id: string;
+  name: string;
+  phone_number: string;
+  company?: string;
+  role: string;
+  email?: string;
 }
 
 export interface WhatsAppTemplate {
@@ -116,10 +120,7 @@ class WhatsAppService {
       return {
         id: storedMessage.id,
         wa_message_id: storedMessage.external_id || '',
-        from: '',
-        to: to,
         content: storedMessage.content,
-        message_type: storedMessage.message_type as 'text' | 'image' | 'document' | 'voice' | 'video',
         timestamp: storedMessage.created_at,
         status: storedMessage.status as 'sent' | 'delivered' | 'read' | 'failed',
         direction: storedMessage.direction as 'inbound' | 'outbound',
@@ -191,10 +192,7 @@ class WhatsAppService {
       return {
         id: storedMessage.id,
         wa_message_id: storedMessage.external_id || '',
-        from: '',
-        to: to,
         content: storedMessage.content,
-        message_type: storedMessage.message_type as 'text' | 'image' | 'document' | 'voice' | 'video',
         timestamp: storedMessage.created_at,
         status: storedMessage.status as 'sent' | 'delivered' | 'read' | 'failed',
         direction: storedMessage.direction as 'inbound' | 'outbound',
@@ -321,33 +319,16 @@ class WhatsAppService {
 
       if (error) throw error;
 
-      return data?.map(msg => {
-        const messageObj: WhatsAppMessage = {
-          id: msg.id,
-          wa_message_id: msg.external_id || '',
-          from: msg.direction === 'inbound' ? msg.sender_name : '',
-          to: msg.direction === 'outbound' ? msg.sender_name : '',
-          content: msg.content,
-          message_type: msg.message_type as 'text' | 'image' | 'document' | 'voice' | 'video',
-          timestamp: msg.created_at,
-          status: msg.status as 'sent' | 'delivered' | 'read' | 'failed',
-          direction: msg.direction as 'inbound' | 'outbound',
-          vendor_id: msg.vendor_id,
-          event_id: msg.event_id
-        };
-
-        // Add metadata if it exists
-        if (msg.metadata && typeof msg.metadata === 'object' && !Array.isArray(msg.metadata)) {
-          messageObj.metadata = {
-            media_url: msg.metadata.media_url as string,
-            media_name: msg.metadata.media_name as string,
-            voice_duration: msg.metadata.voice_duration as number,
-            file_size: msg.metadata.file_size as number
-          };
-        }
-
-        return messageObj;
-      }) || [];
+      return data?.map(msg => ({
+        id: msg.id,
+        wa_message_id: msg.external_id || '',
+        content: msg.content,
+        timestamp: msg.created_at,
+        status: msg.status as 'sent' | 'delivered' | 'read' | 'failed',
+        direction: msg.direction as 'inbound' | 'outbound',
+        vendor_id: msg.vendor_id,
+        event_id: msg.event_id
+      })) || [];
 
     } catch (error) {
       console.error('Error fetching conversation history:', error);

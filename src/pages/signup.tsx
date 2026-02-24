@@ -1,189 +1,258 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { NextPage } from "next";
-import { useRouter } from "next/router";
+import Head from "next/head";
 import Link from "next/link";
-import { authService } from "@/services/authService";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Eye, EyeOff, Mail, Lock, CheckCircle2, XCircle, ShieldAlert } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
-
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+import { Eye, EyeOff, Loader2, ShieldCheck, Mail, User, Building2, CheckCircle2, Circle } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const SignupPage: NextPage = () => {
   const router = useRouter();
+  const { signUp } = useAuth();
   const { toast } = useToast();
-
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+  
+  // Password Strength
+  const [strength, setStrength] = useState({
+    length: false,
+    upper: false,
+    lower: false,
+    number: false,
+    special: false
+  });
 
-  const passwordMeetsLength = password.length >= 8;
-  const passwordHasUpper = /[A-Z]/.test(password);
-  const passwordHasLower = /[a-z]/.test(password);
-  const passwordHasNumber = /\d/.test(password);
-  const passwordHasSymbol = /[^A-Za-z0-9]/.test(password);
-  const passwordValid = passwordRegex.test(password) && password === confirmPassword;
+  useEffect(() => {
+    setStrength({
+      length: password.length >= 8,
+      upper: /[A-Z]/.test(password),
+      lower: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    });
+  }, [password]);
 
-  const handleSubmit = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setError(null);
+  const isPasswordStrong = Object.values(strength).every(Boolean);
 
-    if (!agreedToTerms) {
-      setError("You must agree to the Terms of Service and Privacy Policy.");
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!agreed) {
+      toast({
+        title: "Compliance Error",
+        description: "You must agree to the Terms and Data Privacy Policy.",
+        variant: "destructive",
+      });
       return;
     }
 
-    if (!passwordValid) {
-      setError("Please ensure your password meets all requirements.");
+    if (!isPasswordStrong) {
+      toast({
+        title: "Security Requirement",
+        description: "Please fulfill all password security requirements.",
+        variant: "destructive",
+      });
       return;
     }
 
-    setIsSubmitting(true);
-
+    setIsLoading(true);
     try {
-      const { data, error } = await authService.signUp(email, password);
+      const { error } = await signUp(email, password, fullName);
       if (error) throw error;
-
-      if (data.user) {
-        toast({
-          title: "Account created!",
-          description: "Please check your email for a verification link.",
-        });
-        router.push("/login");
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to create account. Please try again.");
+      
+      toast({
+        title: "Account Created",
+        description: "Please check your email to verify your identity.",
+      });
+      
+      router.push("/login");
+    } catch (error: any) {
+      toast({
+        title: "Registration Failed",
+        description: error.message || "An unexpected error occurred.",
+        variant: "destructive",
+      });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const renderRequirement = (met: boolean, text: string) => (
-    <div className="flex items-center space-x-2 text-xs">
-      {met ? <CheckCircle2 className="h-3 w-3 text-green-600" /> : <XCircle className="h-3 w-3 text-gray-400" />}
-      <span className={met ? "text-green-700" : "text-gray-600"}>{text}</span>
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-white md:bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-4">
-        <div className="text-center space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900">Join Orchestrix</h1>
-          <p className="text-sm text-gray-600">Enterprise Event Coordination Hub</p>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#fafafa] dark:bg-[#09090b] p-4 font-sans">
+      <SEO title="Create Account | Orchestrix" description="Register for Orchestrix professional event workspace." />
+      
+      <div className="w-full max-w-[480px] space-y-8">
+        <div className="flex flex-col items-center space-y-2 text-center">
+          <div className="w-16 h-16 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mb-4 transition-transform hover:scale-105">
+            <Building2 className="w-8 h-8 text-indigo-600" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            Orchestrix
+          </h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
+            Join the Professional Network
+          </p>
         </div>
 
-        <Card className="border shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-lg">Create your professional account</CardTitle>
+        <Card className="border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none bg-white dark:bg-zinc-900/50 backdrop-blur-sm">
+          <CardHeader className="space-y-1 pb-8">
+            <CardTitle className="text-2xl font-bold text-center">Get Started</CardTitle>
+            <CardDescription className="text-center text-zinc-500 dark:text-zinc-400">
+              Create your coordinator or vendor profile
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            {error && (
-              <Alert variant="destructive" className="mb-6">
-                <ShieldAlert className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+            <form onSubmit={handleSignup} className="space-y-6">
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
+                    <Input
+                      id="fullName"
+                      placeholder="Juan Dela Cruz"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="pl-10 h-11 bg-zinc-50/50 dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800"
+                      required
+                    />
+                  </div>
+                </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Work Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="name@company.com" 
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required 
-                  />
+                <div className="space-y-2">
+                  <Label htmlFor="email">Work Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="name@company.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="pl-10 h-11 bg-zinc-50/50 dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Security Password</Label>
+                  <div className="relative">
+                    <ShieldCheck className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
+                    <Input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Choose a strong password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="pl-10 pr-10 h-11 bg-zinc-50/50 dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-3 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input 
-                    id="password" 
-                    type={showPassword ? "text" : "password"} 
-                    className="pl-10 pr-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required 
-                  />
-                  <button 
-                    type="button" 
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-gray-400"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-2">
-                  {renderRequirement(passwordMeetsLength, "8+ characters")}
-                  {renderRequirement(passwordHasUpper, "Uppercase")}
-                  {renderRequirement(passwordHasLower, "Lowercase")}
-                  {renderRequirement(passwordHasNumber, "Number")}
-                  {renderRequirement(passwordHasSymbol, "Symbol")}
+              {/* Password Strength Meter */}
+              <div className="bg-zinc-50 dark:bg-zinc-950/50 p-4 rounded-xl border border-zinc-100 dark:border-zinc-800 space-y-3">
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Security Requirements</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { key: "length", label: "8+ characters" },
+                    { key: "upper", label: "Uppercase" },
+                    { key: "lower", label: "Lowercase" },
+                    { key: "number", label: "Number" },
+                    { key: "special", label: "Symbol" }
+                  ].map((req) => (
+                    <div key={req.key} className="flex items-center gap-2">
+                      {strength[req.key as keyof typeof strength] ? (
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                      ) : (
+                        <Circle className="w-3.5 h-3.5 text-zinc-300 dark:text-zinc-700" />
+                      )}
+                      <span className={`text-[11px] ${strength[req.key as keyof typeof strength] ? "text-zinc-900 dark:text-zinc-200 font-medium" : "text-zinc-400"}`}>
+                        {req.label}
+                      </span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
-                <Input 
-                  id="confirmPassword" 
-                  type="password" 
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required 
+              <div className="flex items-start space-x-3 p-1">
+                <Checkbox
+                  id="agreed"
+                  checked={agreed}
+                  onCheckedChange={(checked) => setAgreed(checked as boolean)}
+                  className="mt-1 border-zinc-300 dark:border-zinc-700 data-[state=checked]:bg-indigo-600"
                 />
-              </div>
-
-              <div className="flex items-start space-x-2 pt-2">
-                <Checkbox 
-                  id="terms" 
-                  checked={agreedToTerms}
-                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-                />
-                <label 
-                  htmlFor="terms" 
-                  className="text-xs text-gray-600 leading-tight"
+                <Label
+                  htmlFor="agreed"
+                  className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400 font-normal cursor-pointer"
                 >
-                  I agree to the{" "}
-                  <Link href="/terms" className="text-blue-600 hover:underline font-medium">Terms of Service</Link>
+                  I certify that I have read and agree to the{" "}
+                  <Link href="/terms" className="text-indigo-600 hover:underline font-medium">Terms of Service</Link>
                   {" "}and{" "}
-                  <Link href="/privacy" className="text-blue-600 hover:underline font-medium">Data Privacy Policy</Link>. 
-                  I understand this platform contains sensitive coordination and financial data.
-                </label>
+                  <Link href="/privacy" className="text-indigo-600 hover:underline font-medium">Data Privacy Policy</Link>.
+                  I understand that my identity may be verified for compliance.
+                </Label>
               </div>
 
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
-                {isSubmitting ? "Securing Account..." : "Create Account"}
+              <Button
+                type="submit"
+                className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-lg shadow-indigo-600/20"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Profile...
+                  </>
+                ) : (
+                  "Initialize Account"
+                )}
               </Button>
             </form>
-
-            <div className="mt-6 text-center text-sm">
-              <span className="text-gray-600">Already a member?</span>{" "}
-              <Link href="/login" className="text-blue-600 hover:underline font-medium">Sign in</Link>
-            </div>
           </CardContent>
+          <CardFooter className="flex flex-col space-y-4 pt-4 pb-8 border-t border-zinc-100 dark:border-zinc-800">
+            <p className="text-sm text-center text-zinc-500 dark:text-zinc-400">
+              Already have an account?{" "}
+              <Link
+                href="/login"
+                className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
+              >
+                Sign in
+              </Link>
+            </p>
+          </CardFooter>
         </Card>
 
-        <p className="text-center text-[10px] text-gray-400 uppercase tracking-widest">
-          Secured by Orchestrix Infrastructure
-        </p>
+        <div className="flex flex-col items-center space-y-4 text-center px-4">
+          <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 text-xs font-medium uppercase tracking-widest">
+            <ShieldCheck className="w-4 h-4" />
+            GOVERNMENT LEVEL SECURITY
+          </div>
+          <p className="text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-600 max-w-sm">
+            By creating an account, you acknowledge that Orchestrix operates under strict Anti-Money Laundering (AML) and Data Privacy laws. Unauthorized account usage is strictly prohibited.
+          </p>
+        </div>
       </div>
     </div>
   );

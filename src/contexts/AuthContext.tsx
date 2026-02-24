@@ -1,106 +1,97 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { authService, type AuthUser } from "@/services/authService";
+import { supabase } from "@/integrations/supabase/client";
+import type { User, Session } from "@supabase/supabase-js";
+import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
-import { useRouter } from "next/router";
 
+// Breaking the circular dependency by using simplified function types
 interface AuthContextType {
-  user: AuthUser | null;
+  user: User | null;
+  session: Session | null;
   profile: any | null;
-  loading: boolean;
-  signOut: () => Promise<void>;
-  organizations: any[];
   currentOrganization: any | null;
-  setCurrentOrganization: (org: any) => void;
+  loading: boolean;
+  isLoading: boolean;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<any>;
+  signOut: () => Promise<any>;
+  resetPasswordRequest: (email: string) => Promise<any>;
+  updatePassword: (password: string) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [organizations, setOrganizations] = useState<any[]>([]);
   const [currentOrganization, setCurrentOrganization] = useState<any | null>(null);
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchUserData = async (userId: string) => {
+  const loadUserData = async (userId: string) => {
     try {
-      // profileService.getProfile returns { data, error }
       const { data: profileData } = await profileService.getProfile(userId);
-      setProfile(profileData || null);
-
-      const { data: orgData } = await authService.getUserOrganizations(userId);
-      const orgs = orgData || [];
-      setOrganizations(orgs);
+      setProfile(profileData);
       
-      if (orgs.length > 0 && !currentOrganization) {
-        setCurrentOrganization(orgs[0].organizations);
-      }
+      const { data: orgs } = await supabase
+        .from("organization_members")
+        .select("*, organizations(*)")
+        .eq("user_id", userId)
+        .limit(1)
+        .maybeSingle();
+        
+      setCurrentOrganization(orgs?.organizations || null);
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error("Error loading auth data:", error);
     }
   };
 
   useEffect(() => {
     const initializeAuth = async () => {
-      try {
-        const session = await authService.getCurrentSession();
-        if (session?.user) {
-          const currentUser = await authService.getCurrentUser();
-          setUser(currentUser);
-          if (currentUser) {
-            await fetchUserData(currentUser.id);
-          }
-        }
-      } catch (error) {
-        console.error("Auth initialization error:", error);
-      } finally {
-        setLoading(false);
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      if (currentSession?.user) {
+        await loadUserData(currentSession.user.id);
       }
+      setIsLoading(false);
     };
 
     initializeAuth();
 
-    const subscription = authService.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
-        if (currentUser) {
-          await fetchUserData(currentUser.id);
-        }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+      setSession(currentSession);
+      setUser(currentSession?.user ?? null);
+      
+      if (currentSession?.user) {
+        await loadUserData(currentSession.user.id);
       } else {
-        setUser(null);
         setProfile(null);
-        setOrganizations([]);
         setCurrentOrganization(null);
       }
-      setLoading(false);
+      setIsLoading(false);
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  const signOut = async () => {
-    await authService.signOut();
-    router.push("/login");
+  const value: AuthContextType = {
+    user,
+    session,
+    profile,
+    currentOrganization,
+    loading: isLoading,
+    isLoading,
+    signIn: authService.signIn,
+    signUp: authService.signUp,
+    signOut: authService.signOut,
+    resetPasswordRequest: authService.resetPasswordRequest,
+    updatePassword: authService.updatePassword,
   };
 
-  return (
-    <AuthContext.Provider value={{ 
-      user, 
-      profile, 
-      loading, 
-      signOut, 
-      organizations, 
-      currentOrganization, 
-      setCurrentOrganization 
-    }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

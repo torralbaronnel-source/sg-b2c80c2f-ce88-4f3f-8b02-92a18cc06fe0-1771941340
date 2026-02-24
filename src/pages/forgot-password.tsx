@@ -2,170 +2,154 @@ import React, { useState } from "react";
 import type { NextPage } from "next";
 import Head from "next/head";
 import Link from "next/link";
-import { Mail, ArrowLeft, ShieldCheck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Mail, ArrowLeft, ShieldCheck, Building2 } from "lucide-react";
+import { authService } from "@/services/authService";
+import { SEO } from "@/components/SEO";
 
 const ForgotPasswordPage: NextPage = () => {
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [honeypot, setHoneypot] = useState("");
   const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [honeypot, setHoneypot] = useState("");
 
-  const handleReset = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (honeypot) return; // Silent block for bots
+    if (honeypot) return;
 
-    setLoading(true);
+    setIsLoading(true);
     try {
-      // In a real environment, Supabase handles the email sending
-      // The redirect URL is configured in the Supabase dashboard
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
-      });
-
+      const { error } = await authService.resetPasswordRequest(email);
       if (error) throw error;
-
-      setSubmitted(true);
+      
+      setIsSubmitted(true);
       toast({
-        title: "Reset link sent",
-        description: "If an account exists with this email, you will receive a reset link.",
+        title: "Recovery Link Sent",
+        description: "If an account exists, you will receive an email shortly.",
       });
     } catch (error: any) {
       toast({
+        title: "Request Failed",
+        description: error.message || "An error occurred. Please try again later.",
         variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to send reset link",
       });
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4">
-        <Head>
-          <title>Check Your Email | Orchestrix Security</title>
-        </Head>
-        <Card className="w-full max-w-md border-t-4 border-t-primary shadow-xl">
-          <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-              <Mail className="h-6 w-6 text-primary" />
-            </div>
-            <CardTitle className="text-2xl font-bold tracking-tight">Check your email</CardTitle>
-            <CardDescription className="text-sm">
-              We've sent a password reset link to <span className="font-semibold text-foreground">{email}</span>.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center text-sm text-muted-foreground space-y-4">
-            <p>
-              Please check your inbox and follow the instructions to reset your password. The link will expire in 1 hour for your security.
-            </p>
-            <div className="p-3 bg-amber-50 border border-amber-100 rounded-md text-amber-800 text-xs flex items-start gap-2 text-left">
-              <ShieldCheck className="h-4 w-4 mt-0.5 shrink-0" />
-              <span>If you don't see the email, check your spam folder or try again in 5 minutes.</span>
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-2">
-            <Button variant="outline" className="w-full" onClick={() => setSubmitted(false)}>
-              Try a different email
-            </Button>
-            <Link href="/login" className="text-sm text-primary hover:underline flex items-center justify-center gap-1">
-              <ArrowLeft className="h-3 w-3" /> Back to Login
-            </Link>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4">
-      <Head>
-        <title>Forgot Password | Orchestrix Security</title>
-      </Head>
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <div className="flex justify-center mb-6">
-            <div className="bg-primary px-3 py-1 rounded text-white font-bold tracking-tighter text-xl">
-              ORCHESTRIX
-            </div>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#fafafa] dark:bg-[#09090b] p-4 font-sans">
+      <SEO title="Reset Security Access | Orchestrix" description="Secure password recovery for Orchestrix platform." />
+      
+      <div className="w-full max-w-[440px] space-y-8">
+        <div className="flex flex-col items-center space-y-2 text-center">
+          <div className="w-16 h-16 bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 flex items-center justify-center mb-4 transition-transform hover:scale-105">
+            <Building2 className="w-8 h-8 text-indigo-600" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Reset your password</h1>
-          <p className="text-muted-foreground">
-            Enter your email and we'll send you a secure link to get back into your account.
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
+            Orchestrix
+          </h1>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">
+            Security Access Recovery
           </p>
         </div>
 
-        <Card className="shadow-xl border-t-4 border-t-primary">
-          <form onSubmit={handleReset}>
-            <CardHeader>
-              <CardTitle className="text-lg">Security Verification</CardTitle>
-              <CardDescription>
-                We protect your data with enterprise-grade encryption.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Bot Honeypot */}
-              <div className="hidden" aria-hidden="true">
-                <input
-                  type="text"
-                  name="bot_field"
-                  value={honeypot}
-                  onChange={(e) => setHoneypot(e.target.value)}
-                  tabIndex={-1}
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Work Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@company.com"
-                    className="pl-10"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
+        <Card className="border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-200/50 dark:shadow-none bg-white dark:bg-zinc-900/50 backdrop-blur-sm">
+          {!isSubmitted ? (
+            <>
+              <CardHeader className="space-y-1 pb-8">
+                <CardTitle className="text-2xl font-bold text-center">Forgot Password?</CardTitle>
+                <CardDescription className="text-center text-zinc-500 dark:text-zinc-400 px-4">
+                  Enter your verified work email and we'll send you a secure recovery link.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <input
+                    type="text"
+                    className="hidden"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    tabIndex={-1}
                   />
-                </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Work Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-zinc-400" />
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="name@company.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="pl-10 h-11 bg-zinc-50/50 dark:bg-zinc-950/50 border-zinc-200 dark:border-zinc-800"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-lg shadow-indigo-600/20"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating Link...
+                      </>
+                    ) : (
+                      "Send Recovery Link"
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </>
+          ) : (
+            <CardContent className="py-12 flex flex-col items-center text-center space-y-6">
+              <div className="w-16 h-16 bg-emerald-50 dark:bg-emerald-500/10 rounded-full flex items-center justify-center">
+                <Mail className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
               </div>
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full font-semibold h-11" disabled={loading}>
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending link...
-                  </>
-                ) : (
-                  "Send reset link"
-                )}
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold">Check your email</h3>
+                <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-xs">
+                  We've sent a recovery link to <span className="font-semibold text-zinc-900 dark:text-zinc-100">{email}</span>. Please check your inbox and spam folder.
+                </p>
+              </div>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setIsSubmitted(false)}
+              >
+                Try a different email
               </Button>
-              <div className="text-center">
-                <Link href="/login" className="text-sm text-primary hover:underline flex items-center justify-center gap-1">
-                  <ArrowLeft className="h-3 w-3" /> Back to Login
-                </Link>
-              </div>
-            </CardFooter>
-          </form>
+            </CardContent>
+          )}
+          <CardFooter className="flex flex-col space-y-4 pt-4 pb-8 border-t border-zinc-100 dark:border-zinc-800">
+            <Link
+              href="/login"
+              className="flex items-center gap-2 text-sm font-semibold text-zinc-500 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to login
+            </Link>
+          </CardFooter>
         </Card>
 
-        <div className="text-center space-y-4 pt-4 border-t border-gray-200">
-          <p className="text-xs text-muted-foreground px-4">
-            For security reasons, we do not confirm if an email exists in our system. If the email is valid, you will receive instructions shortly.
-          </p>
-          <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-semibold">
-            SECURED BY ORCHESTRIX INFRASTRUCTURE
+        <div className="flex flex-col items-center space-y-4 text-center px-4">
+          <div className="flex items-center gap-2 text-zinc-400 dark:text-zinc-500 text-xs font-medium uppercase tracking-widest">
+            <ShieldCheck className="w-4 h-4" />
+            ENCRYPTED RECOVERY
+          </div>
+          <p className="text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-600 max-w-sm">
+            Recovery links expire after 15 minutes for your protection. If you didn't request this, please contact your organization's security administrator immediately.
           </p>
         </div>
       </div>

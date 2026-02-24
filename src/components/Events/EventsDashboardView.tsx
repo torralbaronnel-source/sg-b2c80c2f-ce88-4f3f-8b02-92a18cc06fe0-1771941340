@@ -158,23 +158,19 @@ export function EventsDashboardView() {
     });
 
     return result.sort((a, b) => {
-      // 1. Pinned first
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
 
-      // 2. Status priority (Live > Setup > Upcoming > Completed)
       const priorityA = STATUS_PRIORITY[a.status as keyof typeof STATUS_PRIORITY];
       const priorityB = STATUS_PRIORITY[b.status as keyof typeof STATUS_PRIORITY];
       if (priorityA !== priorityB) return priorityA - priorityB;
 
-      // 3. Date & Time
       const dateA = new Date(`${a.date}T${a.time}`).getTime();
       const dateB = new Date(`${b.date}T${b.time}`).getTime();
       return dateA - dateB;
     });
   }, [events, searchQuery, statusFilter]);
 
-  // Pagination logic
   const totalPages = Math.ceil(filteredAndSortedEvents.length / ITEMS_PER_PAGE);
   const paginatedEvents = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -190,7 +186,6 @@ export function EventsDashboardView() {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const getStatusColor = (status: string) => {
@@ -205,7 +200,6 @@ export function EventsDashboardView() {
 
   return (
     <div className="p-6 space-y-8 bg-slate-50/50 min-h-full">
-      {/* Header & Stats Overview */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-serif">Production Hub</h1>
@@ -234,7 +228,6 @@ export function EventsDashboardView() {
         </div>
       </div>
 
-      {/* Filters & Actions */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
         <div className="flex flex-1 items-center gap-3 w-full md:w-auto">
           <div className="relative flex-1 max-w-sm">
@@ -245,7 +238,7 @@ export function EventsDashboardView() {
               value={searchQuery}
               onChange={(e) => {
                 setSearchQuery(e.target.value);
-                setCurrentPage(1); // Reset to first page on search
+                setCurrentPage(1);
               }}
             />
           </div>
@@ -253,7 +246,7 @@ export function EventsDashboardView() {
             value={statusFilter} 
             onValueChange={(val) => {
               setStatusFilter(val);
-              setCurrentPage(1); // Reset to first page on filter change
+              setCurrentPage(1);
             }}
           >
             <SelectTrigger className="w-[180px] bg-white border-slate-200">
@@ -276,7 +269,6 @@ export function EventsDashboardView() {
         </Button>
       </div>
 
-      {/* Event Cards Grid */}
       {paginatedEvents.length > 0 ? (
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -288,7 +280,6 @@ export function EventsDashboardView() {
                   event.isPinned && "ring-2 ring-blue-500/50 shadow-blue-100"
                 )}
               >
-                {/* Pin Button */}
                 <button 
                   onClick={() => togglePin(event.id)}
                   className={cn(
@@ -377,7 +368,6 @@ export function EventsDashboardView() {
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center pt-4 pb-8">
               <Pagination>

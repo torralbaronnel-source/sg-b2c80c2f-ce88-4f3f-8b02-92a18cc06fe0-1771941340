@@ -125,7 +125,8 @@ class WhatsAppService {
         status: storedMessage.status as 'sent' | 'delivered' | 'read' | 'failed',
         direction: storedMessage.direction as 'inbound' | 'outbound',
         vendor_id: storedMessage.vendor_id,
-        event_id: storedMessage.event_id
+        event_id: storedMessage.event_id,
+        metadata: {}
       };
 
     } catch (error) {
@@ -197,7 +198,8 @@ class WhatsAppService {
         status: storedMessage.status as 'sent' | 'delivered' | 'read' | 'failed',
         direction: storedMessage.direction as 'inbound' | 'outbound',
         vendor_id: storedMessage.vendor_id,
-        event_id: storedMessage.event_id
+        event_id: storedMessage.event_id,
+        metadata: {}
       };
 
     } catch (error) {
@@ -327,7 +329,8 @@ class WhatsAppService {
         status: msg.status as 'sent' | 'delivered' | 'read' | 'failed',
         direction: msg.direction as 'inbound' | 'outbound',
         vendor_id: msg.vendor_id,
-        event_id: msg.event_id
+        event_id: msg.event_id,
+        metadata: {}
       })) || [];
 
     } catch (error) {
@@ -464,9 +467,9 @@ class WhatsAppService {
       const conversations = await this.getConversationHistory(vendorId, eventId);
       
       const csvContent = [
-        'Timestamp,Direction,Sender,Content,Status',
+        'Timestamp,Direction,Content,Status',
         ...conversations.map(conv => 
-          `"${conv.timestamp}","${conv.direction}","${conv.from}","${conv.content.replace(/"/g, '""')}","${conv.status}"`
+          `"${conv.timestamp}","${conv.direction}","${conv.content.replace(/"/g, '""')}","${conv.status}"`
         )
       ].join('\n');
 

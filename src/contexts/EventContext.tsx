@@ -40,29 +40,33 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       
-      const typedData: Event[] = (data || []).map((e: any) => ({
-        id: String(e.id || ""),
-        title: String(e.title || ""),
-        client_name: String(e.client_name || ""),
-        event_date: String(e.event_date || ""),
-        call_time: String(e.call_time || ""),
-        venue: String(e.venue || ""),
-        status: (e.status || "planning") as Event["status"],
-        guest_count: Number(e.guest_count) || 0,
-        budget: Number(e.budget) || 0,
-        created_at: String(e.created_at || ""),
-        organization_id: String(e.organization_id || ""),
-        created_by: String(e.created_by || ""),
-        description: String(e.description || ""),
-        hmu_artist: String(e.hmu_artist || ""),
-        lights_sounds: String(e.lights_sounds || ""),
-        catering: String(e.catering || ""),
-        photo_video: String(e.photo_video || ""),
-        coordination_team: String(e.coordination_team || ""),
-        backdrop_styling: String(e.backdrop_styling || ""),
-        souvenirs: String(e.souvenirs || ""),
-        host_mc: String(e.host_mc || "")
-      }));
+      const typedData = (data || []).map((e: any) => {
+        const mapped = {
+          id: String(e.id || ""),
+          title: String(e.title || ""),
+          client_name: String(e.client_name || ""),
+          event_date: String(e.event_date || ""),
+          call_time: String(e.call_time || ""),
+          venue: String(e.venue || ""),
+          status: (e.status || "planning") as Event["status"],
+          guest_count: Number(e.guest_count) || 0,
+          budget: Number(e.budget) || 0,
+          created_at: String(e.created_at || ""),
+          organization_id: String(e.organization_id || ""),
+          created_by: String(e.created_by || ""),
+          description: String(e.description || ""),
+          hmu_artist: String(e.hmu_artist || ""),
+          lights_sounds: String(e.lights_sounds || ""),
+          catering: String(e.catering || ""),
+          photo_video: String(e.photo_video || ""),
+          coordination_team: String(e.coordination_team || ""),
+          backdrop_styling: String(e.backdrop_styling || ""),
+          souvenirs: String(e.souvenirs || ""),
+          host_mc: String(e.host_mc || "")
+        };
+        // Use unknown cast to resolve TS2352 overlap error as suggested by the compiler
+        return (mapped as unknown) as Event;
+      });
       
       setEvents(typedData);
     } catch (error) {

@@ -1,138 +1,70 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { 
-  Search, 
-  Send, 
-  MoreVertical, 
-  Phone, 
-  Video, 
-  CheckCheck,
-  User,
-  Clock,
-  MessageSquare
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { MessageSquare, Clock, User, CheckCircle2 } from "lucide-react";
 
-// Using named export for consistency and to fix import error
+interface ChatPreview {
+  id: string;
+  name: string;
+  lastMessage: string;
+  time: string;
+  status: "pending" | "responded" | "urgent";
+  type: "Client" | "Vendor";
+}
+
+const chats: ChatPreview[] = [
+  { id: "1", name: "Maria Clara (Bride)", lastMessage: "Can we move the call to 3 PM?", time: "2m ago", status: "urgent", type: "Client" },
+  { id: "2", name: "Green Gardens Catering", lastMessage: "Menu options confirmed.", time: "15m ago", status: "responded", type: "Vendor" },
+  { id: "3", name: "Juan Dela Cruz (Groom)", lastMessage: "Sent the guest list draft.", time: "1h ago", status: "pending", type: "Client" },
+];
+
 export function WhatsAppTabletView() {
-  const [activeChat, setActiveChat] = useState<number | null>(null);
-  
-  const chats = [
-    { id: 1, name: "Santos Wedding", lastMsg: "The florist has arrived!", time: "10:30 AM", unread: 2 },
-    { id: 2, name: "Reyes Debut", lastMsg: "Did you receive the cake?", time: "09:45 AM", unread: 0 },
-    { id: 3, name: "Gomez Anniversary", lastMsg: "Guest list updated.", time: "Yesterday", unread: 0 },
-  ];
-
   return (
-    <div className="flex h-[calc(100vh-280px)] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      {/* Sidebar List */}
-      <div className="w-80 border-r border-slate-100 flex flex-col">
-        <div className="p-4 border-b border-slate-50">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <Input className="pl-9 bg-slate-50 border-none h-9 text-sm" placeholder="Search chats..." />
-          </div>
+    <Card className="h-full border-none shadow-none bg-background/50 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg font-bold flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-green-500" />
+            Quick Chat
+          </CardTitle>
+          <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-200">Live</Badge>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          {chats.map((chat) => (
-            <button
-              key={chat.id}
-              onClick={() => setActiveChat(chat.id)}
-              className={cn(
-                "w-full flex items-center gap-3 p-4 hover:bg-slate-50 transition-colors border-b border-slate-50",
-                activeChat === chat.id && "bg-indigo-50/50 border-r-2 border-r-indigo-500"
-              )}
-            >
-              <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0">
-                <User size={20} />
-              </div>
-              <div className="flex-1 text-left">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-slate-900 text-sm">{chat.name}</span>
-                  <span className="text-[10px] text-slate-400">{chat.time}</span>
+      </CardHeader>
+      <CardContent>
+        <ScrollArea className="h-[400px] pr-4">
+          <div className="space-y-4">
+            {chats.map((chat) => (
+              <div key={chat.id} className="p-3 rounded-lg border bg-card hover:bg-accent transition-colors cursor-pointer group">
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                      {chat.name.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold leading-none">{chat.name}</p>
+                      <p className="text-[10px] text-muted-foreground mt-1">{chat.type}</p>
+                    </div>
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">{chat.time}</span>
                 </div>
-                <p className="text-xs text-slate-500 truncate mt-0.5">{chat.lastMsg}</p>
-              </div>
-              {chat.unread > 0 && (
-                <div className="h-4 w-4 rounded-full bg-indigo-600 text-[10px] text-white flex items-center justify-center">
-                  {chat.unread}
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Main Chat View */}
-      <div className="flex-1 flex flex-col bg-slate-50/30">
-        {activeChat ? (
-          <>
-            <div className="p-4 border-b border-slate-100 bg-white flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                  <User size={18} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-900">
-                    {chats.find(c => c.id === activeChat)?.name}
-                  </h3>
-                  <p className="text-[10px] text-emerald-600 font-medium">Online</p>
+                <p className="text-xs text-muted-foreground line-clamp-1 mt-2 group-hover:text-foreground">
+                  {chat.lastMessage}
+                </p>
+                <div className="flex items-center justify-between mt-3">
+                  <Badge 
+                    variant={chat.status === "urgent" ? "destructive" : chat.status === "pending" ? "secondary" : "outline"}
+                    className="text-[10px] py-0 h-5"
+                  >
+                    {chat.status}
+                  </Badge>
+                  {chat.status === "responded" && <CheckCircle2 className="w-3 h-3 text-blue-500" />}
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon" className="text-slate-500"><Phone size={18} /></Button>
-                <Button variant="ghost" size="icon" className="text-slate-500"><Video size={18} /></Button>
-                <Button variant="ghost" size="icon" className="text-slate-500"><MoreVertical size={18} /></Button>
-              </div>
-            </div>
-            
-            <div className="flex-1 p-6 overflow-y-auto space-y-4">
-              <div className="flex justify-center">
-                <span className="px-3 py-1 bg-white text-slate-400 text-[10px] rounded-full shadow-sm">TODAY</span>
-              </div>
-              
-              <div className="flex flex-col items-start max-w-[70%]">
-                <div className="bg-white p-3 rounded-2xl rounded-tl-none shadow-sm text-sm text-slate-700">
-                  The florist has arrived! Where should they set up the arch?
-                </div>
-                <span className="text-[10px] text-slate-400 mt-1 ml-1">10:30 AM</span>
-              </div>
-
-              <div className="flex flex-col items-end self-end max-w-[70%]">
-                <div className="bg-indigo-600 p-3 rounded-2xl rounded-tr-none shadow-sm text-sm text-white">
-                  They can start at the Garden Terrace. The logistics team is there to assist.
-                </div>
-                <div className="flex items-center gap-1 mt-1 mr-1">
-                  <span className="text-[10px] text-slate-400">10:32 AM</span>
-                  <CheckCheck size={12} className="text-indigo-400" />
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 bg-white border-t border-slate-100">
-              <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
-                <Button variant="ghost" size="icon" className="text-slate-500 shrink-0">+</Button>
-                <Input className="flex-1 bg-slate-50 border-none" placeholder="Type a message..." />
-                <Button className="bg-indigo-600 hover:bg-indigo-700 shrink-0">
-                  <Send size={18} />
-                </Button>
-              </form>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-12">
-            <div className="h-16 w-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 mb-4">
-              <MessageSquare size={32} />
-            </div>
-            <h3 className="text-lg font-semibold text-slate-900">Your Communication Hub</h3>
-            <p className="text-slate-500 text-sm max-w-xs mt-2">
-              Select a conversation to start messaging your clients or vendors in real-time.
-            </p>
+            ))}
           </div>
-        )}
-      </div>
-    </div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
   );
 }

@@ -47,6 +47,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   const createEvent = async (eventData: Omit<Event, "id" | "created_at" | "updated_at">) => {
     try {
       const newEvent = await eventService.createEvent({
+        description: "", // Default empty description
         ...eventData,
         created_by: user?.id,
         organization_id: activeOrg?.id

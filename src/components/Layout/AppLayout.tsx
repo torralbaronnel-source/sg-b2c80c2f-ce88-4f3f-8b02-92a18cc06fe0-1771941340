@@ -59,12 +59,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-slate-50 font-sans text-slate-900">
         <Sidebar className="border-r border-slate-200">
-          <SidebarHeader className="p-4">
-            <div className="flex items-center gap-3 px-2">
-              <div className="relative h-14 w-full">
-                <Image 
-                  src="/LOGO_BRAND_ORCHESTRIX.PNG" 
-                  alt="Orchestrix" 
+          <SidebarHeader className="border-b border-sidebar-border/50">
+            <div className="p-4 flex items-center justify-center">
+              <div className="relative w-full h-16">
+                <Image
+                  src="/Capture.PNG"
+                  alt="Orchestrix Logo"
                   fill
                   className="object-contain mix-blend-multiply brightness-95"
                   priority

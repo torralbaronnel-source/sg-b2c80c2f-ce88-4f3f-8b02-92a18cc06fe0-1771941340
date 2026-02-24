@@ -9,8 +9,20 @@ import {
   FileText,
   BarChart3,
   Settings,
-  Plus
+  Plus,
+  User
 } from 'lucide-react';
+import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/router';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -24,10 +36,18 @@ const apps = [
   { id: 'vendors', name: 'Vendor Management', icon: Users2, href: '/vendors' },
   { id: 'contracts', name: 'Contracts', icon: FileText, href: '/contracts' },
   { id: 'analytics', name: 'Analytics', icon: BarChart3, href: '/analytics' },
-  { id: 'settings', name: 'Settings', icon: Settings, href: '/settings' },
+  { id: 'settings', name: 'Settings', icon: Settings, href: '/profile' },
 ];
 
 export function AppLayout({ children, activeApp = 'dashboard' }: AppLayoutProps) {
+  const { signOut, user } = useAuth();
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header with Navigation */}
@@ -55,21 +75,22 @@ export function AppLayout({ children, activeApp = 'dashboard' }: AppLayoutProps)
                   const isActive = activeApp === app.id;
                   
                   return (
-                    <Button
-                      key={app.id}
-                      variant={isActive ? "default" : "ghost"}
-                      size="sm"
-                      className={`
-                        flex items-center space-x-2 h-9
-                        ${isActive 
-                          ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                        }
-                      `}
-                    >
-                      <Icon className="h-4 w-4" />
-                      <span className="hidden lg:inline">{app.name}</span>
-                    </Button>
+                    <Link key={app.id} href={app.href} passHref legacyBehavior>
+                      <Button
+                        variant={isActive ? "default" : "ghost"}
+                        size="sm"
+                        className={`
+                          flex items-center space-x-2 h-9
+                          ${isActive 
+                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                          }
+                        `}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span className="hidden lg:inline">{app.name}</span>
+                      </Button>
+                    </Link>
                   );
                 })}
               </nav>
@@ -80,9 +101,41 @@ export function AppLayout({ children, activeApp = 'dashboard' }: AppLayoutProps)
                   <Plus className="h-4 w-4 mr-2" />
                   New Event
                 </Button>
-                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-medium">JD</span>
-                </div>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:ring-2 hover:ring-offset-2 hover:ring-blue-500 transition-all">
+                        <span className="text-white text-xs font-medium">
+                          {user?.email?.charAt(0).toUpperCase() || "U"}
+                        </span>
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">My Account</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user?.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => router.push('/profile')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => router.push('/profile')}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Security</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={handleSignOut}>
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>

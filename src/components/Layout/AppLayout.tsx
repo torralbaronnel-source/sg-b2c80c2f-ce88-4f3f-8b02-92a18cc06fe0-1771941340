@@ -41,12 +41,16 @@ import {
   SidebarMenuButton, 
   SidebarMenuItem, 
   SidebarProvider, 
-  SidebarTrigger 
+  SidebarTrigger,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { useEvent } from "@/contexts/EventContext";
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
+import { format } from "date-fns";
 
 const NAV_ITEMS = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
@@ -260,7 +264,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                         className="flex flex-col items-start gap-1 py-2"
                       >
                         <span className="font-bold text-sm">{event.title}</span>
-                        <span className="text-xs text-slate-500">{event.client} • {event.date}</span>
+                        <span className="text-xs text-slate-500">
+                          {event.client_name || "No Client"} • {event.event_date ? format(new Date(event.event_date), "MMM dd") : "TBD"}
+                        </span>
                       </DropdownMenuItem>
                     ))}
                   </div>

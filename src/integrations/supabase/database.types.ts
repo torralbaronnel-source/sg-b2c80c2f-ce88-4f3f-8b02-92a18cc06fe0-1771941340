@@ -64,40 +64,49 @@ export type Database = {
       }
       events: {
         Row: {
+          budget: number | null
           client_name: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           event_date: string | null
+          guest_count: number | null
           id: string
           organization_id: string | null
           status: string | null
           title: string
           updated_at: string | null
+          venue: string | null
         }
         Insert: {
+          budget?: number | null
           client_name?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           event_date?: string | null
+          guest_count?: number | null
           id?: string
           organization_id?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
+          venue?: string | null
         }
         Update: {
+          budget?: number | null
           client_name?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           event_date?: string | null
+          guest_count?: number | null
           id?: string
           organization_id?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
+          venue?: string | null
         }
         Relationships: [
           {

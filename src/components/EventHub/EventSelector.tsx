@@ -65,9 +65,9 @@ export function EventSelector() {
                       )}
                     />
                   </div>
-                  {event.date && (
+                  {event.event_date && (
                     <span className="text-xs text-zinc-400">
-                      {event.date}
+                      {format(new Date(event.event_date), "MMM dd, yyyy")}
                     </span>
                   )}
                 </CommandItem>

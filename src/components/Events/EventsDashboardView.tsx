@@ -16,82 +16,229 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { 
   MapPin, 
   Users, 
-  Clock, 
   Calendar as CalendarIcon, 
   Activity, 
   ChevronRight, 
   Search,
-  Filter
+  Filter,
+  Edit2,
+  DollarSign,
+  Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useEvent } from "@/contexts/EventContext";
+import { format } from "date-fns";
 
-const ITEMS_PER_PAGE = 6;
+const STATUS_CONFIG = {
+  planning: { color: "bg-slate-100 text-slate-700", label: "Planning" },
+  confirmed: { color: "bg-blue-100 text-blue-700", label: "Confirmed" },
+  in_progress: { color: "bg-amber-100 text-amber-700", label: "Live / In Progress" },
+  completed: { color: "bg-emerald-100 text-emerald-700", label: "Completed" },
+  cancelled: { color: "bg-rose-100 text-rose-700", label: "Cancelled" },
+};
 
-const STATUS_PRIORITY = {
-  "LIVE": 1,
-  "SETUP": 2,
-  "UPCOMING": 3,
-  "COMPLETED": 4
+const QuickEditDialog = ({ event, onSave }: { event: any, onSave: (data: any) => Promise<void> }) => {
+  const [formData, setFormData] = useState({
+    title: event.title,
+    client_name: event.client_name || "",
+    event_date: event.event_date ? format(new Date(event.event_date), "yyyy-MM-dd'T'HH:mm") : "",
+    venue: event.venue || "",
+    guest_count: event.guest_count || 0,
+    budget: event.budget || 0,
+    status: event.status || "planning"
+  });
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSave = async () => {
+    setLoading(true);
+    await onSave(formData);
+    setLoading(false);
+    setOpen(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900">
+          <Edit2 className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[525px]">
+        <DialogHeader>
+          <DialogTitle className="font-serif text-2xl">Quick Edit Event</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-6 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Event Name</Label>
+              <Input 
+                value={formData.title} 
+                onChange={(e) => setFormData({...formData, title: e.target.value})} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Client Name</Label>
+              <Input 
+                value={formData.client_name} 
+                onChange={(e) => setFormData({...formData, client_name: e.target.value})} 
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Date & Time</Label>
+              <Input 
+                type="datetime-local"
+                value={formData.event_date} 
+                onChange={(e) => setFormData({...formData, event_date: e.target.value})} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Status</Label>
+              <Select 
+                value={formData.status} 
+                onValueChange={(val) => setFormData({...formData, status: val})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Venue</Label>
+            <Input 
+              value={formData.venue} 
+              onChange={(e) => setFormData({...formData, venue: e.target.value})} 
+              placeholder="e.g., Grand Ballroom, Conrad Manila"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Expected Guests</Label>
+              <Input 
+                type="number"
+                value={formData.guest_count} 
+                onChange={(e) => setFormData({...formData, guest_count: parseInt(e.target.value)})} 
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Total Budget (PHP)</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">₱</span>
+                <Input 
+                  type="number"
+                  className="pl-7"
+                  value={formData.budget} 
+                  onChange={(e) => setFormData({...formData, budget: parseFloat(e.target.value)})} 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={handleSave} disabled={loading} className="bg-slate-900 text-white">
+            {loading ? "Saving..." : "Save Changes"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 const EventCard = ({ event }: { event: any }) => {
-  const isLive = event.status === "LIVE";
-  const isSetup = event.status === "SETUP";
+  const { updateEvent } = useEvent();
+  const statusInfo = STATUS_CONFIG[event.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.planning;
+  const isLive = event.status === "in_progress";
+
+  const eventDate = event.event_date ? new Date(event.event_date) : null;
 
   return (
-    <Card className={`group transition-all duration-300 border-slate-200 hover:border-slate-300 hover:shadow-xl relative overflow-hidden ${event.isPinned ? 'ring-1 ring-amber-400 shadow-md' : ''}`}>
-      <div className={`h-2 w-full ${
-        isLive ? "bg-rose-500" : isSetup ? "bg-amber-500" : "bg-slate-200"
-      }`} />
+    <Card className="group transition-all duration-300 border-slate-200 hover:border-slate-400 hover:shadow-xl relative overflow-hidden bg-white">
+      <div className={cn("h-1.5 w-full", isLive ? "bg-rose-500 animate-pulse" : "bg-slate-200")} />
       
       <CardHeader className="pb-2">
-        <div className="flex justify-between items-start mb-2">
-          <Badge variant={isLive ? "destructive" : "secondary"} className={`${isLive ? "animate-pulse" : ""} text-[10px] font-bold uppercase tracking-widest px-1.5 py-0`}>
+        <div className="flex justify-between items-start">
+          <Badge className={cn("text-[10px] font-bold uppercase tracking-widest px-1.5 py-0 border-none", statusInfo.color)}>
             {isLive && <Activity className="h-3 w-3 mr-1 inline-block" />}
-            {event.status}
+            {statusInfo.label}
           </Badge>
+          <QuickEditDialog event={event} onSave={(data) => updateEvent(event.id, data)} />
         </div>
-        <CardTitle className="text-lg font-serif line-clamp-1">{event.title}</CardTitle>
-        <p className="text-xs text-slate-500">{event.client}</p>
+        <CardTitle className="text-xl font-serif mt-2 line-clamp-1">{event.title}</CardTitle>
+        <p className="text-sm text-slate-500 font-medium">{event.client_name || "No Client Assigned"}</p>
       </CardHeader>
       
       <CardContent>
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-2 rounded-lg">
-              <Users className="h-4 w-4 text-slate-400 shrink-0" />
-              <span className="font-medium truncate">{event.guests} Guests</span>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1 p-2 rounded-lg bg-slate-50 border border-slate-100">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <CalendarIcon className="h-3 w-3" />
+                <span className="text-[10px] uppercase font-bold tracking-wider">Date</span>
+              </div>
+              <span className="text-xs font-bold text-slate-900">
+                {eventDate ? format(eventDate, "MMM dd, yyyy") : "TBD"}
+              </span>
             </div>
-            <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-2 rounded-lg">
-              <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
-              <span className="font-medium truncate">{event.venue}</span>
+            <div className="flex flex-col gap-1 p-2 rounded-lg bg-slate-50 border border-slate-100">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <Clock className="h-3 w-3" />
+                <span className="text-[10px] uppercase font-bold tracking-wider">Time</span>
+              </div>
+              <span className="text-xs font-bold text-slate-900">
+                {eventDate ? format(eventDate, "hh:mm a") : "TBD"}
+              </span>
+            </div>
+            <div className="flex flex-col gap-1 p-2 rounded-lg bg-slate-50 border border-slate-100">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <Users className="h-3 w-3" />
+                <span className="text-[10px] uppercase font-bold tracking-wider">Guests</span>
+              </div>
+              <span className="text-xs font-bold text-slate-900">{event.guest_count || 0} pax</span>
+            </div>
+            <div className="flex flex-col gap-1 p-2 rounded-lg bg-slate-50 border border-slate-100">
+              <div className="flex items-center gap-1.5 text-slate-400">
+                <DollarSign className="h-3 w-3" />
+                <span className="text-[10px] uppercase font-bold tracking-wider">Budget</span>
+              </div>
+              <span className="text-xs font-bold text-slate-900">
+                ₱{(event.budget || 0).toLocaleString()}
+              </span>
             </div>
           </div>
 
+          <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100">
+            <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
+            <span className="text-xs font-medium truncate">{event.venue || "No Venue Set"}</span>
+          </div>
+
           <Link href={`/events/${event.id}/live`} className="block w-full">
-            <Button 
-              className={`w-full group/btn transition-all duration-300 font-bold ${
-                isLive 
-                  ? "bg-slate-900 hover:bg-black text-white" 
-                  : "bg-white border border-slate-200 text-slate-900 hover:bg-slate-50"
-              }`}
-            >
-              <span className="flex items-center gap-2">
-                {isLive ? "Enter Command Center" : "Production Overview"}
-                <ChevronRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-              </span>
+            <Button className="w-full bg-slate-900 hover:bg-black text-white text-xs font-bold h-10 gap-2">
+              {isLive ? "Enter Command Center" : "Production Overview"}
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>
@@ -101,208 +248,86 @@ const EventCard = ({ event }: { event: any }) => {
 };
 
 export function EventsDashboardView() {
-  const { events, loading, setEvents } = useEvent();
+  const { events, loading } = useEvent();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
 
-  const togglePin = (id: string) => {
-    setEvents(prev => prev.map(event => 
-      event.id === id ? { ...event, isPinned: !event.isPinned } : event
-    ));
-  };
-
-  const filteredAndSortedEvents = useMemo(() => {
-    const result = events.filter(event => {
+  const filteredEvents = useMemo(() => {
+    return events.filter(event => {
       const matchesSearch = 
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.venue.toLowerCase().includes(searchTerm.toLowerCase());
+        (event.client_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (event.venue || "").toLowerCase().includes(searchTerm.toLowerCase());
       
       const matchesStatus = statusFilter === "all" || event.status === statusFilter;
       
       return matchesSearch && matchesStatus;
     });
-
-    return result.sort((a, b) => {
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-
-      const priorityA = STATUS_PRIORITY[a.status as keyof typeof STATUS_PRIORITY] || 99;
-      const priorityB = STATUS_PRIORITY[b.status as keyof typeof STATUS_PRIORITY] || 99;
-      if (priorityA !== priorityB) return priorityA - priorityB;
-
-      const dateA = new Date(`${a.date}T${a.time}`).getTime();
-      const dateB = new Date(`${b.date}T${b.time}`).getTime();
-      return dateA - dateB;
-    });
   }, [events, searchTerm, statusFilter]);
 
-  const totalPages = Math.ceil(filteredAndSortedEvents.length / ITEMS_PER_PAGE);
-  const paginatedEvents = useMemo(() => {
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedEvents.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-  }, [filteredAndSortedEvents, currentPage]);
-
-  const stats = useMemo(() => ({
-    live: filteredAndSortedEvents.filter(e => e.status === "LIVE").length,
-    upcoming: filteredAndSortedEvents.filter(e => e.status === "UPCOMING").length,
-    setup: filteredAndSortedEvents.filter(e => e.status === "SETUP").length,
-    totalGuests: filteredAndSortedEvents.reduce((acc, curr) => acc + curr.guests, 0)
-  }), [filteredAndSortedEvents]);
-
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
-
   if (loading) {
-    return <div className="p-8">Loading events...</div>;
+    return (
+      <div className="p-8 flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <Activity className="h-8 w-8 text-slate-400 animate-pulse" />
+          <p className="text-slate-500 font-medium">Loading Production Data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="p-6 space-y-8 bg-slate-50/50 min-h-full">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-serif">Production Hub</h1>
-          <p className="text-slate-500 mt-1">Real-time command center for active events</p>
+          <p className="text-slate-500 mt-1">Directly manage and monitor your event operations</p>
         </div>
-        
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full md:w-auto">
-          {[
-            { label: "Live Now", value: stats.live, color: "text-rose-600", icon: Activity },
-            { label: "In Setup", value: stats.setup, color: "text-amber-600", icon: Clock },
-            { label: "Upcoming", value: stats.upcoming, color: "text-blue-600", icon: CalendarIcon },
-            { label: "Total Capacity", value: stats.totalGuests.toLocaleString(), color: "text-slate-900", icon: Users }
-          ].map((stat, i) => (
-            <Card key={i} className="bg-white border-none shadow-sm">
-              <CardContent className="p-3 flex items-center gap-3">
-                <div className={cn("p-2 rounded-lg bg-slate-50", stat.color)}>
-                  <stat.icon className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{stat.label}</p>
-                  <p className={cn("text-lg font-bold leading-none", stat.color)}>{stat.value}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Button className="bg-slate-900 text-white font-bold gap-2">
+          <CalendarIcon className="w-4 h-4" />
+          Create New Event
+        </Button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
         <div className="flex flex-1 items-center gap-3 w-full md:w-auto">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input 
-              placeholder="Search events, clients, venues..." 
-              className="pl-9 bg-white border-slate-200 focus-visible:ring-blue-500"
+              placeholder="Search by name, client, or venue..." 
+              className="pl-9 bg-slate-50 border-slate-200 focus-visible:ring-slate-400"
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Select 
-            value={statusFilter} 
-            onValueChange={(val) => {
-              setStatusFilter(val);
-              setCurrentPage(1);
-            }}
-          >
-            <SelectTrigger className="w-[180px] bg-white border-slate-200">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200">
               <Filter className="w-4 h-4 mr-2 text-slate-400" />
-              <SelectValue placeholder="Filter by Status" />
+              <SelectValue placeholder="All States" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All States</SelectItem>
-              <SelectItem value="LIVE">Live Now</SelectItem>
-              <SelectItem value="SETUP">Setting Up</SelectItem>
-              <SelectItem value="UPCOMING">Upcoming</SelectItem>
-              <SelectItem value="COMPLETED">Completed</SelectItem>
+              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                <SelectItem key={key} value={key}>{config.label}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
-
-        <Button className="w-full md:w-auto bg-slate-900 hover:bg-slate-800 text-white gap-2">
-          <CalendarIcon className="w-4 h-4" />
-          Calendar View
-        </Button>
       </div>
 
-      {paginatedEvents.length > 0 ? (
-        <div className="space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedEvents.map((event) => (
-              <EventCard 
-                key={event.id} 
-                event={event} 
-              />
-            ))}
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex justify-center pt-4 pb-8">
-              <Pagination>
-                <PaginationContent>
-                  <PaginationItem>
-                    <PaginationPrevious 
-                      href="#" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage > 1) handlePageChange(currentPage - 1);
-                      }}
-                      className={cn(currentPage === 1 && "pointer-events-none opacity-50")}
-                    />
-                  </PaginationItem>
-                  
-                  {Array.from({ length: totalPages }).map((_, i) => (
-                    <PaginationItem key={i}>
-                      <PaginationLink 
-                        href="#" 
-                        isActive={currentPage === i + 1}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handlePageChange(i + 1);
-                        }}
-                      >
-                        {i + 1}
-                      </PaginationLink>
-                    </PaginationItem>
-                  ))}
-
-                  <PaginationItem>
-                    <PaginationNext 
-                      href="#" 
-                      onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage < totalPages) handlePageChange(currentPage + 1);
-                      }}
-                      className={cn(currentPage === totalPages && "pointer-events-none opacity-50")}
-                    />
-                  </PaginationItem>
-                </PaginationContent>
-              </Pagination>
-            </div>
-          )}
+      {filteredEvents.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredEvents.map((event) => (
+            <EventCard key={event.id} event={event} />
+          ))}
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border-2 border-dashed border-slate-200">
           <div className="p-4 rounded-full bg-slate-50 mb-4">
             <Search className="w-8 h-8 text-slate-300" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900">No events found</h3>
-          <p className="text-slate-500 mb-6">Try adjusting your search or filters to find what you're looking for.</p>
-          <Button 
-            variant="outline" 
-            onClick={() => {
-              setSearchTerm("");
-              setStatusFilter("all");
-              setCurrentPage(1);
-            }}
-          >
-            Clear all filters
-          </Button>
+          <h3 className="text-xl font-bold text-slate-900">No active events</h3>
+          <p className="text-slate-500">Adjust your filters or create a new event to get started.</p>
         </div>
       )}
     </div>

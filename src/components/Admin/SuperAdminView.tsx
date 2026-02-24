@@ -46,7 +46,7 @@ interface Organization {
   id: string;
   name: string;
   logo_url: string | null;
-  subscription_plan: string;
+  subscription_tier: string;
   subscription_status: string;
   created_at: string;
   _count?: {
@@ -67,15 +67,20 @@ export function SuperAdminView() {
   const fetchOrganizations = async () => {
     try {
       setLoading(true);
-      // In a real app, we would use a more complex query or edge function
-      // for counts. For now, we'll fetch basic org data.
       const { data, error } = await supabase
         .from("organizations")
         .select("*")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setOrganizations(data || []);
+      
+      // Ensure the data matches our interface
+      const orgsWithTier = (data || []).map((org: any) => ({
+        ...org,
+        subscription_tier: org.subscription_tier || "free"
+      }));
+      
+      setOrganizations(orgsWithTier);
     } catch (error: any) {
       toast({
         title: "Error fetching organizations",
@@ -87,18 +92,18 @@ export function SuperAdminView() {
     }
   };
 
-  const updateSubscription = async (orgId: string, plan: string) => {
+  const updateSubscription = async (orgId: string, tier: string) => {
     try {
       const { error } = await supabase
         .from("organizations")
-        .update({ subscription_plan: plan })
+        .update({ subscription_tier: tier })
         .eq("id", orgId);
 
       if (error) throw error;
       
       toast({
         title: "Subscription updated",
-        description: `Organization plan changed to ${plan.toUpperCase()}`,
+        description: `Organization tier changed to ${tier.toUpperCase()}`,
       });
       
       fetchOrganizations();
@@ -118,7 +123,7 @@ export function SuperAdminView() {
   const stats = {
     totalTenants: organizations.length,
     activeSubscriptions: organizations.filter(o => o.subscription_status === "active").length,
-    enterprisePlans: organizations.filter(o => o.subscription_plan === "enterprise").length,
+    enterprisePlans: organizations.filter(o => o.subscription_tier === "enterprise").length,
   };
 
   return (
@@ -139,7 +144,6 @@ export function SuperAdminView() {
         </div>
       </div>
 
-      {/* Stats Overview */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -173,7 +177,6 @@ export function SuperAdminView() {
         </Card>
       </div>
 
-      {/* Tenant Table */}
       <Card>
         <CardHeader>
           <CardTitle>Tenant Management</CardTitle>
@@ -196,7 +199,7 @@ export function SuperAdminView() {
               <TableRow>
                 <TableHead>Organization</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Plan</TableHead>
+                <TableHead>Tier</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -241,11 +244,11 @@ export function SuperAdminView() {
                       <Badge 
                         variant="outline" 
                         className={
-                          org.subscription_plan === "enterprise" ? "border-yellow-500 text-yellow-500" :
-                          org.subscription_plan === "pro" ? "border-blue-500 text-blue-500" : ""
+                          org.subscription_tier === "enterprise" ? "border-yellow-500 text-yellow-500" :
+                          org.subscription_tier === "pro" ? "border-blue-500 text-blue-500" : ""
                         }
                       >
-                        {org.subscription_plan.toUpperCase()}
+                        {org.subscription_tier.toUpperCase()}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">

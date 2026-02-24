@@ -30,20 +30,18 @@ export type UpdateEvent = Partial<CreateEvent>;
 
 /**
  * Event Service
- * Uses a type-erased internal query to prevent TypeScript TS2589 (Excessively deep type instantiation).
- * This maintains strict typing for the rest of the application while satisfying the compiler.
+ * Fixed TS2589: "Type instantiation is excessively deep" 
+ * by isolating the supabase table access behind a type-erased proxy.
  */
 export const eventService = {
   async getEvents(organizationId: string): Promise<{ data: Event[], error: any }> {
     try {
-      // Casting to any to stop recursive type checking, then casting back to our known Event[]
-      const query = supabase
+      // Use any to bypass infinite recursion in Supabase's generated types
+      const { data, error } = await (supabase as any)
         .from("events")
         .select("*")
         .eq("organization_id", organizationId)
         .order("event_date", { ascending: true });
-      
-      const { data, error } = await (query as any);
       
       return { data: (data || []) as Event[], error };
     } catch (err) {
@@ -53,14 +51,12 @@ export const eventService = {
 
   async createEvent(event: CreateEvent): Promise<{ data: Event | null, error: any }> {
     try {
-      const query = supabase
+      const { data, error } = await (supabase as any)
         .from("events")
-        .insert(event as any)
+        .insert(event)
         .select()
         .single();
         
-      const { data, error } = await (query as any);
-      
       return { data: data as Event, error };
     } catch (err) {
       return { data: null, error: err };
@@ -69,15 +65,13 @@ export const eventService = {
 
   async updateEvent(id: string, updates: UpdateEvent): Promise<{ data: Event | null, error: any }> {
     try {
-      const query = supabase
+      const { data, error } = await (supabase as any)
         .from("events")
-        .update(updates as any)
+        .update(updates)
         .eq("id", id)
         .select()
         .single();
         
-      const { data, error } = await (query as any);
-      
       return { data: data as Event, error };
     } catch (err) {
       return { data: null, error: err };

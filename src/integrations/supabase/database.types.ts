@@ -102,6 +102,7 @@ export type Database = {
         Row: {
           content: string
           created_at: string | null
+          direction: string | null
           event_id: string | null
           external_id: string | null
           id: string
@@ -109,11 +110,14 @@ export type Database = {
           platform: string
           sender_name: string
           sender_type: string
+          status: string | null
           timestamp: string | null
+          vendor_id: string | null
         }
         Insert: {
           content: string
           created_at?: string | null
+          direction?: string | null
           event_id?: string | null
           external_id?: string | null
           id?: string
@@ -121,11 +125,14 @@ export type Database = {
           platform: string
           sender_name: string
           sender_type: string
+          status?: string | null
           timestamp?: string | null
+          vendor_id?: string | null
         }
         Update: {
           content?: string
           created_at?: string | null
+          direction?: string | null
           event_id?: string | null
           external_id?: string | null
           id?: string
@@ -133,7 +140,9 @@ export type Database = {
           platform?: string
           sender_name?: string
           sender_type?: string
+          status?: string | null
           timestamp?: string | null
+          vendor_id?: string | null
         }
         Relationships: [
           {
@@ -141,6 +150,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "event_vendors"
             referencedColumns: ["id"]
           },
         ]

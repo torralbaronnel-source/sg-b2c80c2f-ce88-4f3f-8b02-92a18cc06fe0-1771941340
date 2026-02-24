@@ -101,9 +101,10 @@ class WhatsAppService {
         content,
         message_type: 'text' as const,
         external_id: data.messages[0].id,
-        direction: 'outbound',
-        status: 'sent',
-        created_at: new Date().toISOString()
+        direction: 'outbound' as const,
+        status: 'sent' as const,
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       };
 
       const { data: storedMessage } = await supabase
@@ -160,11 +161,12 @@ class WhatsAppService {
         sender_name: 'Coordinator',
         sender_type: 'coordinator' as const,
         content: caption || `Sent ${mediaType}`,
-        message_type: mediaType,
+        message_type: mediaType as const,
         external_id: data.messages[0].id,
-        direction: 'outbound',
-        status: 'sent',
-        created_at: new Date().toISOString()
+        direction: 'outbound' as const,
+        status: 'sent' as const,
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       };
 
       const { data: storedMessage } = await supabase
@@ -202,11 +204,12 @@ class WhatsAppService {
         sender_name: message.from,
         sender_type: 'vendor' as const,
         content: message.text?.body || message.image?.caption || 'Media message',
-        message_type: message.type,
+        message_type: message.type as const,
         external_id: message.id,
-        direction: 'inbound',
-        status: 'delivered',
-        created_at: new Date().toISOString()
+        direction: 'inbound' as const,
+        status: 'delivered' as const,
+        created_at: new Date().toISOString(),
+        timestamp: new Date().toISOString()
       };
 
       await supabase.from('messages').insert(messageData);
@@ -242,10 +245,10 @@ class WhatsAppService {
           conversations.set(vendorId, {
             vendor: {
               id: message.event_vendors.id,
-              name: message.event_vendors.name,
-              phone_number: message.event_vendors.phone_number,
-              company: message.event_vendors.company,
-              role: message.event_vendors.role
+              name: message.event_vendors.vendor_name,
+              phone_number: message.event_vendors.contact_phone || '',
+              company: message.event_vendors.vendor_type,
+              role: message.event_vendors.vendor_type
             },
             last_message: {
               content: message.content,
@@ -399,10 +402,10 @@ class WhatsAppService {
           conversations.set(vendorId, {
             vendor: {
               id: message.event_vendors.id,
-              name: message.event_vendors.name,
-              phone_number: message.event_vendors.phone_number,
-              company: message.event_vendors.company,
-              role: message.event_vendors.role
+              name: message.event_vendors.vendor_name,
+              phone_number: message.event_vendors.contact_phone || '',
+              company: message.event_vendors.vendor_type,
+              role: message.event_vendors.vendor_type
             },
             last_message: {
               content: message.content,

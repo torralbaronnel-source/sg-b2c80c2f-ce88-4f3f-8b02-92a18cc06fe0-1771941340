@@ -97,7 +97,7 @@ const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ eventId }) =>
 
   const unreadCount = conversations.reduce((acc, conv) => acc + conv.unread_count, 0);
   const urgentCount = conversations.filter(conv => 
-    conv.last_message.priority === 'critical' || conv.last_message.priority === 'urgent'
+    conv.last_message.priority && (conv.last_message.priority === 'critical' || conv.last_message.priority === 'urgent')
   ).length;
 
   return (
@@ -224,9 +224,9 @@ const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ eventId }) =>
                         <Badge variant="outline" className={`text-xs ${
                           conversation.last_message.priority === 'critical' ? 'border-red-200 text-red-600' :
                           conversation.last_message.priority === 'urgent' ? 'border-orange-200 text-orange-600' :
-                          'border-gray-200'
+                          conversation.last_message.priority ? 'border-gray-200' : 'border-gray-200'
                         }`}>
-                          {conversation.last_message.priority}
+                          {conversation.last_message.priority || 'normal'}
                         </Badge>
                       </div>
                     </div>

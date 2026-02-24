@@ -8,21 +8,20 @@ type Vendor = Database['public']['Tables']['event_vendors']['Row'];
 export interface WhatsAppMessage {
   id: string;
   wa_message_id: string;
-  from: string; // WhatsApp number (vendor/client)
-  to: string; // Business WhatsApp number
   content: string;
-  message_type: 'text' | 'image' | 'document' | 'voice' | 'video';
   timestamp: string;
-  status: 'sent' | 'delivered' | 'read' | 'failed';
   direction: 'inbound' | 'outbound';
-  vendor_id?: string;
-  event_id: string;
-  metadata?: {
+  status: 'sent' | 'delivered' | 'read' | 'failed';
+  metadata: {
     media_url?: string;
     media_name?: string;
     voice_duration?: number;
     file_size?: number;
+    message_type?: 'text' | 'image' | 'voice' | 'document';
   };
+  priority?: 'low' | 'normal' | 'urgent' | 'critical';
+  vendor_id: string;
+  event_id: string;
 }
 
 export interface WhatsAppConversation {

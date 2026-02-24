@@ -42,21 +42,15 @@ export const authService = {
     return session;
   },
 
-  async trackLoginAttempt(email: string, successful: boolean, source: string = "web") {
-    // In a production environment with proper table permissions, this would log to a security table.
-    // For now, we use console logging as a placeholder for the security audit trail.
-    console.log(`[SECURITY AUDIT] Login attempt for ${email} from ${source}: ${successful ? "SUCCESS" : "FAILURE"}`);
-    
-    // We can extend this with actual DB logging if a 'login_attempts' table exists
+  async trackLoginAttempt(email: string, success: boolean, userId?: string) {
     try {
       await supabase.from("login_attempts").insert({
         email,
-        successful,
-        source,
-        ip_address: "client-side-tracked",
-        attempted_at: new Date().toISOString()
+        success,
+        user_id: userId,
+        attempt_time: new Date().toISOString(),
       });
-    } catch (e) {
+    } catch (error) {
       // Silently fail if table doesn't exist yet to prevent blocking auth flow
     }
   }

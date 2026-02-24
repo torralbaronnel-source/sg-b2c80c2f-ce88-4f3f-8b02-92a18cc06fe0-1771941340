@@ -1,42 +1,39 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { eventService, type Event, type UpdateEvent } from "@/services/eventService";
-import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./AuthContext";
+import { eventService, type Event, type CreateEvent, type UpdateEvent } from "@/services/eventService";
+import { useToast } from "@/hooks/use-toast";
 
 interface EventContextType {
   events: Event[];
   loading: boolean;
-  refreshEvents: () => Promise<void>;
+  createEvent: (eventData: CreateEvent) => Promise<Event | null>;
   updateEvent: (id: string, updates: UpdateEvent) => Promise<void>;
-  createEvent: (event: Omit<Event, "id" | "created_at" | "updated_at" | "created_by" | "organization_id">) => Promise<Event>;
   activeEvent: Event | null;
   setActiveEvent: (event: Event | null) => void;
+  refreshEvents: () => Promise<void>;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export function EventProvider({ children }: { children: React.ReactNode }) {
-  const { activeOrg, user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+  const { activeOrg, user } = useAuth();
+  const { toast } = useToast();
 
-  const refreshEvents = useCallback(async () => {
+  const fetchEvents = useCallback(async () => {
     if (!activeOrg?.id) {
       setEvents([]);
       setLoading(false);
       return;
     }
 
-    setLoading(true);
     try {
+      setLoading(true);
       const data = await eventService.getEvents(activeOrg.id);
-      // Map database names to our cleaner UI type names
-      const mappedEvents = (data || []).map((e: any) => ({
-        ...e,
-        pax: e.guest_count || 0,
-        call_time: e.call_time || "00:00"
-      })) as Event[];
-      setEvents(mappedEvents);
+      setEvents(data);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
@@ -45,39 +42,67 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   }, [activeOrg?.id]);
 
   useEffect(() => {
-    refreshEvents();
-  }, [refreshEvents]);
+    fetchEvents();
+  }, [fetchEvents]);
 
-  const updateEvent = async (id: string, updates: UpdateEvent) => {
+  const createEvent = async (eventData: CreateEvent) => {
+    if (!activeOrg?.id || !user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in and have an active organization selected.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
     try {
-      const data = await eventService.updateEvent(id, updates);
-      setEvents(prev => prev.map(e => e.id === id ? { ...e, ...data, pax: (data as any).guest_count || 0 } as Event : e));
-    } catch (error) {
-      console.error("Error updating event:", error);
-      throw error;
+      const newEvent = await eventService.createEvent({
+        ...eventData,
+        organization_id: activeOrg.id,
+        created_by: user.id,
+        status: 'planning', // Force planning status for new events
+        description: eventData.description || ""
+      });
+      
+      await fetchEvents();
+      toast({
+        title: "Success",
+        description: "Event scheduled successfully!",
+      });
+      return newEvent;
+    } catch (error: any) {
+      console.error("Error creating event:", error);
+      toast({
+        title: "Creation Failed",
+        description: error.message || "Failed to create event. Please check all fields.",
+        variant: "destructive",
+      });
+      return null;
     }
   };
 
-  const createEvent = async (eventData: Omit<Event, "id" | "created_at" | "updated_at" | "created_by" | "organization_id">) => {
-    if (!activeOrg?.id) throw new Error("No active organization");
-
+  const updateEvent = async (id: string, updates: UpdateEvent) => {
     try {
-      // Map UI pax back to DB guest_count
-      const dbData = {
-        ...eventData,
-        guest_count: eventData.pax,
-        organization_id: activeOrg.id,
-        created_by: user?.id,
-        description: eventData.event_notes || ""
-      };
+      await eventService.updateEvent(id, updates);
+      await fetchEvents();
       
-      const data = await eventService.createEvent(dbData);
-      const newEvent = { ...data, pax: (data as any).guest_count || 0, call_time: (data as any).call_time || "00:00" } as Event;
-      setEvents(prev => [...prev, newEvent]);
-      return newEvent;
-    } catch (error) {
-      console.error("Error creating event:", error);
-      throw error;
+      // Update active event if it's the one being modified
+      if (activeEvent?.id === id) {
+        const updated = events.find(e => e.id === id);
+        if (updated) setActiveEvent({ ...updated, ...updates });
+      }
+
+      toast({
+        title: "Success",
+        description: "Event updated successfully!",
+      });
+    } catch (error: any) {
+      console.error("Error updating event:", error);
+      toast({
+        title: "Update Failed",
+        description: error.message || "Could not update event.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -85,11 +110,11 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     <EventContext.Provider value={{ 
       events, 
       loading, 
-      refreshEvents, 
-      updateEvent, 
-      createEvent,
-      activeEvent,
-      setActiveEvent 
+      createEvent, 
+      updateEvent,
+      activeEvent, 
+      setActiveEvent,
+      refreshEvents: fetchEvents
     }}>
       {children}
     </EventContext.Provider>

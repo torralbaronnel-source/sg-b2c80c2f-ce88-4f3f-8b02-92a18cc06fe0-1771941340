@@ -8,12 +8,13 @@ export interface Event {
   event_date: string;
   call_time: string;
   venue: string;
-  status: "planning" | "active" | "completed" | "cancelled";
-  pax: number;
+  status: "planning" | "confirmed" | "in_progress" | "completed" | "cancelled";
+  guest_count: number;
   budget: number;
   created_at: string;
   organization_id: string;
   created_by: string;
+  description: string;
   // New comprehensive fields
   hmu_artist?: string;
   lights_sounds?: string;

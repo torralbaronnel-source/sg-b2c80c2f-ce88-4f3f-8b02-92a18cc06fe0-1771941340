@@ -1,9 +1,4 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader
 ...
-          </ScrollArea>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+export default WhatsAppManagerView;

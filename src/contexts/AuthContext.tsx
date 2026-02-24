@@ -4,6 +4,10 @@ import type { User, Session } from "@supabase/supabase-js";
 import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
 
+// Global cache for session to prevent flickering during navigation
+let cachedSession: any = null;
+let cachedProfile: any = null;
+
 /**
  * STRATEGIC FIX FOR TS2589:
  * We use simplified function signatures here to stop the TypeScript compiler from 
@@ -35,7 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const loadUserData = async (userId: string) => {
     try {
       // 1. Load Profile via simplified service
-      const { data: profileData } = await profileService.getProfile(userId);
+      const profileData = await profileService.getProfile(userId);
       setProfile(profileData);
       
       // 2. Load Organization via isolated service to prevent TS2589 recursion
@@ -47,29 +51,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    const initializeAuth = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+    // 1. Immediate check from cache if available
+    if (cachedSession) {
+      setSession(cachedSession);
+      setProfile(cachedProfile);
+      setIsLoading(false);
+    }
+
+    const initAuth = async () => {
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
       
-      if (currentSession?.user) {
-        await loadUserData(currentSession.user.id);
+      if (initialSession) {
+        setSession(initialSession);
+        cachedSession = initialSession;
+        
+        // Load profile only if not cached or if session changed
+        if (!cachedProfile || cachedProfile.id !== initialSession.user.id) {
+          const profileData = await profileService.getProfile(initialSession.user.id);
+          setProfile(profileData);
+          cachedProfile = profileData;
+        }
       }
+      
       setIsLoading(false);
     };
 
-    initializeAuth();
+    initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setSession(session);
+      cachedSession = session;
       
-      if (currentSession?.user) {
-        await loadUserData(currentSession.user.id);
+      if (session) {
+        const profileData = await profileService.getProfile(session.user.id);
+        setProfile(profileData);
+        cachedProfile = profileData;
       } else {
         setProfile(null);
-        setCurrentOrganization(null);
+        cachedProfile = null;
       }
+      
       setIsLoading(false);
     });
 

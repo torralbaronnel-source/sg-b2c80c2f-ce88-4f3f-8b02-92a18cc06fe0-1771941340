@@ -10,14 +10,19 @@ export interface Profile {
 }
 
 export const profileService = {
-  async getProfile(userId: string) {
+  async getProfile(id: string): Promise<Profile | null> {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", userId)
-      .single();
-    
-    return { data: data as Profile | null, error };
+      .eq("id", id)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching profile:", error);
+      return null;
+    }
+
+    return data as Profile | null;
   },
 
   async updateProfile(userId: string, updates: Partial<Profile>) {

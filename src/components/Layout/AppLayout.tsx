@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { useRouter } from "next/router";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
@@ -9,9 +9,10 @@ import { useEvent } from "@/contexts/EventContext";
 
 const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password", "/terms", "/privacy"];
 
-export function AppLayout({ children }: { children: React.ReactNode }) {
+// Memoize the layout to prevent re-renders during navigation
+export const AppLayout = memo(({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   
   const isPublicPage = PUBLIC_PAGES.includes(router.pathname);
 
@@ -56,7 +57,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       </div>
     </SidebarProvider>
   );
-}
+});
+
+AppLayout.displayName = "AppLayout";
 
 function GlobalScheduleButton() {
   const { setIsCreateDialogOpen } = useEvent();

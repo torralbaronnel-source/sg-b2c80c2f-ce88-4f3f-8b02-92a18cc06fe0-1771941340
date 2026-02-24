@@ -23,7 +23,7 @@ export function OverviewDashboardView() {
   const { activeOrg } = useAuth();
 
   const stats = useMemo(() => {
-    const active = events.filter(e => e.status === "active").length;
+    const active = events.filter(e => e.status === "in_progress" || e.status === "confirmed").length;
     const planning = events.filter(e => e.status === "planning").length;
     const completed = events.filter(e => e.status === "completed").length;
     const totalGuests = events.reduce((acc, e) => acc + (e.guest_count || 0), 0);
@@ -31,7 +31,7 @@ export function OverviewDashboardView() {
     return [
       {
         title: "Live Events",
-        value: events.filter(e => e.status === "active").length,
+        value: active,
         icon: Clock,
         color: "text-rose-500",
         bg: "bg-rose-50"

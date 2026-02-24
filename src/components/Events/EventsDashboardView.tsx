@@ -91,7 +91,7 @@ export function EventsDashboardView() {
       catering: event?.catering || "",
       photo_video: event?.photo_video || "",
       coordination_team: event?.coordination_team || "",
-      backdrops_styling: event?.backdrops_styling || "",
+      backdrop_styling: event?.backdrop_styling || "",
       souvenirs: event?.souvenirs || "",
       host_mc: event?.host_mc || "",
       description: event?.description || ""
@@ -182,7 +182,7 @@ export function EventsDashboardView() {
             </div>
             <div className="space-y-2">
               <Label>Backdrops / Styling</Label>
-              <Input name="backdrops_styling" value={formData.backdrops_styling} onChange={handleChange} />
+              <Input name="backdrop_styling" value={formData.backdrop_styling} onChange={handleChange} />
             </div>
             <div className="space-y-2">
               <Label>Souvenirs</Label>

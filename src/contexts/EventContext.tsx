@@ -34,13 +34,13 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       setLoading(true);
       const data = await eventService.getEvents(activeOrg.id);
       // Map database results to ensure mandatory fields exist
-      const typedData: Event[] = (data || []).map((e: any) => ({
+      const typedData = (data || []).map((e: any) => ({
         ...e,
         call_time: e.call_time || "",
         description: e.description || "",
         guest_count: e.guest_count || 0,
         budget: e.budget || 0
-      }));
+      })) as Event[];
       setEvents(typedData);
     } catch (error) {
       console.error("Error fetching events:", error);

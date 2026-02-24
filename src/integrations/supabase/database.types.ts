@@ -24,10 +24,13 @@ export type Database = {
           event_id: string | null
           id: string
           last_message: string | null
+          metadata: Json | null
           platform: string
+          priority: string | null
           status: string | null
           unread_count: number | null
           updated_at: string | null
+          vendor: string | null
         }
         Insert: {
           contact_name: string
@@ -37,10 +40,13 @@ export type Database = {
           event_id?: string | null
           id?: string
           last_message?: string | null
+          metadata?: Json | null
           platform: string
+          priority?: string | null
           status?: string | null
           unread_count?: number | null
           updated_at?: string | null
+          vendor?: string | null
         }
         Update: {
           contact_name?: string
@@ -50,10 +56,13 @@ export type Database = {
           event_id?: string | null
           id?: string
           last_message?: string | null
+          metadata?: Json | null
           platform?: string
+          priority?: string | null
           status?: string | null
           unread_count?: number | null
           updated_at?: string | null
+          vendor?: string | null
         }
         Relationships: [
           {
@@ -134,6 +143,75 @@ export type Database = {
           },
         ]
       }
+      organization_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string | null
+          profile_id: string | null
+          role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string | null
+          profile_id?: string | null
+          role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string | null
+          profile_id?: string | null
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organization_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          subscription_status: string | null
+          subscription_tier: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          subscription_status?: string | null
+          subscription_tier?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          subscription_status?: string | null
+          subscription_tier?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -165,25 +243,34 @@ export type Database = {
         Row: {
           communication_id: string
           content: string
+          direction: string | null
           id: string
           is_from_me: boolean | null
+          metadata: Json | null
           sender_name: string
+          status: string | null
           timestamp: string | null
         }
         Insert: {
           communication_id: string
           content: string
+          direction?: string | null
           id?: string
           is_from_me?: boolean | null
+          metadata?: Json | null
           sender_name: string
+          status?: string | null
           timestamp?: string | null
         }
         Update: {
           communication_id?: string
           content?: string
+          direction?: string | null
           id?: string
           is_from_me?: boolean | null
+          metadata?: Json | null
           sender_name?: string
+          status?: string | null
           timestamp?: string | null
         }
         Relationships: [

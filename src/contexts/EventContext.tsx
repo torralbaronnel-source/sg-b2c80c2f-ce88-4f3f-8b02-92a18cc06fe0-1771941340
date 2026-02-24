@@ -8,7 +8,7 @@ interface EventContextType {
   loading: boolean;
   refreshEvents: () => Promise<void>;
   updateEvent: (id: string, updates: UpdateEvent) => Promise<void>;
-  createEvent: (event: Omit<Event, "id" | "created_at" | "updated_at">) => Promise<Event>;
+  createEvent: (event: Omit<Event, "id" | "created_at" | "updated_at" | "created_by" | "description" | "organization_id">) => Promise<Event>;
   activeEvent: Event | null;
   recentEvents: Event[];
   setActiveEvent: (event: Event | null) => void;
@@ -44,7 +44,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const createEvent = async (eventData: Omit<Event, "id" | "created_at" | "updated_at">) => {
+  const createEvent = async (eventData: Omit<Event, "id" | "created_at" | "updated_at" | "created_by" | "description" | "organization_id">) => {
     try {
       const newEvent = await eventService.createEvent({
         description: "", // Default empty description

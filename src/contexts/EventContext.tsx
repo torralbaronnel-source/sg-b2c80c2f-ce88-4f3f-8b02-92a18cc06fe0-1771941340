@@ -56,7 +56,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
         backdrop_styling: String(e.backdrop_styling || ""),
         souvenirs: String(e.souvenirs || ""),
         host_mc: String(e.host_mc || "")
-      }));
+      })) as Event[];
       setEvents(typedData);
     } catch (error) {
       console.error("Error fetching events:", error);

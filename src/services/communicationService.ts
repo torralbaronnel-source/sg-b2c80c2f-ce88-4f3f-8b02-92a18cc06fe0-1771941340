@@ -200,6 +200,37 @@ class CommunicationService {
     return result !== null;
   }
 
+  // Enhanced messaging with priority
+  async sendMessage(
+    eventId: string,
+    recipientType: string,
+    content: string,
+    priority: 'normal' | 'urgent' | 'critical' = 'normal',
+    platform: string = 'whatsapp'
+  ): Promise<Message | null> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    // Detect priority from message content
+    const detectedPriority = content.includes('#') ? 'critical' : content.includes('@') ? 'urgent' : priority;
+
+    const messageData = {
+      event_id: eventId,
+      vendor_id: null,
+      platform: platform as any,
+      sender_name: user.user_metadata?.full_name || 'Coordinator',
+      sender_type: 'coordinator' as const,
+      content,
+      message_type: 'text' as const,
+      external_id: null,
+      priority: detectedPriority,
+      created_at: new Date().toISOString()
+    };
+
+    const result = await this.createMessage(messageData);
+    return result;
+  }
+
   // Search and filtering
   async searchEvents(coordinatorId: string, query: string): Promise<EventWithDetails[]> {
     const { data, error } = await supabase

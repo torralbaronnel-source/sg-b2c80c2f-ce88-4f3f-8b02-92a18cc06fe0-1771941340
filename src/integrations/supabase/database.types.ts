@@ -22,6 +22,8 @@ export type Database = {
           created_at: string | null
           event_id: string
           id: string
+          last_contact_at: string | null
+          response_status: string | null
           status: string | null
           vendor_name: string
           vendor_type: string
@@ -32,6 +34,8 @@ export type Database = {
           created_at?: string | null
           event_id: string
           id?: string
+          last_contact_at?: string | null
+          response_status?: string | null
           status?: string | null
           vendor_name: string
           vendor_type: string
@@ -42,6 +46,8 @@ export type Database = {
           created_at?: string | null
           event_id?: string
           id?: string
+          last_contact_at?: string | null
+          response_status?: string | null
           status?: string | null
           vendor_name?: string
           vendor_type?: string

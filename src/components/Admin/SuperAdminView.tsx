@@ -127,8 +127,8 @@ export function SuperAdminView() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-8">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Super Admin Panel</h1>
           <p className="text-muted-foreground">Platform-wide tenant management and oversight.</p>

@@ -8,6 +8,7 @@ interface EventContextType {
   loading: boolean;
   refreshEvents: () => Promise<void>;
   updateEvent: (id: string, updates: UpdateEvent) => Promise<void>;
+  createEvent: (event: Omit<Event, "id" | "created_at" | "updated_at">) => Promise<Event>;
   activeEvent: Event | null;
   recentEvents: Event[];
   setActiveEvent: (event: Event | null) => void;
@@ -18,12 +19,16 @@ const EventContext = createContext<EventContextType | undefined>(undefined);
 export function EventProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
-  const [loading, setLoading] = useState(true);
-  const { activeOrg } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const { activeOrg, user } = useAuth();
   const { toast } = useToast();
 
   const refreshEvents = async () => {
-    if (!activeOrg?.id) return;
+    if (!activeOrg?.id) {
+      setEvents([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const data = await eventService.getEvents(activeOrg.id);
@@ -36,6 +41,29 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createEvent = async (eventData: Omit<Event, "id" | "created_at" | "updated_at">) => {
+    try {
+      const newEvent = await eventService.createEvent({
+        ...eventData,
+        created_by: user?.id,
+        organization_id: activeOrg?.id
+      });
+      setEvents(prev => [newEvent, ...prev]);
+      toast({
+        title: "Event Scheduled",
+        description: `${newEvent.title} has been added to your production calendar.`,
+      });
+      return newEvent;
+    } catch (error: any) {
+      toast({
+        title: "Scheduling failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      throw error;
     }
   };
 
@@ -63,7 +91,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   }, [activeOrg?.id]);
 
   return (
-    <EventContext.Provider value={{ events, loading, refreshEvents, updateEvent, activeEvent, recentEvents, setActiveEvent }}>
+    <EventContext.Provider value={{ events, loading, refreshEvents, updateEvent, createEvent, activeEvent, recentEvents, setActiveEvent }}>
       {children}
     </EventContext.Provider>
   );

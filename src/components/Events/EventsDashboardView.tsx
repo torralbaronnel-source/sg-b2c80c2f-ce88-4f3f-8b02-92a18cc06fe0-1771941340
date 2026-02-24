@@ -34,7 +34,9 @@ import {
   Filter,
   Edit2,
   DollarSign,
-  Clock
+  Clock,
+  Plus,
+  Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -48,6 +50,145 @@ const STATUS_CONFIG = {
   in_progress: { color: "bg-amber-100 text-amber-700", label: "Live / In Progress" },
   completed: { color: "bg-emerald-100 text-emerald-700", label: "Completed" },
   cancelled: { color: "bg-rose-100 text-rose-700", label: "Cancelled" },
+};
+
+const CreateEventDialog = () => {
+  const { createEvent } = useEvent();
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    client_name: "",
+    event_date: format(new Date(), "yyyy-MM-dd'T'18:00"),
+    venue: "",
+    guest_count: 150,
+    budget: 0,
+    status: "planning"
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await createEvent(formData);
+      setOpen(false);
+      setFormData({
+        title: "",
+        client_name: "",
+        event_date: format(new Date(), "yyyy-MM-dd'T'18:00"),
+        venue: "",
+        guest_count: 150,
+        budget: 0,
+        status: "planning"
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button className="bg-slate-900 text-white font-bold gap-2 hover:bg-black transition-all shadow-md active:scale-95">
+          <Plus className="w-4 h-4" />
+          Schedule Event
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[550px]">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle className="font-serif text-2xl text-slate-900">Schedule New Production</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-6 py-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Event Title</Label>
+                <Input 
+                  required
+                  placeholder="e.g. Santos-Reyes Wedding"
+                  value={formData.title} 
+                  onChange={(e) => setFormData({...formData, title: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Client Name</Label>
+                <Input 
+                  required
+                  placeholder="Full Name"
+                  value={formData.client_name} 
+                  onChange={(e) => setFormData({...formData, client_name: e.target.value})} 
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Date & Call Time</Label>
+                <Input 
+                  required
+                  type="datetime-local"
+                  value={formData.event_date} 
+                  onChange={(e) => setFormData({...formData, event_date: e.target.value})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Initial Status</Label>
+                <Select 
+                  value={formData.status} 
+                  onValueChange={(val) => setFormData({...formData, status: val})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(STATUS_CONFIG).map(([key, config]) => (
+                      <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Venue / Location</Label>
+              <Input 
+                placeholder="Hotel, Ballroom, or Landmark"
+                value={formData.venue} 
+                onChange={(e) => setFormData({...formData, venue: e.target.value})} 
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Target Pax</Label>
+                <Input 
+                  type="number"
+                  value={formData.guest_count} 
+                  onChange={(e) => setFormData({...formData, guest_count: parseInt(e.target.value) || 0})} 
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Budget (PHP)</Label>
+                <Input 
+                  type="number"
+                  value={formData.budget} 
+                  onChange={(e) => setFormData({...formData, budget: parseFloat(e.target.value) || 0})} 
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={loading} className="bg-slate-900 text-white hover:bg-black min-w-[140px]">
+              {loading ? "Scheduling..." : "Create Production"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
 };
 
 const QuickEditDialog = ({ event, onSave }: { event: any, onSave: (data: any) => Promise<void> }) => {
@@ -175,7 +316,7 @@ const QuickEditDialog = ({ event, onSave }: { event: any, onSave: (data: any) =>
 };
 
 export function EventsDashboardView() {
-  const { events, loading, updateEvent } = useEvent();
+  const { events, loading, updateEvent, createEvent } = useEvent();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
@@ -191,6 +332,18 @@ export function EventsDashboardView() {
       return matchesSearch && matchesStatus;
     });
   }, [events, searchTerm, statusFilter]);
+
+  const handleSeedData = async () => {
+    await createEvent({
+      title: "Reyes-Santos Wedding",
+      client_name: "Maria & Carlos Reyes-Santos",
+      event_date: format(new Date(), "yyyy-MM-dd'T'15:00"),
+      venue: "Manila Hotel Grand Ballroom",
+      guest_count: 350,
+      budget: 1200000,
+      status: "planning"
+    });
+  };
 
   if (loading) {
     return (
@@ -210,10 +363,15 @@ export function EventsDashboardView() {
           <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-serif">Production Hub</h1>
           <p className="text-slate-500 mt-1">Directly manage and monitor your event operations</p>
         </div>
-        <Button className="bg-slate-900 text-white font-bold gap-2 hover:bg-black transition-all shadow-md active:scale-95">
-          <CalendarIcon className="w-4 h-4" />
-          Create New Event
-        </Button>
+        <div className="flex items-center gap-3">
+          {events.length === 0 && (
+            <Button variant="outline" onClick={handleSeedData} className="gap-2 border-dashed border-slate-300">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              Seed Sample Event
+            </Button>
+          )}
+          <CreateEventDialog />
+        </div>
       </div>
 
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
@@ -336,12 +494,19 @@ export function EventsDashboardView() {
           })}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+        <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border-2 border-dashed border-slate-200 text-center px-4">
           <div className="p-4 rounded-full bg-slate-50 mb-4">
-            <Search className="w-8 h-8 text-slate-300" />
+            <CalendarIcon className="w-8 h-8 text-slate-300" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900">No active events found</h3>
-          <p className="text-slate-500">Adjust your filters or create a new event to get started.</p>
+          <h3 className="text-xl font-bold text-slate-900">Your Production Calendar is Empty</h3>
+          <p className="text-slate-500 max-w-sm mx-auto mb-6">Schedule your first event or seed sample data to explore the Orchestrix production hub.</p>
+          <div className="flex flex-col sm:flex-row gap-3">
+             <Button variant="outline" onClick={handleSeedData} className="gap-2 border-slate-200">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              Seed Sample Event
+            </Button>
+            <CreateEventDialog />
+          </div>
         </div>
       )}
     </div>

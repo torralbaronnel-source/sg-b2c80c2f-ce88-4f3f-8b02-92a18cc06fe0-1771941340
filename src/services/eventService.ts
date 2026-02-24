@@ -16,6 +16,17 @@ export const eventService = {
     return data;
   },
 
+  async createEvent(event: any) {
+    const { data, error } = await supabase
+      .from("events")
+      .insert([event])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async updateEvent(id: string, updates: UpdateEvent) {
     const { data, error } = await supabase
       .from("events")

@@ -1,197 +1,248 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import React from "react";
+import Link from "next/link";
+import { useRouter } from "next/router";
 import { 
-  Home,
-  MessageSquare,
-  CalendarDays,
-  Users2,
-  FileText,
-  BarChart3,
-  Settings,
+  LayoutDashboard, 
+  Users, 
+  Calendar, 
+  MessageSquare, 
+  CreditCard, 
+  BarChart3, 
+  Settings, 
+  Search, 
+  Bell, 
   Plus,
-  User
-} from 'lucide-react';
-import Link from 'next/link';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/router';
+  ChevronRight,
+  User,
+  Clock,
+  Briefcase,
+  Map,
+  DollarSign,
+  FileText
+} from "lucide-react";
 import { 
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+  Sidebar, 
+  SidebarContent, 
+  SidebarHeader, 
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent
+} from "@/components/ui/sidebar";
 import { EventSelector } from "@/components/EventHub/EventSelector";
+import { cn } from "@/lib/utils";
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-  activeApp?: string;
-}
-
-const apps = [
-  { id: 'dashboard', name: 'Dashboard', icon: Home, href: '/' },
-  { id: 'communication', name: 'Communication Hub', icon: MessageSquare, href: '/communication' },
-  { id: 'calendar', name: 'Event Calendar', icon: CalendarDays, href: '/calendar' },
-  { id: 'vendors', name: 'Vendor Management', icon: Users2, href: '/vendors' },
-  { id: 'contracts', name: 'Contracts', icon: FileText, href: '/contracts' },
-  { id: 'analytics', name: 'Analytics', icon: BarChart3, href: '/analytics' },
-  { id: 'settings', name: 'Settings', icon: Settings, href: '/profile' },
+const PLATFORMS = [
+  { 
+    id: "dashboard", 
+    name: "Overview", 
+    icon: LayoutDashboard, 
+    path: "/dashboard" 
+  },
+  { 
+    id: "crm", 
+    name: "CRM & Leads", 
+    icon: Users, 
+    path: "/crm",
+    subItems: [
+      { name: "Inquiries", href: "/crm/inquiries", icon: Users },
+      { name: "Clients", href: "/crm/clients", icon: User },
+      { name: "Contracts", href: "/crm/contracts", icon: FileText },
+    ]
+  },
+  { 
+    id: "events",
+    name: "Events",
+    icon: Calendar,
+    path: "/events",
+    subItems: [
+      { name: "Overview", href: "/events", icon: LayoutDashboard },
+      { name: "Timeline", href: "/events/timeline", icon: Clock },
+      { name: "Guest List", href: "/events/guests", icon: Users },
+      { name: "Vendors", href: "/events/vendors", icon: Briefcase },
+      { name: "Seating Plans", href: "/events/seating", icon: Map },
+    ],
+  },
+  { 
+    id: "comm", 
+    name: "Communication", 
+    icon: MessageSquare, 
+    path: "/communication",
+    subItems: [
+      { name: "WhatsApp", href: "/whatsapp", icon: MessageSquare },
+      { name: "Email", href: "/communication/email", icon: FileText },
+    ]
+  },
+  { 
+    id: "finance",
+    name: "Finance",
+    icon: CreditCard,
+    path: "/finance",
+    subItems: [
+      { name: "Overview", href: "/finance", icon: LayoutDashboard },
+      { name: "Budget", href: "/finance/budget", icon: DollarSign },
+      { name: "Invoices", href: "/finance/invoices", icon: FileText },
+      { name: "Payments", href: "/finance/payments", icon: CreditCard },
+    ],
+  },
+  { 
+    id: "analytics", 
+    name: "Analytics", 
+    icon: BarChart3, 
+    path: "/analytics" 
+  },
 ];
 
-export function AppLayout({ children, activeApp = 'dashboard' }: AppLayoutProps) {
-  const { signOut, user } = useAuth();
+export function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.push('/login');
-  };
-
-  const AppSidebar = () => {
-    return (
-      <Sidebar className="border-r border-white/10 bg-black">
-        <SidebarHeader className="p-4 border-b border-white/10">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center font-bold text-white">
-              O
-            </div>
-            <span className="font-bold text-xl tracking-tight text-white">Orchestrix</span>
-          </div>
-          <EventSelector />
-        </SidebarHeader>
-      </Sidebar>
-    );
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Header with Navigation */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            {/* Logo and Brand */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">O</span>
-                </div>
-                <h1 className="text-xl font-bold text-slate-900">Orchestrix</h1>
+    <SidebarProvider defaultOpen={true}>
+      <div className="flex min-h-screen w-full bg-[#F8FAFC]">
+        {/* Sidebar */}
+        <Sidebar className="border-r border-slate-200 bg-white shadow-sm">
+          <SidebarHeader className="border-b border-slate-100 p-4">
+            <div className="flex items-center gap-2 px-2 py-4">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 font-bold text-white shadow-md shadow-indigo-200">
+                O
               </div>
-              <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                Event Management Platform
-              </Badge>
+              <span className="text-xl font-bold tracking-tight text-slate-900">Orchestrix</span>
             </div>
-
-            {/* Navigation Tabs */}
-            <div className="flex items-center space-x-6">
-              <nav className="hidden md:flex items-center space-x-1">
-                {apps.map((app) => {
-                  const Icon = app.icon;
-                  const isActive = activeApp === app.id;
-                  
-                  return (
-                    <Link key={app.id} href={app.href} passHref legacyBehavior>
-                      <Button
-                        variant={isActive ? "default" : "ghost"}
-                        size="sm"
-                        className={`
-                          flex items-center space-x-2 h-9
-                          ${isActive 
-                            ? 'bg-blue-600 text-white hover:bg-blue-700' 
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                          }
-                        `}
-                      >
-                        <Icon className="h-4 w-4" />
-                        <span className="hidden lg:inline">{app.name}</span>
-                      </Button>
-                    </Link>
-                  );
-                })}
-              </nav>
-
-              {/* User Actions */}
-              <div className="flex items-center space-x-3">
-                <Button variant="outline" size="sm">
-                  <Plus className="h-4 w-4 mr-2" />
-                  New Event
-                </Button>
-                
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-8 w-8 rounded-full p-0">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:ring-2 hover:ring-offset-2 hover:ring-blue-500 transition-all">
-                        <span className="text-white text-xs font-medium">
-                          {user?.email?.charAt(0).toUpperCase() || "U"}
-                        </span>
-                      </div>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">My Account</p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user?.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push('/profile')}>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile Settings</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push('/profile')}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>Security</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={handleSignOut}>
-                      Sign out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+            <div className="px-2 pb-2">
+              <EventSelector />
             </div>
+          </SidebarHeader>
+          
+          <SidebarContent className="p-2">
+            <SidebarGroup>
+              <SidebarGroupLabel className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                Platforms
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {PLATFORMS.map((platform) => {
+                    const isActive = router.pathname === platform.path || (platform.path !== "/dashboard" && router.pathname.startsWith(platform.path));
+                    
+                    return (
+                      <SidebarMenuItem key={platform.id} className="mb-1">
+                        <SidebarMenuButton 
+                          asChild
+                          isActive={isActive}
+                          className={cn(
+                            "group flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-200",
+                            isActive 
+                              ? "bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100" 
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          )}
+                        >
+                          <Link href={platform.path}>
+                            <platform.icon className={cn(
+                              "h-4 w-4 shrink-0 transition-colors",
+                              isActive ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
+                            )} />
+                            <span>{platform.name}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                        
+                        {isActive && platform.subItems && (
+                          <div className="mt-1 ml-9 flex flex-col gap-1 border-l border-slate-100 pl-4">
+                            {platform.subItems.map((sub) => {
+                              const isSubActive = router.pathname === sub.href;
+                              return (
+                                <Link 
+                                  key={sub.name} 
+                                  href={sub.href}
+                                  className={cn(
+                                    "py-1 text-left text-xs font-medium transition-colors",
+                                    isSubActive ? "text-indigo-600 font-semibold" : "text-slate-500 hover:text-indigo-600"
+                                  )}
+                                >
+                                  {sub.name}
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </SidebarMenuItem>
+                    );
+                  })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </SidebarContent>
+
+          <div className="mt-auto border-t border-slate-100 p-4">
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="flex items-center gap-3 text-slate-600 hover:text-slate-900">
+                  <Settings className="h-4 w-4" />
+                  <span className="text-sm font-medium">Settings</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton className="flex items-center gap-3 text-slate-600 hover:text-slate-900">
+                  <User className="h-4 w-4" />
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold">Production Team</span>
+                    <span className="text-[10px] text-slate-400">Admin Account</span>
+                  </div>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
           </div>
-        </div>
-      </header>
+        </Sidebar>
 
-      {/* Main Content Area */}
-      <main className="container mx-auto px-4 py-6">
-        {children}
-      </main>
+        {/* Main Workspace */}
+        <div className="flex flex-1 flex-col">
+          {/* Top Bar */}
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-md">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger className="text-slate-500 hover:text-slate-900" />
+              <div className="h-4 w-[1px] bg-slate-200" />
+              <div className="flex items-center gap-2 text-sm text-slate-500">
+                <span className="font-medium text-slate-900 capitalize">
+                  {router.pathname.split("/")[1] || "Dashboard"}
+                </span>
+                <ChevronRight className="h-3 w-3" />
+                <span className="text-slate-400 text-xs">Active Workspace</span>
+              </div>
+            </div>
 
-      {/* Mobile Navigation */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50">
-        <div className="flex items-center justify-around py-2">
-          {apps.slice(0, 5).map((app) => {
-            const Icon = app.icon;
-            const isActive = activeApp === app.id;
-            
-            return (
-              <Button
-                key={app.id}
-                variant={isActive ? "default" : "ghost"}
-                size="sm"
-                className={`
-                  flex flex-col items-center space-y-1 h-12 px-3
-                  ${isActive 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-slate-600'
-                  }
-                `}
-              >
-                <Icon className="h-4 w-4" />
-                <span className="text-xs">{app.name}</span>
-              </Button>
-            );
-          })}
+            <div className="flex items-center gap-6">
+              <div className="relative hidden md:block">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text" 
+                  placeholder="Quick search (⌘+K)" 
+                  className="h-9 w-64 rounded-full border border-slate-200 bg-slate-50 pl-10 pr-4 text-xs transition-all focus:border-indigo-300 focus:outline-none focus:ring-4 focus:ring-indigo-50"
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button className="relative rounded-full p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-900 transition-colors">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white" />
+                </button>
+                <button className="flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-100 hover:bg-indigo-700 active:scale-95 transition-all">
+                  <Plus className="h-4 w-4" />
+                  <span className="hidden sm:inline">New Action</span>
+                </button>
+              </div>
+            </div>
+          </header>
+
+          {/* Page Content */}
+          <main className="flex-1 overflow-auto p-8">
+            <div className="mx-auto max-w-[1400px]">
+              {children}
+            </div>
+          </main>
         </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }

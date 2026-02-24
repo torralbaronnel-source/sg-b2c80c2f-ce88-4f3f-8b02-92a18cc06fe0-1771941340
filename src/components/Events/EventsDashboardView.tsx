@@ -36,6 +36,7 @@ import {
   PinOff
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -131,6 +132,60 @@ const STATUS_PRIORITY = {
   "SETUP": 2,
   "UPCOMING": 3,
   "COMPLETED": 4
+};
+
+const EventCard = ({ event, onPin }: { event: any; onPin: (id: string) => void }) => {
+  const isLive = event.status === "LIVE";
+  const isSetup = event.status === "SETUP";
+
+  return (
+    <Card className={`group transition-all duration-300 border-slate-200 hover:border-slate-300 hover:shadow-xl relative overflow-hidden ${event.pinned ? 'ring-1 ring-amber-400 shadow-md' : ''}`}>
+      {/* Visual Header */}
+      <div className={`h-2 w-full ${
+        isLive ? "bg-rose-500" : isSetup ? "bg-amber-500" : "bg-slate-200"
+      }`} />
+      
+      <CardHeader className="pb-2">
+        <div className="flex justify-between items-start mb-2">
+          <Badge variant={isLive ? "destructive" : "secondary"} className={`${isLive ? "animate-pulse" : ""} text-[10px] font-bold uppercase tracking-widest px-1.5 py-0`}>
+            {isLive && <Activity className="h-3 w-3 mr-1 inline-block" />}
+            {event.status}
+          </Badge>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="space-y-4">
+          {/* Details Grid */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-2 rounded-lg">
+              <Users className="h-4 w-4 text-slate-400 shrink-0" />
+              <span className="font-medium truncate">{event.guestCount} Guests</span>
+            </div>
+            <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-2 rounded-lg">
+              <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
+              <span className="font-medium truncate">{event.venue}</span>
+            </div>
+          </div>
+
+          <Link href={`/events/${event.id}/live`} className="block w-full">
+            <Button 
+              className={`w-full group/btn transition-all duration-300 font-bold ${
+                isLive 
+                  ? "bg-slate-900 hover:bg-black text-white" 
+                  : "bg-white border border-slate-200 text-slate-900 hover:bg-slate-50"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                {isLive ? "Enter Command Center" : "Production Overview"}
+                <ChevronRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+              </span>
+            </Button>
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
 
 export function EventsDashboardView() {
@@ -273,98 +328,11 @@ export function EventsDashboardView() {
         <div className="space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedEvents.map((event) => (
-              <Card 
+              <EventCard 
                 key={event.id} 
-                className={cn(
-                  "group relative overflow-hidden border-none shadow-md hover:shadow-xl transition-all duration-300",
-                  event.isPinned && "ring-2 ring-blue-500/50 shadow-blue-100"
-                )}
-              >
-                <button 
-                  onClick={() => togglePin(event.id)}
-                  className={cn(
-                    "absolute top-3 right-3 z-10 p-1.5 rounded-full transition-all duration-200",
-                    event.isPinned 
-                      ? "bg-blue-500 text-white opacity-100" 
-                      : "bg-black/5 text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-black/10"
-                  )}
-                >
-                  {event.isPinned ? <Pin className="w-3.5 h-3.5" /> : <PinOff className="w-3.5 h-3.5" />}
-                </button>
-
-                <CardHeader className="p-0">
-                  <div className="relative h-4 w-full bg-slate-100">
-                    <div 
-                      className={cn(
-                        "absolute inset-0 transition-all duration-500", 
-                        getStatusColor(event.status).split(' ')[0]
-                      )} 
-                    />
-                  </div>
-                  <div className="p-5 pb-0 flex items-start justify-between">
-                    <div>
-                      <Badge className={cn("mb-2 font-bold", getStatusColor(event.status))}>
-                        {event.status === "LIVE" && <Activity className="w-3 h-3 mr-1" />}
-                        {event.status}
-                      </Badge>
-                      <CardTitle className="text-xl font-serif text-slate-900 group-hover:text-blue-600 transition-colors">
-                        {event.title}
-                      </CardTitle>
-                      <p className="text-sm font-medium text-slate-500 mt-1">{event.client}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-                
-                <CardContent className="p-5 pt-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm text-slate-600 gap-2">
-                      <div className="p-1.5 rounded-md bg-slate-100">
-                        <CalendarIcon className="w-4 h-4" />
-                      </div>
-                      <span>{new Date(event.date).toLocaleDateString('en-PH', { month: 'long', day: 'numeric', year: 'numeric' })}</span>
-                      <span className="text-slate-300">•</span>
-                      <Clock className="w-4 h-4" />
-                      <span>{event.time}</span>
-                    </div>
-
-                    <div className="flex items-start text-sm text-slate-600 gap-2">
-                      <div className="p-1.5 rounded-md bg-slate-100">
-                        <MapPin className="w-4 h-4" />
-                      </div>
-                      <span className="line-clamp-1">{event.venue}</span>
-                    </div>
-
-                    <div className="flex items-center text-sm text-slate-600 gap-2">
-                      <div className="p-1.5 rounded-md bg-slate-100">
-                        <Users className="w-4 h-4" />
-                      </div>
-                      <span>{event.guests} Guests Confirmed</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
-                    <div className="flex -space-x-2">
-                      {[1,2,3].map((_, i) => (
-                        <div key={i} className="w-7 h-7 rounded-full border-2 border-white bg-slate-200" />
-                      ))}
-                      <div className="w-7 h-7 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                        +5
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      variant="ghost" 
-                      className={cn(
-                        "text-sm font-bold gap-2 group/btn",
-                        event.status === "LIVE" ? "text-rose-600 hover:text-rose-700" : "text-blue-600 hover:text-blue-700"
-                      )}
-                    >
-                      {event.status === "LIVE" ? "Live Dashboard" : "View Production"}
-                      <ChevronRight className="w-4 h-4 group-hover/btn:translate-x-1 transition-transform" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                event={event} 
+                onPin={togglePin}
+              />
             ))}
           </div>
 

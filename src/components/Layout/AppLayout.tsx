@@ -70,6 +70,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { events, activeEvent, setActiveEvent } = useEvent();
   const { user, profile, activeOrg, organizations, setActiveOrg, signOut } = useAuth();
 
+  const getPlatformName = () => {
+    const path = router.pathname;
+    if (path === "/dashboard") return "Overview";
+    if (path === "/events") return "Production Hub";
+    if (path === "/communication") return "Communication";
+    if (path === "/crm") return "CRM & Clients";
+    if (path === "/finance") return "Finance";
+    if (path === "/admin") return "Portal Admin";
+    if (path === "/profile") return "Settings";
+    return "Orchestrix";
+  };
+
   // For now, we'll allow anyone with "owner" role or your specific user ID to see the admin link
   // In production, this would be restricted to platform admins only
   const isSuperAdmin = true; 
@@ -237,33 +249,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <SidebarTrigger className="hover:bg-slate-100 text-slate-500" />
               <Separator orientation="vertical" className="h-6 mx-2" />
               
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="h-9 gap-2 border-slate-200 shadow-sm font-medium bg-white">
-                    {activeEvent ? activeEvent.title : "Select Active Event"}
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64">
-                  <div className="p-2">
-                    <Input placeholder="Search events..." className="h-8 mb-2" />
-                    {events.map(event => (
-                      <DropdownMenuItem 
-                        key={event.id}
-                        onClick={() => setActiveEvent(event)}
-                        className="flex flex-col items-start gap-1 py-2"
-                      >
-                        <span className="font-bold text-sm">{event.title}</span>
-                        <span className="text-xs text-slate-500">
-                          {event.client_name || "No Client"} • {event.event_date ? format(new Date(event.event_date), "MMM dd") : "TBD"}
-                        </span>
-                      </DropdownMenuItem>
-                    ))}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div className="flex items-center gap-2">
+                <span className="font-black text-slate-900 tracking-tight text-lg">
+                  {getPlatformName()}
+                </span>
+              </div>
 
-              <div className="relative w-64 lg:w-96 hidden md:block">
+              <div className="relative w-64 lg:w-96 hidden md:block ml-4">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <Input 
                   placeholder="Ask Orchestrix..." 
@@ -278,8 +270,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
               </Button>
               <div className="h-8 w-px bg-slate-200 mx-2" />
-              <Button className="bg-slate-900 text-white hover:bg-slate-800 rounded-lg h-9 font-medium shadow-sm px-4">
-                New Project
+              <Button 
+                onClick={() => router.push("/events")}
+                className="bg-slate-900 text-white hover:bg-slate-800 rounded-lg h-9 font-medium shadow-sm px-4"
+              >
+                Schedule Event
               </Button>
             </div>
           </header>

@@ -6,7 +6,7 @@ import { WhatsAppTabletView } from "@/components/WhatsApp/WhatsAppTabletView";
 
 export default function WhatsAppPage() {
   return (
-    <AppLayout title="WhatsApp Hub">
+    <AppLayout>
       <div className="container mx-auto p-6">
         <div className="flex items-center justify-between mb-8">
           <div>

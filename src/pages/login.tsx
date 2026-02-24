@@ -10,11 +10,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type UserRoleChoice = "team" | "external";
 
 const LoginPage: NextPage = () => {
   const router = useRouter();
+  const { toast } = useToast();
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -69,8 +71,15 @@ const LoginPage: NextPage = () => {
       }
 
       setIsSubmitting(false);
-      router.push("/");
-    } catch {
+      if (error) throw error;
+      
+      toast({
+        title: "Welcome back!",
+        description: "Successfully signed in.",
+      });
+
+      router.push("/dashboard");
+    } catch (error: any) {
       setIsSubmitting(false);
       setError("Unable to sign in at the moment. Please try again.");
     }

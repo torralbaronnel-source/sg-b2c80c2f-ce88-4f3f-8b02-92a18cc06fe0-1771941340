@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Mail, Lock, CheckCircle2, XCircle } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Minimum 8 characters, at least one uppercase, one lowercase, one number, one symbol.
 const passwordRegex =
@@ -16,6 +17,7 @@ const passwordRegex =
 
 const SignupPage: NextPage = () => {
   const router = useRouter();
+  const { toast } = useToast();
 
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -71,7 +73,7 @@ const SignupPage: NextPage = () => {
       setConfirmPassword("");
 
       setTimeout(() => {
-        router.push("/login");
+        router.push("/dashboard");
       }, 3000);
     } catch {
       setIsSubmitting(false);

@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { AppLayout } from '@/components/Layout/AppLayout';
+import React, { useState, useEffect } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Link from 'next/link';
 import { 
@@ -25,6 +24,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRouter } from "next/router";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Mock data for events
 const mockEvents = [
@@ -103,6 +104,16 @@ const mockEvents = [
 const EventDashboard = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('all');
+  const { user, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard");
+    }
+  }, [user, loading, router]);
+
+  if (loading) return null;
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -149,195 +160,193 @@ const EventDashboard = () => {
 
   return (
     <ProtectedRoute>
-      <AppLayout>
-        <div className="min-h-screen bg-gray-50">
-          {/* Header */}
-          <div className="bg-white border-b border-gray-200">
-            <div className="container mx-auto px-4 py-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Event Dashboard</h1>
-                  <p className="text-gray-600 mt-1">Manage your events and coordinate with teams</p>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                    <Input
-                      type="text"
-                      placeholder="Search events..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-                    <SelectTrigger className="w-40 border border-gray-300">
-                      <SelectValue placeholder="Filter by status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="live">Live</SelectItem>
-                      <SelectItem value="setup">Setup</SelectItem>
-                      <SelectItem value="upcoming">Upcoming</SelectItem>
-                      <SelectItem value="completed">Completed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                    <Plus className="h-4 w-4 mr-2" />
-                    New Event
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Stats Cards */}
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200">
           <div className="container mx-auto px-4 py-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-              <Card className="bg-white border border-gray-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Live Events</p>
-                      <p className="text-2xl font-bold text-red-600">{liveEventCount}</p>
-                    </div>
-                    <div className="bg-red-100 p-3 rounded-lg">
-                      <Activity className="h-6 w-6 text-red-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white border border-gray-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Events</p>
-                      <p className="text-2xl font-bold text-blue-600">{totalEvents}</p>
-                    </div>
-                    <div className="bg-blue-100 p-3 rounded-lg">
-                      <Calendar className="h-6 w-6 text-blue-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white border border-gray-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Total Guests</p>
-                      <p className="text-2xl font-bold text-green-600">{totalGuests.toLocaleString()}</p>
-                    </div>
-                    <div className="bg-green-100 p-3 rounded-lg">
-                      <Users className="h-6 w-6 text-green-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-white border border-gray-200">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600">Unread Messages</p>
-                      <p className="text-2xl font-bold text-purple-600">{totalUnreadMessages}</p>
-                    </div>
-                    <div className="bg-purple-100 p-3 rounded-lg">
-                      <MessageSquare className="h-6 w-6 text-purple-600" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Events Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredEvents.map((event) => (
-                <Card key={event.id} className="bg-white border border-gray-200 hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-lg font-bold text-gray-900">{event.title}</CardTitle>
-                        <p className="text-sm text-gray-600 mt-1">{event.clientName}</p>
-                      </div>
-                      <Badge className={`${getStatusColor(event.status)} flex items-center gap-1`}>
-                        {getStatusIcon(event.status)}
-                        {event.status.toUpperCase()}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center text-gray-700">
-                        <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                        {event.venue}
-                      </div>
-                      <div className="flex items-center text-gray-700">
-                        <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-                        {event.date} • {event.time}
-                      </div>
-                      <div className="flex items-center text-gray-700">
-                        <Users className="h-4 w-4 mr-2 text-gray-400" />
-                        {event.guestCount} Guests • {event.vendorCount} Vendors
-                      </div>
-                      <div className="flex items-center text-gray-700">
-                        <Users className="h-4 w-4 mr-2 text-gray-400" />
-                        Coordinator: {event.coordinator}
-                      </div>
-                    </div>
-
-                    {event.criticalIssues > 0 && (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                        <div className="flex items-center text-red-800">
-                          <AlertTriangle className="h-4 w-4 mr-2" />
-                          <span className="text-sm font-medium">{event.criticalIssues} Critical Issue{event.criticalIssues > 1 ? 's' : ''}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex items-center space-x-2">
-                        {event.unreadMessages > 0 && (
-                          <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
-                            {event.unreadMessages} Messages
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex space-x-2">
-                        <Link href={`/dashboard?eventId=${event.id}`}>
-                          <Button 
-                            size="sm" 
-                            className={event.status === 'live' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}
-                          >
-                            <Eye className="h-4 w-4 mr-1" />
-                            {event.status === 'live' ? 'Command Center' : 'View Event'}
-                          </Button>
-                        </Link>
-                        <Link href={`/whatsapp?eventId=${event.id}`}>
-                          <Button variant="outline" size="sm" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {filteredEvents.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">
-                  <Calendar className="h-12 w-12 mx-auto mb-4" />
-                  <p className="text-lg font-medium">No events found</p>
-                  <p className="text-sm">Try adjusting your search or filters</p>
-                </div>
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Event Dashboard</h1>
+                <p className="text-gray-600 mt-1">Manage your events and coordinate with teams</p>
               </div>
-            )}
+              <div className="flex items-center space-x-3">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    type="text"
+                    placeholder="Search events..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+                  <SelectTrigger className="w-40 border border-gray-300">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="live">Live</SelectItem>
+                    <SelectItem value="setup">Setup</SelectItem>
+                    <SelectItem value="upcoming">Upcoming</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Event
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
-      </AppLayout>
+
+        {/* Stats Cards */}
+        <div className="container mx-auto px-4 py-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <Card className="bg-white border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Live Events</p>
+                    <p className="text-2xl font-bold text-red-600">{liveEventCount}</p>
+                  </div>
+                  <div className="bg-red-100 p-3 rounded-lg">
+                    <Activity className="h-6 w-6 text-red-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Events</p>
+                    <p className="text-2xl font-bold text-blue-600">{totalEvents}</p>
+                  </div>
+                  <div className="bg-blue-100 p-3 rounded-lg">
+                    <Calendar className="h-6 w-6 text-blue-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Guests</p>
+                    <p className="text-2xl font-bold text-green-600">{totalGuests.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-green-100 p-3 rounded-lg">
+                    <Users className="h-6 w-6 text-green-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-white border border-gray-200">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Unread Messages</p>
+                    <p className="text-2xl font-bold text-purple-600">{totalUnreadMessages}</p>
+                  </div>
+                  <div className="bg-purple-100 p-3 rounded-lg">
+                    <MessageSquare className="h-6 w-6 text-purple-600" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Events Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredEvents.map((event) => (
+              <Card key={event.id} className="bg-white border border-gray-200 hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-lg font-bold text-gray-900">{event.title}</CardTitle>
+                      <p className="text-sm text-gray-600 mt-1">{event.clientName}</p>
+                    </div>
+                    <Badge className={`${getStatusColor(event.status)} flex items-center gap-1`}>
+                      {getStatusIcon(event.status)}
+                      {event.status.toUpperCase()}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center text-gray-700">
+                      <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                      {event.venue}
+                    </div>
+                    <div className="flex items-center text-gray-700">
+                      <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+                      {event.date} • {event.time}
+                    </div>
+                    <div className="flex items-center text-gray-700">
+                      <Users className="h-4 w-4 mr-2 text-gray-400" />
+                      {event.guestCount} Guests • {event.vendorCount} Vendors
+                    </div>
+                    <div className="flex items-center text-gray-700">
+                      <Users className="h-4 w-4 mr-2 text-gray-400" />
+                      Coordinator: {event.coordinator}
+                    </div>
+                  </div>
+
+                  {event.criticalIssues > 0 && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                      <div className="flex items-center text-red-800">
+                        <AlertTriangle className="h-4 w-4 mr-2" />
+                        <span className="text-sm font-medium">{event.criticalIssues} Critical Issue{event.criticalIssues > 1 ? 's' : ''}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-2">
+                    <div className="flex items-center space-x-2">
+                      {event.unreadMessages > 0 && (
+                        <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                          {event.unreadMessages} Messages
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <Link href={`/dashboard?eventId=${event.id}`}>
+                        <Button 
+                          size="sm" 
+                          className={event.status === 'live' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          {event.status === 'live' ? 'Command Center' : 'View Event'}
+                        </Button>
+                      </Link>
+                      <Link href={`/whatsapp?eventId=${event.id}`}>
+                        <Button variant="outline" size="sm" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
+                          <MessageSquare className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          {filteredEvents.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <Calendar className="h-12 w-12 mx-auto mb-4" />
+                <p className="text-lg font-medium">No events found</p>
+                <p className="text-sm">Try adjusting your search or filters</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </ProtectedRoute>
   );
 };

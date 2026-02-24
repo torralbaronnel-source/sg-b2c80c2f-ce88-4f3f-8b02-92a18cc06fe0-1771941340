@@ -59,8 +59,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           backdrop_styling: String(e.backdrop_styling || ""),
           souvenirs: String(e.souvenirs || ""),
           host_mc: String(e.host_mc || "")
-        };
-        return mapped as unknown as Event;
+        } as unknown as Event;
+        return mapped;
       });
       
       setEvents(typedData);

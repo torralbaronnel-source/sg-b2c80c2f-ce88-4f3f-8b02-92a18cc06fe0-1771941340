@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 
 export interface Event {
   id: string;
@@ -8,14 +7,13 @@ export interface Event {
   event_date: string;
   call_time: string;
   venue: string;
-  status: "planning" | "confirmed" | "in_progress" | "completed" | "cancelled";
+  status: "planning" | "active" | "completed" | "cancelled";
   guest_count: number;
   budget: number;
   created_at: string;
   organization_id: string;
   created_by: string;
   description: string;
-  // New comprehensive fields
   hmu_artist?: string;
   lights_sounds?: string;
   catering?: string;
@@ -27,40 +25,54 @@ export interface Event {
   event_notes?: string;
 }
 
-export type CreateEvent = Omit<Event, "id" | "created_at" | "created_by" | "organization_id">;
-export type UpdateEvent = Database["public"]["Tables"]["events"]["Update"];
+export type CreateEvent = Omit<Event, "id" | "created_at">;
+export type UpdateEvent = Partial<CreateEvent>;
 
+/**
+ * Event Service
+ * Uses a simplified query approach to prevent TypeScript TS2589 (Excessively deep type instantiation)
+ */
 export const eventService = {
-  async getEvents() {
-    // Explicitly select columns to avoid recursive type depth issues with '*' on large schemas
-    const { data, error } = await supabase
-      .from("events")
-      .select("id, title, date, start_time, end_time, location, description, status, call_time, organization_id, coordinator_id, created_at, updated_at")
-      .order("date", { ascending: true });
-    
-    return { data, error };
+  async getEvents(organizationId: string): Promise<{ data: Event[], error: any }> {
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("organization_id", organizationId)
+        .order("event_date", { ascending: true });
+      
+      return { data: (data || []) as any as Event[], error };
+    } catch (err) {
+      return { data: [], error: err };
+    }
   },
 
-  async createEvent(event: any) {
-    const { data, error } = await supabase
-      .from("events")
-      .insert([event])
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async createEvent(event: CreateEvent): Promise<{ data: Event | null, error: any }> {
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .insert(event as any)
+        .select()
+        .single();
+      
+      return { data: data as any as Event, error };
+    } catch (err) {
+      return { data: null, error: err };
+    }
   },
 
-  async updateEvent(id: string, updates: UpdateEvent) {
-    const { data, error } = await supabase
-      .from("events")
-      .update(updates)
-      .eq("id", id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
+  async updateEvent(id: string, updates: UpdateEvent): Promise<{ data: Event | null, error: any }> {
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .update(updates as any)
+        .eq("id", id)
+        .select()
+        .single();
+      
+      return { data: data as any as Event, error };
+    } catch (err) {
+      return { data: null, error: err };
+    }
   }
 };

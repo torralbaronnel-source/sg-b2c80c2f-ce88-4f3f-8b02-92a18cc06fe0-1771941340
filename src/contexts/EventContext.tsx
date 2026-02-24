@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
 import { eventService, type Event, type CreateEvent, type UpdateEvent } from "@/services/eventService";
 import { useToast } from "@/hooks/use-toast";
@@ -35,44 +34,9 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("organization_id", activeOrg.id)
-        .order("event_date", { ascending: true });
-
+      const { data, error } = await eventService.getEvents(activeOrg.id);
       if (error) throw error;
-      
-      const typedData: Event[] = (data || []).map((e: any) => {
-        const mappedObject = {
-          id: String(e.id || ""),
-          title: String(e.title || ""),
-          client_name: String(e.client_name || ""),
-          event_date: String(e.event_date || ""),
-          call_time: String(e.call_time || ""),
-          venue: String(e.venue || ""),
-          status: (e.status || "planning") as Event["status"],
-          guest_count: Number(e.guest_count) || 0,
-          budget: Number(e.budget) || 0,
-          created_at: String(e.created_at || ""),
-          organization_id: String(e.organization_id || ""),
-          created_by: String(e.created_by || ""),
-          description: String(e.description || ""),
-          hmu_artist: e.hmu_artist ? String(e.hmu_artist) : undefined,
-          lights_sounds: e.lights_sounds ? String(e.lights_sounds) : undefined,
-          catering: e.catering ? String(e.catering) : undefined,
-          photo_video: e.photo_video ? String(e.photo_video) : undefined,
-          coordination_team: e.coordination_team ? String(e.coordination_team) : undefined,
-          backdrop_styling: e.backdrop_styling ? String(e.backdrop_styling) : undefined,
-          souvenirs: e.souvenirs ? String(e.souvenirs) : undefined,
-          host_mc: e.host_mc ? String(e.host_mc) : undefined,
-          event_notes: e.event_notes ? String(e.event_notes) : undefined
-        };
-        
-        return (mappedObject as unknown) as Event;
-      });
-      
-      setEvents(typedData);
+      setEvents(data || []);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
@@ -95,23 +59,25 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const payload = {
+      const payload: CreateEvent = {
         ...eventData,
         organization_id: activeOrg.id,
         created_by: user.id,
-        status: 'planning' as const,
+        status: 'planning',
         description: eventData.description || ""
       };
 
-      const newEvent = await eventService.createEvent(payload);
+      const { data: newEvent, error } = await eventService.createEvent(payload);
       
+      if (error) throw error;
+
       if (newEvent) {
         await fetchEvents();
         toast({
           title: "Success",
           description: "Event scheduled successfully!",
         });
-        return (newEvent as unknown) as Event;
+        return newEvent;
       }
       return null;
     } catch (error: any) {
@@ -127,13 +93,15 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
   const updateEvent = async (id: string, updates: UpdateEvent) => {
     try {
-      await eventService.updateEvent(id, updates);
+      const { error } = await eventService.updateEvent(id, updates);
+      if (error) throw error;
+      
       await fetchEvents();
       
       if (activeEvent?.id === id) {
         const updated = events.find(e => e.id === id);
         if (updated) {
-          setActiveEvent(({ ...updated, ...updates } as unknown) as Event);
+          setActiveEvent({ ...updated, ...updates } as Event);
         }
       }
 

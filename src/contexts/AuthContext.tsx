@@ -25,8 +25,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const fetchUserData = async (userId: string) => {
     try {
+      // profileService.getProfile returns { data, error }
       const { data: profileData } = await profileService.getProfile(userId);
-      setProfile(profileData);
+      setProfile(profileData || null);
 
       const { data: orgData } = await authService.getUserOrganizations(userId);
       const orgs = orgData || [];

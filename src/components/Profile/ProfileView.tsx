@@ -1,180 +1,137 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { profileService, type Profile } from "@/services/profileService";
-import { Button } from "@/components/ui/button";
+import { 
+  Card, 
+  CardContent, 
+  CardHeader, 
+  CardTitle,
+  CardFooter,
+  CardDescription
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Camera, Mail, ShieldCheck, User } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { User, Mail, Shield, LogOut } from "lucide-react";
 
 export function ProfileView() {
-  const { user } = useAuth();
+  const { user, profile: authProfile, signOut } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(false);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [fullName, setFullName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [profile, setProfile] = useState<Partial<Profile>>({
+    full_name: "",
+    avatar_url: ""
+  });
 
   useEffect(() => {
-    if (user) {
-      fetchProfile();
+    if (authProfile) {
+      setProfile({
+        full_name: authProfile.full_name || "",
+        avatar_url: authProfile.avatar_url || ""
+      });
     }
-  }, [user]);
+  }, [authProfile]);
 
-  async function fetchProfile() {
-    try {
-      setLoading(true);
-      const data = await profileService.getProfile(user!.id);
-      if (data) {
-        setProfile(data);
-        setFullName(data.full_name || "");
-      }
-    } catch (error) {
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleUpdateProfile(e: React.FormEvent) {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
 
     try {
-      setUpdating(true);
-      await profileService.updateProfile(user.id, {
-        full_name: fullName,
-      });
+      setLoading(true);
+      const { error } = await profileService.updateProfile(user.id, profile);
+      
+      if (error) throw error;
+
       toast({
         title: "Profile updated",
-        description: "Your personal information has been saved successfully.",
+        description: "Your changes have been saved successfully.",
       });
-      fetchProfile();
     } catch (error: any) {
       toast({
-        variant: "destructive",
         title: "Update failed",
-        description: error.message || "An error occurred while saving.",
-      });
-    } finally {
-      setUpdating(false);
-    }
-  }
-
-  async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    try {
-      setUpdating(true);
-      const avatarUrl = await profileService.uploadAvatar(user.id, file);
-      await profileService.updateProfile(user.id, { avatar_url: avatarUrl });
-      
-      toast({
-        title: "Avatar updated",
-        description: "Your profile picture has been changed.",
-      });
-      fetchProfile();
-    } catch (error: any) {
-      toast({
+        description: error.message || "Could not update profile.",
         variant: "destructive",
-        title: "Upload failed",
-        description: "Make sure you have an 'avatars' bucket created in Supabase Storage.",
       });
     } finally {
-      setUpdating(false);
+      setLoading(false);
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
-        <p className="text-muted-foreground">Manage your personal information and preferences.</p>
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Profile Settings</h1>
+          <p className="text-muted-foreground">Manage your account and preferences.</p>
+        </div>
+        <Button variant="destructive" onClick={signOut} className="flex items-center gap-2">
+          <LogOut className="h-4 w-4" />
+          Sign Out
+        </Button>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-3">
+      <div className="grid gap-6 md:grid-cols-3">
         <Card className="md:col-span-1">
           <CardHeader>
-            <CardTitle>Profile Picture</CardTitle>
-            <CardDescription>Your public avatar</CardDescription>
+            <CardTitle>Account Overview</CardTitle>
+            <CardDescription>Your public presence.</CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col items-center space-y-4">
-            <div className="relative group">
-              <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
-                <AvatarImage src={profile?.avatar_url || ""} />
-                <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                  {profile?.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <label 
-                htmlFor="avatar-upload" 
-                className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-              >
-                <Camera className="h-8 w-8 text-white" />
-                <input 
-                  id="avatar-upload" 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={handleAvatarUpload}
-                  disabled={updating}
-                />
-              </label>
+          <CardContent className="flex flex-col items-center gap-4">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={profile.avatar_url} />
+              <AvatarFallback className="text-xl bg-blue-100 text-blue-700">
+                {profile.full_name?.charAt(0) || user?.email?.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-center">
+              <p className="font-bold text-lg">{profile.full_name || "New User"}</p>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
             </div>
           </CardContent>
         </Card>
 
         <Card className="md:col-span-2">
-          <form onSubmit={handleUpdateProfile}>
+          <form onSubmit={handleUpdate}>
             <CardHeader>
-              <CardTitle>Personal Details</CardTitle>
-              <CardDescription>Update your name and email address.</CardDescription>
+              <CardTitle>Personal Information</CardTitle>
+              <CardDescription>Update your name and profile details.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+              <div className="grid gap-2">
+                <Label htmlFor="fullName">Full Name</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
-                    id="email" 
-                    value={user?.email || ""} 
-                    disabled 
-                    className="pl-10 bg-muted/50" 
+                    id="fullName" 
+                    className="pl-9"
+                    value={profile.full_name} 
+                    onChange={(e) => setProfile({...profile, full_name: e.target.value})} 
+                    placeholder="Enter your full name"
                   />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+              <div className="grid gap-2 opacity-70">
+                <Label htmlFor="email">Email Address (Locked)</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="fullName" 
-                    placeholder="Enter your full name" 
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="pl-10"
-                    required
-                  />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input id="email" className="pl-9 bg-muted" value={user?.email || ""} readOnly />
                 </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="avatarUrl">Avatar URL</Label>
+                <Input 
+                  id="avatarUrl" 
+                  value={profile.avatar_url} 
+                  onChange={(e) => setProfile({...profile, avatar_url: e.target.value})} 
+                  placeholder="https://example.com/image.png"
+                />
               </div>
             </CardContent>
             <CardFooter className="border-t pt-6">
-              <Button type="submit" disabled={updating}>
-                {updating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Changes
+              <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
+                {loading ? "Saving Changes..." : "Save Changes"}
               </Button>
             </CardFooter>
           </form>

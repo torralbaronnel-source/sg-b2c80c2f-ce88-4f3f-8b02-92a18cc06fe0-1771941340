@@ -10,33 +10,31 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  redirectTo = '/login' 
-}) => {
-  const { user, loading } = useAuth();
+export function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push(redirectTo);
+    if (!isLoading && !user) {
+      console.log("ProtectedRoute: No user found, redirecting to login");
+      router.push("/login");
     }
-  }, [loading, user, router, redirectTo]);
+  }, [user, isLoading, router]);
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+      <div className="flex h-screen w-full items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+          <p className="text-sm font-medium text-muted-foreground">Orchestrix is loading...</p>
         </div>
       </div>
     );
   }
 
   if (!user) {
-    return null; // Will redirect
+    return null;
   }
 
   return <>{children}</>;
-};
+}

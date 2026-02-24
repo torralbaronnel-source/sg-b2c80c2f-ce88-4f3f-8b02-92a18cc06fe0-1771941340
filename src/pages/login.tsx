@@ -32,6 +32,15 @@ const LoginPage: NextPage = () => {
   const [attempts, setAttempts] = useState(0);
   const [lockoutTime, setLockoutTime] = useState(0);
 
+  const { user, isLoading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (user && !authLoading) {
+      console.log("Login Page: User detected, redirecting to dashboard");
+      router.push("/dashboard");
+    }
+  }, [user, authLoading, router]);
+
   useEffect(() => {
     if (lockoutTime > 0) {
       const timer = setInterval(() => {
@@ -43,46 +52,26 @@ const LoginPage: NextPage = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Bot blocking: Honeypot check
-    if (honeypot) {
-      console.warn("Bot detected via honeypot.");
-      return;
-    }
-
-    if (lockoutTime > 0) {
-      toast({
-        title: "Security Lockout",
-        description: `Too many attempts. Please wait ${lockoutTime} seconds.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsLoading(true);
+
     try {
-      // Track attempt
-      await authService.trackLoginAttempt(email, false, "login_page");
-      
-      const { error } = await signIn(email, password);
+      const { data, error } = await authService.signIn(email, password);
       
       if (error) {
-        setAttempts((prev) => prev + 1);
-        if (attempts >= 4) {
-          setLockoutTime(30 * (attempts - 3));
-        }
-        throw error;
+        toast({
+          title: "Login failed",
+          description: error.message,
+          variant: "destructive",
+        });
+        await authService.trackLoginAttempt(email, false);
+      } else {
+        toast({
+          title: "Welcome back!",
+          description: "Logged in successfully.",
+        });
+        await authService.trackLoginAttempt(email, true, data.user?.id);
+        // The useEffect above will handle redirection
       }
-
-      // Successful login
-      await authService.trackLoginAttempt(email, true, "login_page");
-      
-      toast({
-        title: "Welcome back",
-        description: "Secure session established.",
-      });
-      
-      router.push("/dashboard");
     } catch (error: any) {
       toast({
         title: "Access Denied",

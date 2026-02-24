@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2, ShieldCheck, Mail, User, Building2, CheckCircle2, Circle } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { authService } from "@/services/authService";
 
 const SignupPage: NextPage = () => {
   const router = useRouter();
@@ -69,6 +70,18 @@ const SignupPage: NextPage = () => {
 
     setIsLoading(true);
     try {
+      // Check if email already exists before proceeding
+      const emailExists = await authService.checkEmailExists(email);
+      if (emailExists) {
+        toast({
+          title: "Registration Failed",
+          description: "This email is already registered. Please try logging in instead.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
       const { error } = await signUp(email, password, fullName);
       if (error) throw error;
       

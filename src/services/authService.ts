@@ -42,6 +42,27 @@ export const authService = {
     return session;
   },
 
+  async logout() {
+    return await supabase.auth.signOut();
+  },
+
+  async checkEmailExists(email: string): Promise<boolean> {
+    try {
+      // We check the profiles table as a proxy for registered users
+      // This is safer than exposing actual auth.users existence
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", email)
+        .maybeSingle();
+
+      if (error) return false;
+      return !!data;
+    } catch {
+      return false;
+    }
+  },
+
   async trackLoginAttempt(email: string, success: boolean, userId?: string) {
     try {
       await supabase.from("login_attempts").insert({

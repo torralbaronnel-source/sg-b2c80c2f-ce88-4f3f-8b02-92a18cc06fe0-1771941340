@@ -5,8 +5,8 @@ import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
 
 // Global cache for session to prevent flickering during navigation
-let cachedSession: any = null;
-let cachedProfile: any = null;
+const cachedSession: any = null;
+const cachedProfile: any = null;
 
 /**
  * STRATEGIC FIX FOR TS2589:
@@ -51,46 +51,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
-    // 1. Immediate check from cache if available
-    if (cachedSession) {
-      setSession(cachedSession);
-      setProfile(cachedProfile);
-      setIsLoading(false);
-    }
-
-    const initAuth = async () => {
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      
-      if (initialSession) {
-        setSession(initialSession);
-        cachedSession = initialSession;
+    // Initial session check
+    const initSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
         
-        // Load profile only if not cached or if session changed
-        if (!cachedProfile || cachedProfile.id !== initialSession.user.id) {
-          const profileData = await profileService.getProfile(initialSession.user.id);
-          setProfile(profileData);
-          cachedProfile = profileData;
+        console.log("AuthContext: Initial session check", !!session);
+        if (session) {
+          await loadUserData(session.user.id);
         }
+      } catch (error) {
+        console.error("AuthContext: Error initializing session", error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
-    initAuth();
+    initSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setSession(session);
-      cachedSession = session;
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("AuthContext: Auth event detected", event, !!session);
       
       if (session) {
-        const profileData = await profileService.getProfile(session.user.id);
-        setProfile(profileData);
-        cachedProfile = profileData;
+        await loadUserData(session.user.id);
       } else {
+        setUser(null);
         setProfile(null);
-        cachedProfile = null;
+        setCurrentOrganization(null);
       }
-      
       setIsLoading(false);
     });
 

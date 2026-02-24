@@ -42,7 +42,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       
       const typedData: Event[] = (data || []).map((e: any) => {
         // Explicitly defining the object to match the Event interface structure
-        // We include all required fields to satisfy the interface, even with the unknown cast fallback
         const mappedObject = {
           id: String(e.id || ""),
           title: String(e.title || ""),
@@ -68,7 +67,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           event_notes: String(e.event_notes || "")
         };
         
-        // Two-step cast to bypass strict structural overlap check
+        // Two-step cast to satisfy strict structural overlap check
         return (mappedObject as unknown) as Event;
       });
       

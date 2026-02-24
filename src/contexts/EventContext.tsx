@@ -33,7 +33,15 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       const data = await eventService.getEvents(activeOrg.id);
-      setEvents(data);
+      // Map database results to ensure mandatory fields exist
+      const typedData: Event[] = (data || []).map((e: any) => ({
+        ...e,
+        call_time: e.call_time || "",
+        description: e.description || "",
+        guest_count: e.guest_count || 0,
+        budget: e.budget || 0
+      }));
+      setEvents(typedData);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
@@ -56,20 +64,25 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const newEvent = await eventService.createEvent({
+      const payload = {
         ...eventData,
         organization_id: activeOrg.id,
         created_by: user.id,
-        status: 'planning', // Force planning status for new events
+        status: 'planning' as const,
         description: eventData.description || ""
-      });
+      };
+
+      const newEvent = await eventService.createEvent(payload);
       
-      await fetchEvents();
-      toast({
-        title: "Success",
-        description: "Event scheduled successfully!",
-      });
-      return newEvent;
+      if (newEvent) {
+        await fetchEvents();
+        toast({
+          title: "Success",
+          description: "Event scheduled successfully!",
+        });
+        return newEvent as Event;
+      }
+      return null;
     } catch (error: any) {
       console.error("Error creating event:", error);
       toast({
@@ -89,7 +102,9 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       // Update active event if it's the one being modified
       if (activeEvent?.id === id) {
         const updated = events.find(e => e.id === id);
-        if (updated) setActiveEvent({ ...updated, ...updates });
+        if (updated) {
+          setActiveEvent({ ...updated, ...updates } as Event);
+        }
       }
 
       toast({

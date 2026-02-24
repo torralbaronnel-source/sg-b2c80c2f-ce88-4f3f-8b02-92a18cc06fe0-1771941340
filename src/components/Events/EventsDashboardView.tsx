@@ -67,7 +67,12 @@ export function EventsDashboardView() {
     return events.filter(event => {
       const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           (event.client_name?.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesStatus = filterStatus === "all" || event.status === filterStatus;
+      
+      let matchesStatus = filterStatus === "all" || event.status === filterStatus;
+      if (filterStatus === "active") {
+        matchesStatus = event.status === "in_progress" || event.status === "confirmed";
+      }
+      
       return matchesSearch && matchesStatus;
     });
   }, [events, searchTerm, filterStatus]);
@@ -291,9 +296,9 @@ export function EventsDashboardView() {
                 <div className="flex justify-between items-start">
                   <Badge variant="outline" className={cn(
                     "capitalize font-bold border-none px-0 text-[10px] tracking-widest",
-                    event.status === 'active' ? "text-rose-500" : "text-slate-400"
+                    (event.status === 'in_progress' || event.status === 'confirmed') ? "text-rose-500" : "text-slate-400"
                   )}>
-                    {event.status}
+                    {event.status === 'in_progress' ? 'Active' : event.status}
                   </Badge>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

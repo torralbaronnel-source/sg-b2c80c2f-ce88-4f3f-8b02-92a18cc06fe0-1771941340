@@ -26,7 +26,7 @@ export function OverviewDashboardView() {
     const active = events.filter(e => e.status === "active").length;
     const planning = events.filter(e => e.status === "planning").length;
     const completed = events.filter(e => e.status === "completed").length;
-    const totalGuests = events.reduce((acc, e) => acc + (e.pax || 0), 0);
+    const totalGuests = events.reduce((acc, e) => acc + (e.guest_count || 0), 0);
 
     return [
       {

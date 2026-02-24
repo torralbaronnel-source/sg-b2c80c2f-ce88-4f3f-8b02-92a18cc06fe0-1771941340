@@ -1,152 +1,270 @@
 import React, { useState, useEffect } from "react";
+import type { NextPage } from "next";
+import Head from "next/head";
 import { useRouter } from "next/router";
-import { authService } from "@/services/authService";
+import { Lock, ShieldCheck, Loader2, CheckCircle2, Eye, EyeOff, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Lock, Eye, EyeOff, ShieldCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-export default function ResetPasswordPage() {
+const ResetPasswordPage: NextPage = () => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isComplete, setIsComplete] = useState(false);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
+  const { toast } = useToast();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check if we have a valid session (Supabase handles password reset by starting a special session)
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setErrorMsg("Your reset link has expired or is invalid. Please request a new one.");
+      }
+    };
+    
+    checkSession();
+  }, []);
+
+  const passwordSecurity = {
+    length: password.length >= 8,
+    uppercase: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
+  };
+
+  const isStrong = Object.values(passwordSecurity).every(Boolean);
+
+  const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
       toast({
         variant: "destructive",
-        title: "Passwords mismatch",
-        description: "Please make sure your passwords match.",
+        title: "Validation Error",
+        description: "Passwords do not match.",
       });
       return;
     }
 
-    if (password.length < 8) {
+    if (!isStrong) {
       toast({
         variant: "destructive",
-        title: "Weak password",
-        description: "Password must be at least 8 characters long.",
+        title: "Security Weakness",
+        description: "Password does not meet our high-security standards.",
       });
       return;
     }
 
-    setIsSubmitting(true);
-
+    setLoading(true);
     try {
-      const { error } = await authService.updatePassword(password);
+      const { error } = await supabase.auth.updateUser({
+        password: password
+      });
+
       if (error) throw error;
-      
-      setIsComplete(true);
+
+      setSuccess(true);
       toast({
         title: "Password updated",
-        description: "Your password has been reset successfully. You can now log in.",
+        description: "Your security credentials have been successfully refreshed.",
       });
-      
+
+      // Redirect to login after a short delay
       setTimeout(() => {
         router.push("/login");
       }, 3000);
     } catch (error: any) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to reset password.",
+        title: "Update Failed",
+        description: error.message || "Could not update password. Please try again.",
       });
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-12">
-      <Card className="w-full max-w-md shadow-xl border-slate-200">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold tracking-tight text-slate-900">Set new password</CardTitle>
-          <CardDescription className="text-slate-500">
-            {isComplete 
-              ? "Password reset successful! Redirecting..." 
-              : "Enter your new password below."}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isComplete ? (
-            <div className="flex flex-col items-center justify-center py-6 text-center space-y-4">
-              <div className="h-12 w-12 rounded-full bg-green-100 flex items-center justify-center">
-                <ShieldCheck className="h-6 w-6 text-green-600" />
-              </div>
-              <p className="text-sm text-slate-600">
-                Redirecting you to the login page in a few seconds...
-              </p>
-              <Button onClick={() => router.push("/login")} variant="outline" className="mt-2">
-                Login Now
-              </Button>
+  if (errorMsg) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4">
+        <Head>
+          <title>Invalid Link | Orchestrix Security</title>
+        </Head>
+        <Card className="w-full max-w-md border-t-4 border-t-destructive shadow-xl">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
+              <AlertTriangle className="h-6 w-6 text-destructive" />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <CardTitle className="text-2xl font-bold tracking-tight">Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center text-sm text-muted-foreground">
+            <p className="mb-6">{errorMsg}</p>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full" onClick={() => router.push("/forgot-password")}>
+              Request new link
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4">
+        <Head>
+          <title>Success | Orchestrix Security</title>
+        </Head>
+        <Card className="w-full max-w-md border-t-4 border-t-green-500 shadow-xl">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-green-50 rounded-full flex items-center justify-center mb-4">
+              <CheckCircle2 className="h-6 w-6 text-green-500" />
+            </div>
+            <CardTitle className="text-2xl font-bold tracking-tight">Security Updated</CardTitle>
+            <CardDescription>
+              Your password has been successfully reset.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="text-center text-sm text-muted-foreground">
+            <p>
+              Redirecting you to the secure login gateway...
+            </p>
+            <div className="mt-4 flex justify-center">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full" onClick={() => router.push("/login")}>
+              Go to Login now
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50/50 p-4">
+      <Head>
+        <title>New Password | Orchestrix Security</title>
+      </Head>
+      <div className="w-full max-w-md space-y-6">
+        <div className="text-center space-y-2">
+          <div className="flex justify-center mb-6">
+            <div className="bg-primary px-3 py-1 rounded text-white font-bold tracking-tighter text-xl">
+              ORCHESTRIX
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Choose new password</h1>
+          <p className="text-muted-foreground">
+            Update your credentials to maintain platform security.
+          </p>
+        </div>
+
+        <Card className="shadow-xl border-t-4 border-t-primary">
+          <form onSubmit={handleReset}>
+            <CardHeader>
+              <CardTitle className="text-lg">Security Upgrade</CardTitle>
+              <CardDescription>
+                Passwords must meet AML and DPA complexity requirements.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="password">New Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
+                    className="pl-10"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pl-10 h-11 border-slate-200"
-                    placeholder="Min. 8 characters"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600"
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="confirmPassword"
                     type={showPassword ? "text" : "password"}
+                    className="pl-10"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pl-10 h-11 border-slate-200"
-                    placeholder="Confirm new password"
                     required
                   />
                 </div>
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full h-11 bg-blue-600 hover:bg-blue-700 transition-colors"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
+              <div className="grid grid-cols-2 gap-2 p-3 bg-gray-50 rounded-lg border text-xs">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className={`h-3 w-3 ${passwordSecurity.length ? "text-green-500" : "text-gray-300"}`} />
+                  <span className={passwordSecurity.length ? "text-green-700" : "text-gray-500"}>8+ Characters</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className={`h-3 w-3 ${passwordSecurity.uppercase ? "text-green-500" : "text-gray-300"}`} />
+                  <span className={passwordSecurity.uppercase ? "text-green-700" : "text-gray-500"}>Uppercase</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className={`h-3 w-3 ${passwordSecurity.number ? "text-green-500" : "text-gray-300"}`} />
+                  <span className={passwordSecurity.number ? "text-green-700" : "text-gray-500"}>Number</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className={`h-3 w-3 ${passwordSecurity.special ? "text-green-500" : "text-gray-300"}`} />
+                  <span className={passwordSecurity.special ? "text-green-700" : "text-gray-500"}>Special Char</span>
+                </div>
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <Button type="submit" className="w-full font-semibold h-11" disabled={loading || !isStrong}>
+                {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Updating Password...
+                    Updating security...
                   </>
                 ) : (
-                  "Reset Password"
+                  "Update Password"
                 )}
               </Button>
-            </form>
-          )}
-        </CardContent>
-      </Card>
+            </CardFooter>
+          </form>
+        </Card>
+
+        <div className="p-4 bg-primary/5 rounded-lg border border-primary/10 flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-primary mt-0.5 shrink-0" />
+          <div className="space-y-1">
+            <p className="text-sm font-semibold">Automatic Session Termination</p>
+            <p className="text-xs text-muted-foreground">
+              Updating your password will immediately terminate all other active sessions for this account to prevent unauthorized access.
+            </p>
+          </div>
+        </div>
+
+        <p className="text-[10px] text-center text-muted-foreground uppercase tracking-widest font-semibold pt-4">
+          ORCHESTRIX SECURITY INFRASTRUCTURE
+        </p>
+      </div>
     </div>
   );
-}
+};
+
+export default ResetPasswordPage;

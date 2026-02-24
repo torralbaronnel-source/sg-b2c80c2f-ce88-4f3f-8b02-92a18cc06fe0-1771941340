@@ -28,8 +28,37 @@ export const authService = {
     });
   },
 
-  async signIn(email: string, password: string) {
-    return await supabase.auth.signInWithPassword({ email, password });
+  async signIn(email: string, password: string): Promise<{ data: { user: User | null; session: Session | null }; error: any }> {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      // Log the attempt
+      await supabase.from("login_attempts").insert({
+        email,
+        success: !error
+      });
+
+      return { data, error };
+    } catch (err) {
+      return { data: { user: null, session: null }, error: err };
+    }
+  },
+
+  async getRecentFailedAttempts(email: string, minutes: number = 5): Promise<number> {
+    const timeThreshold = new Date(Date.now() - minutes * 60 * 1000).toISOString();
+    
+    const { count, error } = await supabase
+      .from("login_attempts")
+      .select("*", { count: 'exact', head: true })
+      .eq("email", email)
+      .eq("success", false)
+      .gt("attempt_time", timeThreshold);
+
+    if (error) return 0;
+    return count || 0;
   },
 
   async signOut() {

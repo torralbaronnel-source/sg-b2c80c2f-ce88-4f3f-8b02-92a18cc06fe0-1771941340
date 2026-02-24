@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,7 +31,8 @@ import {
   Settings,
   Bell,
   Zap,
-  Eye
+  Eye,
+  Info
 } from 'lucide-react';
 
 const UnifiedEventDashboard = () => {

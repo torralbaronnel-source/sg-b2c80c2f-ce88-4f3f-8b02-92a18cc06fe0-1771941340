@@ -34,17 +34,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loadUserData = async (userId: string) => {
     try {
+      // 1. Load Profile via simplified service
       const { data: profileData } = await profileService.getProfile(userId);
       setProfile(profileData);
       
-      const { data: orgs } = await supabase
-        .from("organization_members")
-        .select("*, organizations(*)")
-        .eq("user_id", userId)
-        .limit(1)
-        .maybeSingle();
-        
-      setCurrentOrganization(orgs?.organizations || null);
+      // 2. Load Organization via isolated service to prevent TS2589 recursion
+      const orgData = await profileService.getUserOrganization(userId);
+      setCurrentOrganization(orgData);
     } catch (error) {
       console.error("Error loading auth data:", error);
     }
@@ -81,21 +77,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Use type erasure during assignment to bypass the recursion check
-  const value: AuthContextType = {
+  const value: any = {
     user,
     session,
     profile,
     currentOrganization,
     loading: isLoading,
     isLoading,
-    signIn: authService.signIn as any,
-    signUp: authService.signUp as any,
-    signOut: authService.signOut as any,
-    resetPasswordRequest: authService.resetPasswordRequest as any,
-    updatePassword: authService.updatePassword as any,
+    signIn: authService.signIn,
+    signUp: authService.signUp,
+    signOut: authService.signOut,
+    resetPasswordRequest: authService.resetPasswordRequest,
+    updatePassword: authService.updatePassword,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value as AuthContextType}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

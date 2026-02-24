@@ -11,7 +11,8 @@ import {
   Filter,
   CheckCircle2,
   Clock,
-  MoreVertical
+  MoreVertical,
+  Sparkles
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 

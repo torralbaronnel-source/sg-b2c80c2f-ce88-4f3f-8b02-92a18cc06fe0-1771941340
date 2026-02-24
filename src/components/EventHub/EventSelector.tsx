@@ -15,12 +15,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useEventHub } from "@/contexts/EventContext";
+import { useEvent } from "@/contexts/EventContext";
 import { format } from "date-fns";
 
 export function EventSelector() {
+  const { activeEvent, recentEvents, setActiveEvent } = useEvent();
   const [open, setOpen] = React.useState(false);
-  const { activeEvent, events, setActiveEvent } = useEventHub();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -46,7 +46,7 @@ export function EventSelector() {
           <CommandList>
             <CommandEmpty>No event found.</CommandEmpty>
             <CommandGroup>
-              {events.map((event) => (
+              {recentEvents.map((event) => (
                 <CommandItem
                   key={event.id}
                   value={event.title}

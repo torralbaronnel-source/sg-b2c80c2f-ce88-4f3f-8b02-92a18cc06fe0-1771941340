@@ -42,9 +42,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const profileData = await profileService.getProfile(userId);
       setProfile(profileData);
       
-      // 2. Load Organization via isolated service to prevent TS2589 recursion
-      const orgData = await profileService.getUserOrganization(userId);
-      setCurrentOrganization(orgData);
+      // 2. Load Organization
+      const { data: membership, error: orgError } = await supabase
+        .from("organization_members")
+        .select(`*, organizations(*)`)
+        .eq("profile_id", userId)
+        .limit(1)
+        .maybeSingle();
+
+      if (!orgError && membership) {
+        setCurrentOrganization(membership);
+      }
     } catch (error) {
       console.error("Error loading auth data:", error);
     }

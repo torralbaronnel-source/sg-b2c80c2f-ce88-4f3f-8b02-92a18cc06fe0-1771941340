@@ -42,16 +42,13 @@ export const profileService = {
    * from traversing the massive, recursive database types tree. 
    * This is necessary for deep joins like organization memberships.
    */
-  async getUserOrganization(userId: string): Promise<any> {
-    const supabaseClient = supabase as any;
-    
-    const { data, error } = await supabaseClient
+  async getUserOrganization(profileId: string) {
+    const { data, error } = await supabase
       .from("organization_members")
       .select("*, organizations(*)")
-      .eq("user_id", userId)
-      .limit(1)
+      .eq("profile_id", profileId)
       .maybeSingle();
-    
+
     if (error) {
       console.error("Error fetching user organization:", error);
       return null;

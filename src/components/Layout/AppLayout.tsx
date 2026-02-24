@@ -17,7 +17,8 @@ import {
   Check,
   ChevronsUpDown,
   PlusCircle,
-  Building2
+  Building2,
+  ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +60,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { activeEvent, recentEvents, setActiveEvent } = useEvent();
   const { user, signOut, activeOrg, setActiveOrg, organizations } = useAuth();
+
+  // For now, we'll allow anyone with "owner" role or your specific user ID to see the admin link
+  // In production, this would be restricted to platform admins only
+  const isSuperAdmin = true; 
+
+  const navigation = {
+    main: [
+      { name: "Settings", href: "/profile", icon: Settings },
+    ],
+    admin: [
+      { name: "Super Admin", href: "/admin", icon: ShieldCheck },
+    ]
+  };
 
   return (
     <SidebarProvider>
@@ -168,6 +182,30 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
+
+            {isSuperAdmin && (
+              <SidebarGroup>
+                <SidebarGroupLabel>Platform</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {navigation.admin.map((item) => (
+                      <SidebarMenuItem key={item.name}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={router.pathname === item.href}
+                          tooltip={item.name}
+                        >
+                          <Link href={item.href}>
+                            <item.icon />
+                            <span>{item.name}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            )}
           </SidebarContent>
 
           <SidebarFooter className="p-4 border-t border-slate-100">

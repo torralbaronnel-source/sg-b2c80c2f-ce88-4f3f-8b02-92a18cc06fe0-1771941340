@@ -35,14 +35,14 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       const data = await eventService.getEvents(activeOrg.id);
       
       // Explicitly map database results to the Event interface
-      // Using unknown cast to satisfy strict overlap checks
       const typedData: Event[] = (data || []).map((e: any) => {
-        const mapped = {
+        // Create an object that strictly matches the Event interface
+        const mapped: Event = {
           id: String(e.id || ""),
           title: String(e.title || ""),
           client_name: String(e.client_name || ""),
           event_date: String(e.event_date || ""),
-          call_time: String(e.call_time || ""),
+          call_time: String(e.call_time || ""), // Ensure this is explicitly set
           venue: String(e.venue || ""),
           status: (e.status || "planning") as Event["status"],
           guest_count: Number(e.guest_count) || 0,
@@ -59,7 +59,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           backdrop_styling: String(e.backdrop_styling || ""),
           souvenirs: String(e.souvenirs || ""),
           host_mc: String(e.host_mc || "")
-        } as unknown as Event;
+        };
         return mapped;
       });
       

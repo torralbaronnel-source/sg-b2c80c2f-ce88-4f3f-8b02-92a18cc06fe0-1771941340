@@ -5,6 +5,7 @@ export interface AuthUser {
   id: string;
   email: string;
   user_metadata?: any;
+  email_confirmed_at?: string;
   created_at?: string;
 }
 
@@ -70,6 +71,7 @@ export const authService = {
         id: data.user.id,
         email: data.user.email || "",
         user_metadata: data.user.user_metadata,
+        email_confirmed_at: data.user.email_confirmed_at,
         created_at: data.user.created_at
       } : null;
 
@@ -98,6 +100,7 @@ export const authService = {
         id: data.user.id,
         email: data.user.email || "",
         user_metadata: data.user.user_metadata,
+        email_confirmed_at: data.user.email_confirmed_at,
         created_at: data.user.created_at
       } : null;
 
@@ -162,6 +165,7 @@ export const authService = {
         id: data.user.id,
         email: data.user.email || "",
         user_metadata: data.user.user_metadata,
+        email_confirmed_at: data.user.email_confirmed_at,
         created_at: data.user.created_at
       } : null;
 

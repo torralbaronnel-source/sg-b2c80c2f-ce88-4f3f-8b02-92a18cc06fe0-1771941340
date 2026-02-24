@@ -60,11 +60,11 @@ const LoginPage: NextPage = () => {
         return;
       }
 
-      // Enforce email verification explicitly. Many builders skip this.
-      if (!user.user_metadata || user.user_metadata.email_confirmed_at === undefined) {
+      // Enforce email verification explicitly.
+      if (!user.email_confirmed_at) {
         setIsSubmitting(false);
         await authService.signOut();
-        setError("Invalid email or password, or email not yet verified.");
+        setError("Your email address has not been verified yet. Please check your inbox for a verification link.");
         return;
       }
 

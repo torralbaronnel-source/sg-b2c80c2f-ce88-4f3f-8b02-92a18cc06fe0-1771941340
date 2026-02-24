@@ -292,36 +292,28 @@ class CommunicationService {
 
   // Analytics
   async getCommunicationStats(coordinatorId: string): Promise<{
-    totalEvents: number;
     totalMessages: number;
-    totalVendors: number;
     responseRate: number;
+    totalVendors: number;
+    avgResponseTime: number;
   }> {
-    const { data: events } = await supabase
-      .from('events')
-      .select('id')
-      .eq('created_by', coordinatorId);
-
     const { data: messages } = await supabase
       .from('messages')
-      .select('id')
-      .in('event_id', events?.map(e => e.id) || []);
+      .select('*')
+      .eq('coordinator_id', coordinatorId);
 
     const { data: vendors } = await supabase
-      .from('event_vendors')
-      .select('id')
-      .in('event_id', events?.map(e => e.id) || []);
+      .from('vendors')
+      .select('id');
 
-    // For now, calculate response rate based on total messages vs vendors
-    // TODO: Implement proper inbound/outbound message tracking when direction field is added
-    const responseRate = events && events.length > 0 ? 
-      ((messages?.length || 0) / (vendors?.length || 1)) * 50 : 0;
+    const totalMessages = messages?.length || 0;
+    const responseRate = totalMessages > 0 ? (messages?.filter(m => m.status === 'read').length || 0) / totalMessages * 100 : 0;
 
     return {
-      totalEvents: events?.length || 0,
-      totalMessages: messages?.length || 0,
+      totalMessages,
       totalVendors: vendors?.length || 0,
-      responseRate: Math.min(Math.round(responseRate), 100)
+      responseRate: Math.min(Math.round(responseRate), 100),
+      avgResponseTime: 8 // Mock baseline
     };
   }
 }

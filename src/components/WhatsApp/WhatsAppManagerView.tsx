@@ -11,10 +11,10 @@ import { MessageCircle, Search, Phone, Video, MoreVertical, Download, Filter, Ar
 import { whatsAppService, type WhatsAppConversation, type WhatsAppMessage, type WhatsAppTemplate } from '@/services/whatsappService';
 
 interface WhatsAppManagerViewProps {
-  eventId: string;
+  coordinatorId: string;
 }
 
-const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ eventId }) => {
+export const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ coordinatorId }) => {
   const [conversations, setConversations] = useState<WhatsAppConversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<WhatsAppConversation | null>(null);
   const [messages, setMessages] = useState<WhatsAppMessage[]>([]);
@@ -26,17 +26,17 @@ const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ eventId }) =>
   useEffect(() => {
     loadConversations();
     loadTemplates();
-  }, [eventId]);
+  }, [coordinatorId]);
 
   useEffect(() => {
     if (selectedConversation) {
       loadConversationHistory(selectedConversation.vendor.id);
     }
-  }, [selectedConversation, eventId]);
+  }, [selectedConversation, coordinatorId]);
 
   const loadConversations = async () => {
     try {
-      const data = await whatsAppService.getConversations(eventId);
+      const data = await whatsAppService.getConversations(coordinatorId);
       setConversations(data);
     } catch (error) {
       console.error('Error loading conversations:', error);
@@ -45,7 +45,7 @@ const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ eventId }) =>
 
   const loadConversationHistory = async (vendorId: string) => {
     try {
-      const data = await whatsAppService.getConversationHistory(vendorId, eventId);
+      const data = await whatsAppService.getConversationHistory(vendorId, coordinatorId);
       setMessages(data);
     } catch (error) {
       console.error('Error loading conversation history:', error);
@@ -69,7 +69,7 @@ const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ eventId }) =>
         vendor: selectedConversation.vendor,
         messages: messages,
         exported_at: new Date().toISOString(),
-        event_id: eventId
+        event_id: coordinatorId
       };
       
       const blob = new Blob([JSON.stringify(logData, null, 2)], { type: 'application/json' });
@@ -424,5 +424,3 @@ const WhatsAppManagerView: React.FC<WhatsAppManagerViewProps> = ({ eventId }) =>
     </div>
   );
 };
-
-export default WhatsAppManagerView;

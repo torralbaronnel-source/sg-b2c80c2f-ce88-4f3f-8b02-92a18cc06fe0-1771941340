@@ -32,12 +32,16 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true);
-      const data = await eventService.getEvents(activeOrg.id);
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("organization_id", activeOrg.id)
+        .order("event_date", { ascending: true });
+
+      if (error) throw error;
       
-      // Explicitly map database results to the Event interface
-      const typedData: Event[] = (data || []).map((e: any) => {
-        // Create an object that strictly matches the Event interface
-        const mapped = {
+      const typedData = (data || []).map((e: any) => {
+        const mapped: any = {
           id: String(e.id || ""),
           title: String(e.title || ""),
           client_name: String(e.client_name || ""),
@@ -60,8 +64,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           souvenirs: String(e.souvenirs || ""),
           host_mc: String(e.host_mc || "")
         };
-        // Use unknown cast to resolve TS2352 overlap error
-        return (mapped as unknown) as Event;
+        return mapped as Event;
       });
       
       setEvents(typedData);
@@ -122,7 +125,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       await eventService.updateEvent(id, updates);
       await fetchEvents();
       
-      // Update active event if it's the one being modified
       if (activeEvent?.id === id) {
         const updated = events.find(e => e.id === id);
         if (updated) {

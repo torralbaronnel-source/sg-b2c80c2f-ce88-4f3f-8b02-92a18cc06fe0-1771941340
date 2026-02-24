@@ -137,6 +137,8 @@ class CommunicationService {
       content,
       message_type: 'text' as const,
       external_id: null,
+      direction: 'outbound' as const,
+      status: 'sent' as const,
       created_at: new Date().toISOString()
     };
 
@@ -158,6 +160,8 @@ class CommunicationService {
       content,
       message_type: 'text' as const,
       external_id: channelId,
+      direction: 'outbound' as const,
+      status: 'sent' as const,
       created_at: new Date().toISOString()
     };
 
@@ -176,6 +180,8 @@ class CommunicationService {
       content: `Subject: ${subject}\n\n${content}`,
       message_type: 'text' as const,
       external_id: recipientEmail,
+      direction: 'outbound' as const,
+      status: 'sent' as const,
       created_at: new Date().toISOString()
     };
 
@@ -193,6 +199,8 @@ class CommunicationService {
       content: `Call duration: ${duration} minutes\n\nNotes: ${notes}`,
       message_type: 'call' as const,
       external_id: null,
+      direction: 'outbound' as const,
+      status: 'sent' as const,
       created_at: new Date().toISOString()
     };
 
@@ -223,6 +231,8 @@ class CommunicationService {
       content,
       message_type: 'text' as const,
       external_id: null,
+      direction: 'outbound' as const,
+      status: 'sent' as const,
       priority: detectedPriority,
       created_at: new Date().toISOString()
     };

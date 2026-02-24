@@ -197,26 +197,12 @@ const LoginPage: NextPage = () => {
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <div className="text-gray-600">
-                  New team member?{" "}
-                  <Link
-                    href="/signup"
-                    className="text-blue-600 hover:text-blue-700 font-medium"
-                  >
-                    Create an account
-                  </Link>
+                <div className="flex items-center text-slate-600">
+                  New team member? <Link href="/signup" className="ml-1 font-medium text-blue-600 hover:text-blue-500 hover:underline">Create an account</Link>
                 </div>
-                <button
-                  type="button"
-                  className="text-gray-500 hover:text-gray-700"
-                  onClick={() =>
-                    setError(
-                      "Password reset will be available soon. Please contact your administrator if you are locked out."
-                    )
-                  }
-                >
+                <Link href="/forgot-password" className="font-medium text-slate-600 hover:text-blue-600 hover:underline">
                   Forgot password?
-                </button>
+                </Link>
               </div>
 
               <Button

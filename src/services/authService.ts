@@ -34,7 +34,7 @@ const getURL = () => {
   return url
 }
 
-export const authService = {
+class AuthService {
   // Get current user
   async getCurrentUser(): Promise<AuthUser | null> {
     const { data: { user } } = await supabase.auth.getUser();
@@ -44,13 +44,13 @@ export const authService = {
       user_metadata: user.user_metadata,
       created_at: user.created_at
     } : null;
-  },
+  }
 
   // Get current session
   async getCurrentSession(): Promise<Session | null> {
     const { data: { session } } = await supabase.auth.getSession();
     return session;
-  },
+  }
 
   // Sign up with email and password
   async signUp(email: string, password: string): Promise<{ user: AuthUser | null; error: AuthError | null }> {
@@ -82,7 +82,7 @@ export const authService = {
         error: { message: "An unexpected error occurred during sign up" } 
       };
     }
-  },
+  }
 
   // Sign in with email and password
   async signIn(email: string, password: string): Promise<{ user: AuthUser | null; error: AuthError | null }> {
@@ -111,24 +111,13 @@ export const authService = {
         error: { message: "An unexpected error occurred during sign in" } 
       };
     }
-  },
+  }
 
   // Sign out
-  async signOut(): Promise<{ error: AuthError | null }> {
-    try {
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        return { error: { message: error.message } };
-      }
-
-      return { error: null };
-    } catch (error) {
-      return { 
-        error: { message: "An unexpected error occurred during sign out" } 
-      };
-    }
-  },
+  async signOut(): Promise<{ error: any }> {
+    const { error } = await supabase.auth.signOut();
+    return { error };
+  }
 
   // Reset password
   async resetPassword(email: string): Promise<{ error: AuthError | null }> {
@@ -147,7 +136,7 @@ export const authService = {
         error: { message: "An unexpected error occurred during password reset" } 
       };
     }
-  },
+  }
 
   // Confirm email (REQUIRED)
   async confirmEmail(token: string, type: 'signup' | 'recovery' | 'email_change' = 'signup'): Promise<{ user: AuthUser | null; error: AuthError | null }> {
@@ -176,10 +165,24 @@ export const authService = {
         error: { message: "An unexpected error occurred during email confirmation" } 
       };
     }
-  },
+  }
 
   // Listen to auth state changes
   onAuthStateChange(callback: (event: string, session: Session | null) => void) {
     return supabase.auth.onAuthStateChange(callback);
   }
-};
+
+  async resetPasswordForEmail(email: string): Promise<{ error: any }> {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error };
+  }
+
+  async updatePassword(password: string): Promise<{ error: any }> {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error };
+  }
+}
+
+export const authService = new AuthService();

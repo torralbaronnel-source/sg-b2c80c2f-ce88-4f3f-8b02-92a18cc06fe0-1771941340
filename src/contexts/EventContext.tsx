@@ -66,6 +66,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           host_mc: String(e.host_mc || ""),
           event_notes: String(e.event_notes || "")
         };
+        // Use unknown cast to resolve TS2352 strict overlap error
         return (mapped as unknown) as Event;
       });
       

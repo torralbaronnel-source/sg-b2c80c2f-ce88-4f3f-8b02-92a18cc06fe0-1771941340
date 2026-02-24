@@ -14,18 +14,13 @@ const cachedProfile: any = null;
  * We use simplified function signatures here to stop the TypeScript compiler from 
  * infinitely recursing through the Supabase Database types.
  */
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   session: Session | null;
-  profile: any | null;
+  profile: Profile | null;
   currentOrganization: any | null;
-  loading: boolean;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<any>;
-  signOut: () => Promise<any>;
-  resetPasswordRequest: (email: string) => Promise<any>;
-  updatePassword: (password: string) => Promise<any>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -38,62 +33,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const loadUserData = async (userId: string) => {
-    try {
-      // 1. Load Profile via simplified service
-      const profileData = await profileService.getProfile(userId);
-      setProfile(profileData);
-      
-      // 2. Load Organization
-      const { data: membership, error: orgError } = await supabase
-        .from("organization_members")
-        .select(`*, organizations(*)`)
-        .eq("profile_id", userId)
-        .limit(1)
-        .maybeSingle();
-
-      if (!orgError && membership) {
-        setCurrentOrganization(membership);
-      }
-    } catch (error) {
-      console.error("Error loading auth data:", error);
+  const fetchProfile = async (userId: string) => {
+    const profileData = await profileService.getProfile(userId);
+    setProfile(profileData);
+    if (profileData) {
+      const org = await profileService.getUserOrganization(userId);
+      setCurrentOrganization(org);
     }
   };
 
   useEffect(() => {
-    // Initial session check
-    const initSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("AuthContext: Initial session", session?.user?.id);
-        if (session) {
-          await loadUserData(session.user.id);
-        } else {
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error("AuthContext: Init error", error);
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchProfile(session.user.id).finally(() => setIsLoading(false));
+      } else {
         setIsLoading(false);
       }
-    };
-
-    initSession();
+    });
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("AuthContext: Auth State Change", event, session?.user?.id);
-      
       if (session?.user) {
         setUser(session.user);
         setSession(session);
-        
-        const profileData = await profileService.getProfile(session.user.id);
-        setProfile(profileData);
-        
-        // Ensure we only redirect once the profile is loaded or created
-        if (profileData && (window.location.pathname === "/login" || window.location.pathname === "/signup" || window.location.pathname === "/")) {
-          router.push("/dashboard");
-        }
+        await fetchProfile(session.user.id);
       } else {
         setUser(null);
         setSession(null);
@@ -112,13 +78,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     profile,
     currentOrganization,
-    loading: isLoading,
     isLoading,
-    signIn: authService.signIn,
-    signUp: authService.signUp,
-    signOut: authService.signOut,
-    resetPasswordRequest: authService.resetPasswordRequest,
-    updatePassword: authService.updatePassword,
+    refreshProfile: async () => {
+      if (user) await fetchProfile(user.id);
+    },
   };
 
   return <AuthContext.Provider value={value as AuthContextType}>{children}</AuthContext.Provider>;

@@ -51,15 +51,22 @@ export const profileService = {
     }
   },
 
-  async updateProfile(userId: string, updates: Partial<Profile>) {
-    const { data, error } = await supabase
+  async updateProfile(userId: string, updates: { 
+    full_name?: string; 
+    avatar_url?: string;
+    bio?: string;
+    role?: string;
+  }): Promise<boolean> {
+    const { error } = await supabase
       .from("profiles")
       .update(updates)
-      .eq("id", userId)
-      .select()
-      .single();
-    
-    return { data, error };
+      .eq("id", userId);
+
+    if (error) {
+      console.error("Error updating profile:", error);
+      return false;
+    }
+    return true;
   },
 
   async getUserOrganization(profileId: string) {

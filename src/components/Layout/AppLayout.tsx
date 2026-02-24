@@ -23,6 +23,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { EventSelector } from "@/components/EventHub/EventSelector";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -46,6 +48,22 @@ export function AppLayout({ children, activeApp = 'dashboard' }: AppLayoutProps)
   const handleSignOut = async () => {
     await signOut();
     router.push('/login');
+  };
+
+  const AppSidebar = () => {
+    return (
+      <Sidebar className="border-r border-white/10 bg-black">
+        <SidebarHeader className="p-4 border-b border-white/10">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-pink-600 flex items-center justify-center font-bold text-white">
+              O
+            </div>
+            <span className="font-bold text-xl tracking-tight text-white">Orchestrix</span>
+          </div>
+          <EventSelector />
+        </SidebarHeader>
+      </Sidebar>
+    );
   };
 
   return (

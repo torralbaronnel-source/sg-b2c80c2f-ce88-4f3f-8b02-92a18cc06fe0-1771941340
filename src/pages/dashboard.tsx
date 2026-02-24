@@ -1,4 +1,4 @@
-<![CDATA[import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -456,10 +456,7 @@ export default function UnifiedEventDashboard() {
                                   )}
                                 </div>
                                 <span className="text-xs font-mono text-slate-500">
-                                  {new Date(message.timestamp).toLocaleTimeString([], { 
-                                    hour: '2-digit', 
-                                    minute: '2-digit' 
-                                  })}
+                                  {new Date(message.timestamp).getHours().toString().padStart(2, '0')}:{new Date(message.timestamp).getMinutes().toString().padStart(2, '0')}
                                 </span>
                               </div>
                               <div className={`text-xs rounded-lg px-2 py-1 ${

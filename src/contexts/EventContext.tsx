@@ -12,6 +12,8 @@ interface EventContextType {
   activeEvent: Event | null;
   setActiveEvent: (event: Event | null) => void;
   refreshEvents: () => Promise<void>;
+  isCreateDialogOpen: boolean;
+  setIsCreateDialogOpen: (open: boolean) => void;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -20,6 +22,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { activeOrg, user } = useAuth();
   const { toast } = useToast();
 
@@ -159,7 +162,9 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       updateEvent,
       activeEvent, 
       setActiveEvent,
-      refreshEvents: fetchEvents
+      refreshEvents: fetchEvents,
+      isCreateDialogOpen,
+      setIsCreateDialogOpen
     }}>
       {children}
     </EventContext.Provider>

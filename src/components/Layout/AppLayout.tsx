@@ -68,7 +68,7 @@ const NAV_ITEMS = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { events, activeEvent, setActiveEvent } = useEvent();
+  const { events, activeEvent, setActiveEvent, setIsCreateDialogOpen } = useEvent();
   const { user, profile, activeOrg, organizations, setActiveOrg, signOut } = useAuth();
   
   return (
@@ -81,6 +81,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { activeOrg, organizations, setActiveOrg, user, signOut } = useAuth();
+  const { setIsCreateDialogOpen } = useEvent();
   const { setOpen, isMobile } = useSidebar();
 
   const getPlatformName = () => {
@@ -295,7 +296,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </Button>
             <div className="h-8 w-px bg-slate-200 mx-2" />
             <Button 
-              onClick={() => router.push("/events")}
+              onClick={() => {
+                if (router.pathname !== "/events") {
+                  router.push("/events");
+                }
+                setIsCreateDialogOpen(true);
+              }}
               className="bg-slate-900 text-white hover:bg-slate-800 rounded-lg h-9 font-medium shadow-sm px-4"
             >
               Schedule Event

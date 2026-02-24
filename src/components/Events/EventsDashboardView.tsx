@@ -54,10 +54,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 export function EventsDashboardView() {
-  const { events, loading, createEvent, updateEvent } = useEvent();
+  const { events, loading, createEvent, updateEvent, isCreateDialogOpen, setIsCreateDialogOpen } = useEvent();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
 
   const filteredEvents = useMemo(() => {
@@ -329,12 +328,34 @@ export function EventsDashboardView() {
             </div>
             <h2 className="text-2xl font-black text-slate-900">No active productions</h2>
             <p className="text-slate-500 max-w-sm mt-2">Every masterpiece starts with a schedule. Create your first production to begin tracking vendors and logistics.</p>
-            <Button className="mt-8 bg-slate-900 text-white hover:bg-slate-800" onClick={() => setIsCreateOpen(true)}>
+            <Button className="mt-8 bg-slate-900 text-white hover:bg-slate-800" onClick={() => setIsCreateDialogOpen(true)}>
               Schedule Your First Event
             </Button>
           </CardContent>
         </Card>
       )}
+
+      {/* Create Event Dialog */}
+      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-primary" /> Schedule New Production
+            </DialogTitle>
+            <DialogDescription>
+              Fill in the event details to start planning your next masterpiece.
+            </DialogDescription>
+          </DialogHeader>
+          <EventForm 
+            onSubmit={async (data) => {
+              const success = await createEvent(data);
+              if (success) setIsCreateDialogOpen(false);
+            }} 
+            onCancel={() => setIsCreateDialogOpen(false)} 
+            title="Create Production"
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Event Dialog */}
       <Dialog open={!!editingEvent} onOpenChange={(open) => !open && setEditingEvent(null)}>

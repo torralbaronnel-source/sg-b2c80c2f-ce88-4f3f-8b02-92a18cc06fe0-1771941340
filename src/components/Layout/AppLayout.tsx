@@ -66,9 +66,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       id: "events",
       name: "Events",
       icon: Calendar,
-      items: [
-        { name: "Production Hub", href: `/${company}/events`, icon: Calendar },
-        { name: "Timelines", href: `/${company}/events/timelines`, icon: Clock },
+      subItems: [
+        { name: "Production Hub", href: "/events", icon: LayoutDashboard },
+        { name: "Timelines", href: "/events/timelines", icon: Clock },
         { name: "Guest List", href: `/${company}/events/guests`, icon: Users },
         { name: "Vendors", href: `/${company}/events/vendors`, icon: UserPlus },
         { name: "Seating Plans", href: `/${company}/events/seating`, icon: CheckCircle2 },

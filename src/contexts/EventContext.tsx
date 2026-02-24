@@ -33,14 +33,22 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true);
       const data = await eventService.getEvents(activeOrg.id);
-      // Map database results to ensure mandatory fields exist
+      // Map database results to ensure mandatory fields exist and fix TS2352 conversion error
       const typedData = (data || []).map((e: any) => ({
         ...e,
         call_time: e.call_time || "",
         description: e.description || "",
-        guest_count: e.guest_count || 0,
-        budget: e.budget || 0
-      })) as Event[];
+        guest_count: Number(e.guest_count) || 0,
+        budget: Number(e.budget) || 0,
+        hmu_artist: e.hmu_artist || "",
+        lights_sounds: e.lights_sounds || "",
+        catering: e.catering || "",
+        photo_video: e.photo_video || "",
+        coordination_team: e.coordination_team || "",
+        backdrop_styling: e.backdrop_styling || "",
+        souvenirs: e.souvenirs || "",
+        host_mc: e.host_mc || ""
+      })) as unknown as Event[];
       setEvents(typedData);
     } catch (error) {
       console.error("Error fetching events:", error);

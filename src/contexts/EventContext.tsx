@@ -23,7 +23,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { activeOrg, user } = useAuth();
+  const { user, currentOrganization: activeOrg } = useAuth();
   const { toast } = useToast();
 
   const fetchEvents = useCallback(async () => {
@@ -44,8 +44,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       const typedData: Event[] = (data || []).map((e: any) => {
-        // Explicitly defining the object with all required and optional properties
-        // This ensures the object shape is predictable for the compiler
         const mappedObject = {
           id: String(e.id || ""),
           title: String(e.title || ""),
@@ -71,7 +69,6 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           event_notes: e.event_notes ? String(e.event_notes) : undefined
         };
         
-        // Final double-cast to resolve structural overlap error
         return (mappedObject as unknown) as Event;
       });
       

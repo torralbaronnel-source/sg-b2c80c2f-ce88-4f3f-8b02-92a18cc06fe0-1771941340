@@ -31,15 +31,14 @@ export type CreateEvent = Omit<Event, "id" | "created_at" | "created_by" | "orga
 export type UpdateEvent = Database["public"]["Tables"]["events"]["Update"];
 
 export const eventService = {
-  async getEvents(organizationId: string) {
+  async getEvents() {
+    // Explicitly select columns to avoid recursive type depth issues with '*' on large schemas
     const { data, error } = await supabase
       .from("events")
-      .select("*")
-      .eq("organization_id", organizationId)
-      .order("event_date", { ascending: true });
-
-    if (error) throw error;
-    return data;
+      .select("id, title, date, start_time, end_time, location, description, status, call_time, organization_id, coordinator_id, created_at, updated_at")
+      .order("date", { ascending: true });
+    
+    return { data, error };
   },
 
   async createEvent(event: any) {

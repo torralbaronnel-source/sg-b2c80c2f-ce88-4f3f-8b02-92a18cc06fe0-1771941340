@@ -69,7 +69,7 @@ const NAV_ITEMS = [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { events, activeEvent, setActiveEvent, setIsCreateDialogOpen } = useEvent();
-  const { user, profile, activeOrg, organizations, setActiveOrg, signOut } = useAuth();
+  const { user, profile, currentOrganization: activeOrg, setCurrentOrganization: setActiveOrg, signOut } = useAuth();
   
   return (
     <SidebarProvider>
@@ -80,7 +80,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { activeOrg, organizations, setActiveOrg, user, signOut } = useAuth();
+  const { currentOrganization: activeOrg, organizations, setCurrentOrganization: setActiveOrg, user, signOut } = useAuth();
   const { setIsCreateDialogOpen } = useEvent();
   const { setOpen, isMobile } = useSidebar();
 

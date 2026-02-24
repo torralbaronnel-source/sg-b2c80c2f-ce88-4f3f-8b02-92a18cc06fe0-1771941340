@@ -56,25 +56,27 @@ const SignupPage: NextPage = () => {
     setIsSubmitting(true);
 
     try {
-      const { user, error: authError } = await authService.signUp(email, password);
+      const { data, error } = await authService.signUp(email, password);
 
-      if (authError || !user) {
+      if (error) throw error;
+
+      if (data.user) {
+        toast({
+          title: "Account created successfully!",
+          description: "Please check your email to verify your account.",
+        });
         setIsSubmitting(false);
-        setError("Could not create account. Please check your details or try again.");
-        return;
+        setSuccessMessage(
+          "Account created. Please check your email and verify your address before logging in."
+        );
+        setEmail("");
+        setPassword("");
+        setConfirmPassword("");
+
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 3000);
       }
-
-      setIsSubmitting(false);
-      setSuccessMessage(
-        "Account created. Please check your email and verify your address before logging in."
-      );
-      setEmail("");
-      setPassword("");
-      setConfirmPassword("");
-
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 3000);
     } catch {
       setIsSubmitting(false);
       setError("Unable to create account at the moment. Please try again.");

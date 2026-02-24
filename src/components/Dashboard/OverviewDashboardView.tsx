@@ -19,8 +19,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 
 export function OverviewDashboardView() {
-  const { events, loading } = useEvent();
-  const { activeOrg } = useAuth();
+  const { user, currentOrganization: activeOrg } = useAuth();
+  const { events, loading: eventsLoading } = useEvent();
 
   const stats = useMemo(() => {
     const active = events.filter(e => e.status === "in_progress" || e.status === "confirmed").length;

@@ -29,7 +29,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 export function PortalAdminView() {
-  const { activeOrg } = useAuth();
+  const { currentOrganization: activeOrg } = useAuth();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   const MOCK_MEMBERS = [

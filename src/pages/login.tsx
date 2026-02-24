@@ -54,31 +54,17 @@ const LoginPage: NextPage = () => {
         await authService.signOut();
       }
 
-      const { user, error: authError } = await authService.signIn(email, password);
+      const { data, error } = await authService.signIn(email, password);
 
-      if (authError || !user) {
-        setError("Invalid email or password, or email not yet verified.");
-        setIsSubmitting(false);
-        return;
-      }
-
-      // Enforce email verification explicitly.
-      if (!user.email_confirmed_at) {
-        setIsSubmitting(false);
-        await authService.signOut();
-        setError("Your email address has not been verified yet. Please check your inbox for a verification link.");
-        return;
-      }
-
-      setIsSubmitting(false);
       if (error) throw error;
-      
-      toast({
-        title: "Welcome back!",
-        description: "Successfully signed in.",
-      });
 
-      router.push("/dashboard");
+      if (data.user) {
+        toast({
+          title: "Welcome back!",
+          description: "Successfully signed in to Orchestrix.",
+        });
+        router.push("/dashboard");
+      }
     } catch (error: any) {
       setIsSubmitting(false);
       setError("Unable to sign in at the moment. Please try again.");

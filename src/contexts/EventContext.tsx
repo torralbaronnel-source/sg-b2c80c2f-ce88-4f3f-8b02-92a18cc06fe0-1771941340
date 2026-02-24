@@ -41,7 +41,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       const typedData = (data || []).map((e: any) => {
-        const mapped = {
+        // We cast each property individually to ensure the structure matches exactly
+        const mapped: Event = {
           id: String(e.id || ""),
           title: String(e.title || ""),
           client_name: String(e.client_name || ""),
@@ -64,8 +65,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           souvenirs: String(e.souvenirs || ""),
           host_mc: String(e.host_mc || "")
         };
-        // Use unknown cast to resolve TS2352 overlap error as suggested by the compiler
-        return (mapped as unknown) as Event;
+        return mapped;
       });
       
       setEvents(typedData);

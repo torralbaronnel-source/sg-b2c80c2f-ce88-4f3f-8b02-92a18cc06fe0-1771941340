@@ -65,9 +65,9 @@ export function EventSelector() {
                       )}
                     />
                   </div>
-                  {event.event_date && (
+                  {event.date && (
                     <span className="text-xs text-zinc-400">
-                      {format(new Date(event.event_date), "PPP")}
+                      {event.date}
                     </span>
                   )}
                 </CommandItem>

@@ -325,11 +325,22 @@ class CommunicationService {
 
     const { count: messageCount } = await messagesQuery;
 
+    // Fetch vendor count
+    const { count: vendorCount } = await supabase
+      .from("event_vendors")
+      .select("id", { count: "exact" });
+
+    // Calculate response rate (mock logic for now)
+    const { data: inboundMsgs } = await supabase.from("messages").select("id").eq("direction", "inbound");
+    const { data: outboundMsgs } = await supabase.from("messages").select("id").eq("direction", "outbound");
+    
+    const responseRate = inboundMsgs && outboundMsgs ? (inboundMsgs.length / (outboundMsgs.length || 1)) * 100 : 94;
+
     return {
       totalEvents: eventsCount?.length || 0,
       activeConversations: messageCount || 0,
-      pendingVendors: 0,
-      responseRate: 94
+      pendingVendors: vendorCount || 0,
+      responseRate: Math.min(Math.round(responseRate), 100)
     };
   }
 }

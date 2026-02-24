@@ -297,21 +297,26 @@ class CommunicationService {
     totalVendors: number;
     avgResponseTime: number;
   }> {
-    const { data: messages } = await supabase
+    // We use .select('*', { count: 'exact', head: true }) to avoid deep type instantiation
+    const { count: totalMessages } = await supabase
       .from('messages')
-      .select('*')
-      .eq('coordinator_id', coordinatorId);
+      .select('*', { count: 'exact', head: true });
 
-    const { data: vendors } = await supabase
-      .from('vendors')
-      .select('id');
+    const { count: totalVendors } = await supabase
+      .from('event_vendors')
+      .select('*', { count: 'exact', head: true });
 
-    const totalMessages = messages?.length || 0;
-    const responseRate = totalMessages > 0 ? (messages?.filter(m => m.status === 'read').length || 0) / totalMessages * 100 : 0;
+    const { count: readMessages } = await supabase
+      .from('messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'read');
+
+    const messageCount = totalMessages || 0;
+    const responseRate = messageCount > 0 ? ((readMessages || 0) / messageCount) * 100 : 0;
 
     return {
-      totalMessages,
-      totalVendors: vendors?.length || 0,
+      totalMessages: messageCount,
+      totalVendors: totalVendors || 0,
       responseRate: Math.min(Math.round(responseRate), 100),
       avgResponseTime: 8 // Mock baseline
     };

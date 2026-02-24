@@ -297,23 +297,26 @@ class CommunicationService {
     totalVendors: number;
     avgResponseTime: number;
   }> {
-    const { data: messages } = await supabase
-      .from("communication_messages")
-      .select("id, status")
-      .eq("coordinator_id", coordinatorId);
+    // We use "messages" and "event_vendors" from the schema
+    const { data: messagesData, error: mError } = await supabase
+      .from('messages')
+      .select('id, status');
 
-    const { data: vendors } = await supabase
-      .from("event_vendors")
-      .select("id")
-      .eq("coordinator_id", coordinatorId);
+    const { data: vendorsData, error: vError } = await supabase
+      .from('event_vendors')
+      .select('id');
 
-    const totalCount = messages?.length || 0;
-    const readCount = messages?.filter(m => m.status === 'read').length || 0;
+    if (mError || vError) {
+      console.error('Error fetching stats:', mError || vError);
+    }
+
+    const totalCount = messagesData?.length || 0;
+    const readCount = messagesData?.filter(m => (m as any).status === 'read').length || 0;
     const responseRate = totalCount > 0 ? (readCount / totalCount) * 100 : 0;
 
     return {
       totalMessages: totalCount,
-      totalVendors: vendors?.length || 0,
+      totalVendors: vendorsData?.length || 0,
       responseRate: Math.min(Math.round(responseRate), 100),
       avgResponseTime: 8
     };

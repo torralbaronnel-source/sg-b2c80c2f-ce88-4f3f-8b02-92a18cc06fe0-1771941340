@@ -297,28 +297,25 @@ class CommunicationService {
     totalVendors: number;
     avgResponseTime: number;
   }> {
-    // We use .select('*', { count: 'exact', head: true }) to avoid deep type instantiation
-    const { count: totalMessages } = await supabase
-      .from('messages')
-      .select('*', { count: 'exact', head: true });
+    const { data: messages } = await supabase
+      .from("communication_messages")
+      .select("id, status")
+      .eq("coordinator_id", coordinatorId);
 
-    const { count: totalVendors } = await supabase
-      .from('event_vendors')
-      .select('*', { count: 'exact', head: true });
+    const { data: vendors } = await supabase
+      .from("event_vendors")
+      .select("id")
+      .eq("coordinator_id", coordinatorId);
 
-    const { count: readMessages } = await supabase
-      .from('messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'read');
-
-    const messageCount = totalMessages || 0;
-    const responseRate = messageCount > 0 ? ((readMessages || 0) / messageCount) * 100 : 0;
+    const totalCount = messages?.length || 0;
+    const readCount = messages?.filter(m => m.status === 'read').length || 0;
+    const responseRate = totalCount > 0 ? (readCount / totalCount) * 100 : 0;
 
     return {
-      totalMessages: messageCount,
-      totalVendors: totalVendors || 0,
+      totalMessages: totalCount,
+      totalVendors: vendors?.length || 0,
       responseRate: Math.min(Math.round(responseRate), 100),
-      avgResponseTime: 8 // Mock baseline
+      avgResponseTime: 8
     };
   }
 }

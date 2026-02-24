@@ -35,7 +35,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       const data = await eventService.getEvents(activeOrg.id);
       // Map database results to ensure mandatory fields exist and satisfy strict TypeScript requirements
       const typedData: Event[] = (data || []).map((e: any) => ({
-        id: String(e.id),
+        id: String(e.id || ""),
         title: String(e.title || ""),
         client_name: String(e.client_name || ""),
         event_date: String(e.event_date || ""),

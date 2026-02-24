@@ -207,7 +207,7 @@ export default function CommunicationHub() {
         content: '📞 CALL (4:23): PARKING FULL - Emergency overflow lot opened. Additional security deployed.',
         timestamp: '2025-02-24T10:10:00Z',
         priority: 'critical',
-        status: 'resolved'
+        status: 'responded'
       }
     ];
 

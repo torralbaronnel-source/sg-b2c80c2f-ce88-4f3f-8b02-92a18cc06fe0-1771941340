@@ -11,7 +11,7 @@ import {
   AlertTriangle,
   Zap,
   CreditCard,
-  ExternalLink
+  PlusCircle
 } from "lucide-react";
 import { 
   Card, 
@@ -49,20 +49,36 @@ interface Organization {
   subscription_tier: string;
   subscription_status: string;
   created_at: string;
-  _count?: {
-    members: number;
-    events: number;
-  };
 }
 
 export function SuperAdminView() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [stats, setStats] = useState({
+    users: 0,
+    events: 0,
+    organizations: 0,
+    activeEvents: 0
+  });
 
   useEffect(() => {
+    fetchStats();
     fetchOrganizations();
   }, []);
+
+  const fetchStats = async () => {
+    const { count: userCount } = await supabase.from("profiles").select("*", { count: "exact", head: true });
+    const { count: eventCount } = await supabase.from("events").select("*", { count: "exact", head: true });
+    const { count: orgCount } = await supabase.from("organizations").select("*", { count: "exact", head: true });
+    
+    setStats({
+      users: userCount || 0,
+      events: eventCount || 0,
+      organizations: orgCount || 0,
+      activeEvents: eventCount || 0
+    });
+  };
 
   const fetchOrganizations = async () => {
     try {
@@ -73,14 +89,7 @@ export function SuperAdminView() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      
-      // Ensure the data matches our interface
-      const orgsWithTier = (data || []).map((org: any) => ({
-        ...org,
-        subscription_tier: org.subscription_tier || "free"
-      }));
-      
-      setOrganizations(orgsWithTier);
+      setOrganizations(data || []);
     } catch (error: any) {
       toast({
         title: "Error fetching organizations",
@@ -120,12 +129,6 @@ export function SuperAdminView() {
     org.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const stats = {
-    totalTenants: organizations.length,
-    activeSubscriptions: organizations.filter(o => o.subscription_status === "active").length,
-    enterprisePlans: organizations.filter(o => o.subscription_tier === "enterprise").length,
-  };
-
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -151,7 +154,7 @@ export function SuperAdminView() {
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalTenants}</div>
+            <div className="text-2xl font-bold">{stats.organizations}</div>
             <p className="text-xs text-muted-foreground">Across all regions</p>
           </CardContent>
         </Card>
@@ -161,7 +164,7 @@ export function SuperAdminView() {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.activeSubscriptions}</div>
+            <div className="text-2xl font-bold">{organizations.filter(o => o.subscription_status === "active").length}</div>
             <p className="text-xs text-green-500 font-medium">Healthy MRR</p>
           </CardContent>
         </Card>
@@ -171,7 +174,7 @@ export function SuperAdminView() {
             <Zap className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.enterprisePlans}</div>
+            <div className="text-2xl font-bold">{organizations.filter(o => o.subscription_tier === "enterprise").length}</div>
             <p className="text-xs text-muted-foreground">High-value contracts</p>
           </CardContent>
         </Card>
@@ -289,23 +292,3 @@ export function SuperAdminView() {
     </div>
   );
 }
-
-const PlusCircle = ({ className, ...props }: any) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={className}
-    {...props}
-  >
-    <circle cx="12" cy="12" r="10" />
-    <path d="M12 8v8" />
-    <path d="M8 12h8" />
-  </svg>
-);

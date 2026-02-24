@@ -7,9 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Camera, User, Mail, ShieldCheck, Building2, Upload, Palette } from "lucide-react";
+import { Loader2, Camera, Mail, ShieldCheck, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import Image from "next/image";
 
 export function ProfileView() {
   const { user } = useAuth();
@@ -18,11 +17,6 @@ export function ProfileView() {
   const [updating, setUpdating] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [fullName, setFullName] = useState("");
-  const { activeOrg, setActiveOrg } = useAuth();
-  const [isEditingOrg, setIsEditingOrg] = useState(false);
-  const [orgName, setOrgName] = useState(activeOrg?.name || "");
-  const [orgLogo, setOrgLogo] = useState(activeOrg?.logo_url || "");
-  const [loadingOrg, setLoadingOrg] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -76,7 +70,6 @@ export function ProfileView() {
 
     try {
       setUpdating(true);
-      // Ensure bucket exists or handle error (usually avatars bucket is public)
       const avatarUrl = await profileService.uploadAvatar(user.id, file);
       await profileService.updateProfile(user.id, { avatar_url: avatarUrl });
       
@@ -96,40 +89,6 @@ export function ProfileView() {
     }
   }
 
-  const handleUpdateOrg = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeOrg) return;
-    
-    setLoadingOrg(true);
-    try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .update({ 
-          name: orgName, 
-          logo_url: orgLogo 
-        })
-        .eq('id', activeOrg.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      setActiveOrg(data);
-      setIsEditingOrg(false);
-      toast({
-        title: "Branding updated",
-        description: "Company details have been saved.",
-      });
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Update failed",
-        description: error.message,
-      });
-    } finally {
-      setLoadingOrg(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -146,7 +105,6 @@ export function ProfileView() {
       </div>
 
       <div className="grid gap-8 md:grid-cols-3">
-        {/* Left Col - Avatar */}
         <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Profile Picture</CardTitle>
@@ -175,13 +133,9 @@ export function ProfileView() {
                 />
               </label>
             </div>
-            <p className="text-xs text-center text-muted-foreground">
-              Click to upload a new photo. JPG, GIF or PNG. Max size 2MB.
-            </p>
           </CardContent>
         </Card>
 
-        {/* Right Col - Details */}
         <Card className="md:col-span-2">
           <form onSubmit={handleUpdateProfile}>
             <CardHeader>
@@ -200,9 +154,6 @@ export function ProfileView() {
                     className="pl-10 bg-muted/50" 
                   />
                 </div>
-                <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <ShieldCheck className="h-3 w-3" /> Managed by your organization
-                </p>
               </div>
 
               <div className="space-y-2">
@@ -227,83 +178,6 @@ export function ProfileView() {
               </Button>
             </CardFooter>
           </form>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* Organization Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
-                <CardTitle>Organization Settings</CardTitle>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setIsEditingOrg(!isEditingOrg)}
-              >
-                {isEditingOrg ? "Cancel" : "Edit"}
-              </Button>
-            </div>
-            <CardDescription>Manage your company branding and details.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isEditingOrg ? (
-              <form onSubmit={handleUpdateOrg} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Company Name</Label>
-                  <Input 
-                    value={orgName} 
-                    onChange={(e) => setOrgName(e.target.value)} 
-                    placeholder="Enter company name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Logo URL</Label>
-                  <Input 
-                    value={orgLogo} 
-                    onChange={(e) => setOrgLogo(e.target.value)} 
-                    placeholder="https://..."
-                  />
-                  <p className="text-[10px] text-muted-foreground">Tip: Use a URL for a transparent PNG logo.</p>
-                </div>
-                <Button type="submit" className="w-full" disabled={loadingOrg}>
-                  {loadingOrg ? "Saving..." : "Save Changes"}
-                </Button>
-              </form>
-            ) : (
-              <div className="space-y-6">
-                <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/30 border border-border/50">
-                  <div className="h-16 w-16 rounded-lg bg-background border flex items-center justify-center overflow-hidden">
-                    {activeOrg?.logo_url ? (
-                      <Image src={activeOrg.logo_url} alt="Logo" width={64} height={64} className="object-contain mix-blend-multiply" />
-                    ) : (
-                      <Building2 className="h-8 w-8 text-muted-foreground" />
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg">{activeOrg?.name}</h3>
-                    <p className="text-sm text-muted-foreground capitalize">{activeOrg?.subscription_plan} Plan</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-3 rounded-md bg-muted/20 border">
-                    <p className="text-xs text-muted-foreground">Member Since</p>
-                    <p className="text-sm font-medium">
-                      {activeOrg?.created_at ? new Date(activeOrg.created_at).toLocaleDateString() : 'N/A'}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-md bg-muted/20 border">
-                    <p className="text-xs text-muted-foreground">Organization ID</p>
-                    <p className="text-sm font-mono truncate">{activeOrg?.id.substring(0, 8)}...</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
         </Card>
       </div>
     </div>

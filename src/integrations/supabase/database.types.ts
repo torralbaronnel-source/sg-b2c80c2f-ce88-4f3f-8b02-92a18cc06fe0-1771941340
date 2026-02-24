@@ -11,50 +11,60 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
-      event_vendors: {
+      communications: {
         Row: {
-          contact_email: string | null
-          contact_phone: string | null
+          contact_name: string
+          contact_type: string | null
+          coordinator_id: string
           created_at: string | null
-          event_id: string
+          event_id: string | null
           id: string
-          last_contact_at: string | null
-          response_status: string | null
+          last_message: string | null
+          platform: string
           status: string | null
-          vendor_name: string
-          vendor_type: string
+          unread_count: number | null
+          updated_at: string | null
         }
         Insert: {
-          contact_email?: string | null
-          contact_phone?: string | null
+          contact_name: string
+          contact_type?: string | null
+          coordinator_id: string
           created_at?: string | null
-          event_id: string
+          event_id?: string | null
           id?: string
-          last_contact_at?: string | null
-          response_status?: string | null
+          last_message?: string | null
+          platform: string
           status?: string | null
-          vendor_name: string
-          vendor_type: string
+          unread_count?: number | null
+          updated_at?: string | null
         }
         Update: {
-          contact_email?: string | null
-          contact_phone?: string | null
+          contact_name?: string
+          contact_type?: string | null
+          coordinator_id?: string
           created_at?: string | null
-          event_id?: string
+          event_id?: string | null
           id?: string
-          last_contact_at?: string | null
-          response_status?: string | null
+          last_message?: string | null
+          platform?: string
           status?: string | null
-          vendor_name?: string
-          vendor_type?: string
+          unread_count?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "event_vendors_event_id_fkey"
+            foreignKeyName: "communications_coordinator_id_fkey"
+            columns: ["coordinator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "communications_event_id_fkey"
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
@@ -64,227 +74,68 @@ export type Database = {
       }
       events: {
         Row: {
-          backdrop_styling: string | null
           budget: number | null
-          catering: string | null
-          client_name: string | null
-          coordination_team: string | null
+          call_time: string | null
+          client_email: string | null
+          client_name: string
+          client_phone: string | null
+          coordinator_id: string
           created_at: string | null
-          created_by: string | null
           description: string | null
-          event_date: string | null
-          event_notes: string | null
-          guest_count: number | null
-          hmu_artist: string | null
-          host_mc: string | null
+          event_date: string
           id: string
-          lights_sounds: string | null
-          organization_id: string | null
-          photo_video: string | null
-          souvenirs: string | null
+          location: string | null
+          package_type: string | null
           status: string | null
           title: string
           updated_at: string | null
-          venue: string | null
         }
         Insert: {
-          backdrop_styling?: string | null
           budget?: number | null
-          catering?: string | null
-          client_name?: string | null
-          coordination_team?: string | null
+          call_time?: string | null
+          client_email?: string | null
+          client_name: string
+          client_phone?: string | null
+          coordinator_id: string
           created_at?: string | null
-          created_by?: string | null
           description?: string | null
-          event_date?: string | null
-          event_notes?: string | null
-          guest_count?: number | null
-          hmu_artist?: string | null
-          host_mc?: string | null
+          event_date: string
           id?: string
-          lights_sounds?: string | null
-          organization_id?: string | null
-          photo_video?: string | null
-          souvenirs?: string | null
+          location?: string | null
+          package_type?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
-          venue?: string | null
         }
         Update: {
-          backdrop_styling?: string | null
           budget?: number | null
-          catering?: string | null
-          client_name?: string | null
-          coordination_team?: string | null
+          call_time?: string | null
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string | null
+          coordinator_id?: string
           created_at?: string | null
-          created_by?: string | null
           description?: string | null
-          event_date?: string | null
-          event_notes?: string | null
-          guest_count?: number | null
-          hmu_artist?: string | null
-          host_mc?: string | null
+          event_date?: string
           id?: string
-          lights_sounds?: string | null
-          organization_id?: string | null
-          photo_video?: string | null
-          souvenirs?: string | null
+          location?: string | null
+          package_type?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
-          venue?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "events_organization_id_fkey"
-            columns: ["organization_id"]
+            foreignKeyName: "events_coordinator_id_fkey"
+            columns: ["coordinator_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
-      }
-      messages: {
-        Row: {
-          content: string
-          created_at: string | null
-          direction: string | null
-          event_id: string | null
-          external_id: string | null
-          id: string
-          message_type: string | null
-          metadata: Json | null
-          platform: string
-          sender_name: string
-          sender_type: string
-          status: string | null
-          timestamp: string | null
-          vendor_id: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          direction?: string | null
-          event_id?: string | null
-          external_id?: string | null
-          id?: string
-          message_type?: string | null
-          metadata?: Json | null
-          platform: string
-          sender_name: string
-          sender_type: string
-          status?: string | null
-          timestamp?: string | null
-          vendor_id?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          direction?: string | null
-          event_id?: string | null
-          external_id?: string | null
-          id?: string
-          message_type?: string | null
-          metadata?: Json | null
-          platform?: string
-          sender_name?: string
-          sender_type?: string
-          status?: string | null
-          timestamp?: string | null
-          vendor_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messages_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messages_vendor_id_fkey"
-            columns: ["vendor_id"]
-            isOneToOne: false
-            referencedRelation: "event_vendors"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      organization_members: {
-        Row: {
-          created_at: string | null
-          id: string
-          organization_id: string
-          role: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          organization_id: string
-          role?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          organization_id?: string
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "organization_members_organization_id_fkey"
-            columns: ["organization_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      organizations: {
-        Row: {
-          branding_colors: Json | null
-          created_at: string | null
-          id: string
-          logo_url: string | null
-          name: string
-          settings: Json | null
-          slug: string
-          subscription_status: string | null
-          subscription_tier: string | null
-          updated_at: string | null
-        }
-        Insert: {
-          branding_colors?: Json | null
-          created_at?: string | null
-          id?: string
-          logo_url?: string | null
-          name: string
-          settings?: Json | null
-          slug: string
-          subscription_status?: string | null
-          subscription_tier?: string | null
-          updated_at?: string | null
-        }
-        Update: {
-          branding_colors?: Json | null
-          created_at?: string | null
-          id?: string
-          logo_url?: string | null
-          name?: string
-          settings?: Json | null
-          slug?: string
-          subscription_status?: string | null
-          subscription_tier?: string | null
-          updated_at?: string | null
-        }
-        Relationships: []
       }
       profiles: {
         Row: {
-          active_organization_id: string | null
           avatar_url: string | null
           created_at: string | null
           email: string | null
@@ -293,7 +144,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          active_organization_id?: string | null
           avatar_url?: string | null
           created_at?: string | null
           email?: string | null
@@ -302,7 +152,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          active_organization_id?: string | null
           avatar_url?: string | null
           created_at?: string | null
           email?: string | null
@@ -310,12 +159,39 @@ export type Database = {
           id?: string
           updated_at?: string | null
         }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          communication_id: string
+          content: string
+          id: string
+          is_from_me: boolean | null
+          sender_name: string
+          timestamp: string | null
+        }
+        Insert: {
+          communication_id: string
+          content: string
+          id?: string
+          is_from_me?: boolean | null
+          sender_name: string
+          timestamp?: string | null
+        }
+        Update: {
+          communication_id?: string
+          content?: string
+          id?: string
+          is_from_me?: boolean | null
+          sender_name?: string
+          timestamp?: string | null
+        }
         Relationships: [
           {
-            foreignKeyName: "profiles_active_organization_id_fkey"
-            columns: ["active_organization_id"]
+            foreignKeyName: "whatsapp_messages_communication_id_fkey"
+            columns: ["communication_id"]
             isOneToOne: false
-            referencedRelation: "organizations"
+            referencedRelation: "communications"
             referencedColumns: ["id"]
           },
         ]
@@ -325,7 +201,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_user_organizations: { Args: never; Returns: string[] }
+      [_ in never]: never
     }
     Enums: {
       [_ in never]: never

@@ -1,93 +1,102 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { 
-  TrendingUp, 
+  ArrowUpRight, 
   Users, 
   Calendar, 
-  DollarSign, 
-  ArrowUpRight, 
-  ArrowDownRight,
-  Clock,
-  CheckCircle2
+  TrendingUp, 
+  MessageSquare,
+  Sparkles
 } from "lucide-react";
 
 export function OverviewDashboardView() {
-  const stats = [
-    { label: "Active Projects", value: "12", change: "+2", icon: Calendar, trend: "up" },
-    { label: "Revenue (MTD)", value: "₱450k", change: "+12%", icon: DollarSign, trend: "up" },
-    { label: "Active Inquiries", value: "28", change: "+5", icon: Users, trend: "up" },
-    { label: "Pending Tasks", value: "64", change: "-8", icon: CheckCircle2, trend: "down" },
-  ];
-
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Executive Overview</h1>
-        <p className="text-slate-500 text-sm">Financial performance and operational alerts.</p>
+    <div className="p-8 space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-serif font-bold tracking-tight text-slate-900">Welcome, Orchestrix Leader.</h1>
+          <p className="text-slate-500 mt-2 text-lg">Your production empire is currently managing 12 events across the PH.</p>
+        </div>
+        <Button className="bg-amber-100 text-amber-900 hover:bg-amber-200 border-none font-bold gap-2">
+          <Sparkles className="w-4 h-4" />
+          AI Insights: 3 Critical To-dos
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.label} className="border-none shadow-sm ring-1 ring-slate-200">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: "Active Clients", value: "24", icon: Users, change: "+12%", color: "text-blue-600" },
+          { label: "Booked Events", value: "82", icon: Calendar, change: "+5%", color: "text-amber-600" },
+          { label: "Total Revenue", value: "₱4.2M", icon: TrendingUp, change: "+24%", color: "text-emerald-600" },
+          { label: "Unread Messages", value: "14", icon: MessageSquare, change: "Hot", color: "text-rose-600" }
+        ].map((stat, i) => (
+          <Card key={i} className="border-none shadow-sm hover:shadow-md transition-shadow">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                  <p className="text-2xl font-bold text-slate-900 mt-1">{stat.value}</p>
-                  <div className="flex items-center gap-1 mt-2">
-                    {stat.trend === "up" ? (
-                      <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                    ) : (
-                      <ArrowDownRight className="h-3 w-3 text-rose-500" />
-                    )}
-                    <span className={stat.trend === "up" ? "text-emerald-600 text-xs" : "text-rose-600 text-xs"}>
-                      {stat.change} vs last month
-                    </span>
-                  </div>
+              <div className="flex items-center justify-between mb-4">
+                <div className={cn("p-2 rounded-lg bg-slate-50", stat.color)}>
+                  <stat.icon className="w-5 h-5" />
                 </div>
-                <div className="p-3 rounded-xl bg-slate-50 text-indigo-600">
-                  <stat.icon size={20} />
-                </div>
+                <span className="text-xs font-bold text-emerald-600 flex items-center gap-1">
+                  {stat.change}
+                  <ArrowUpRight className="w-3 h-3" />
+                </span>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+                <p className="text-2xl font-bold mt-1">{stat.value}</p>
               </div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 border-none shadow-sm ring-1 ring-slate-200">
-          <CardHeader>
-            <CardTitle className="text-base">Production Timeline</CardTitle>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <Card className="lg:col-span-2 border-none shadow-sm">
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-xl font-serif">Recent Intelligence</CardTitle>
+            <Button variant="ghost" size="sm" className="text-blue-600 font-bold">View History</Button>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px] flex items-center justify-center border-2 border-dashed border-slate-100 rounded-lg">
-              <p className="text-sm text-slate-400">Activity graph visualization placeholder</p>
-            </div>
+          <CardContent className="space-y-4">
+            {[1, 2, 3].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50/50 hover:bg-slate-50 transition-colors cursor-pointer group">
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                  <MessageSquare className="w-5 h-5 text-slate-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-900">Inquiry from Maria Clara</p>
+                  <p className="text-sm text-slate-500 truncate">Interested in Garden Wedding Package • 200 Guests</p>
+                </div>
+                <span className="text-xs font-medium text-slate-400">2h ago</span>
+              </div>
+            ))}
           </CardContent>
         </Card>
-        
-        <Card className="border-none shadow-sm ring-1 ring-slate-200">
+
+        <Card className="border-none shadow-sm bg-slate-900 text-white">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <Clock className="h-4 w-4 text-amber-500" />
-              Recent Activity
-            </CardTitle>
+            <CardTitle className="text-xl font-serif text-amber-400">AI Taskmaster</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
+            <p className="text-slate-300 text-sm leading-relaxed">Based on your upcoming schedule, I've prioritized these actions:</p>
             <div className="space-y-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="flex gap-3 text-sm">
-                  <div className="h-2 w-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
-                  <div>
-                    <p className="font-medium text-slate-900">Contract signed by Santos Wedding</p>
-                    <p className="text-xs text-slate-400">2 hours ago</p>
-                  </div>
-                </div>
-              ))}
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer">
+                <div className="mt-1 w-2 h-2 rounded-full bg-amber-400" />
+                <p className="text-sm font-medium">Follow up with Palacio de Memoria for Santos wedding permit.</p>
+              </div>
+              <div className="flex items-start gap-3 p-3 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 cursor-pointer">
+                <div className="mt-1 w-2 h-2 rounded-full bg-blue-400" />
+                <p className="text-sm font-medium">Send remaining balance invoice to Sofia Rodriguez (Debut).</p>
+              </div>
             </div>
+            <Button className="w-full bg-amber-400 text-slate-900 hover:bg-amber-300 font-bold">
+              Run Morning Briefing
+            </Button>
           </CardContent>
         </Card>
       </div>
     </div>
   );
 }
+
+const cn = (...classes: any[]) => classes.filter(Boolean).join(" ");

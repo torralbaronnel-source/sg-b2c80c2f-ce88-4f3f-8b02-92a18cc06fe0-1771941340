@@ -4,235 +4,158 @@ import { useRouter } from "next/router";
 import { 
   LayoutDashboard, 
   Calendar, 
-  Users, 
-  DollarSign, 
   MessageSquare, 
+  Users, 
+  CreditCard, 
   Settings, 
-  LogOut,
-  ChevronRight,
-  Bell,
+  ChevronDown,
   Search,
+  Bell,
+  Sparkles,
   Menu,
-  Clock,
-  CheckCircle2,
-  FileText,
-  UserPlus,
-  BarChart3,
-  Mail,
-  Slack,
-  CreditCard,
-  User
+  X,
+  Briefcase
 } from "lucide-react";
-import { 
-  Sidebar, 
-  SidebarContent, 
-  SidebarHeader, 
-  SidebarMenu, 
-  SidebarMenuItem, 
-  SidebarMenuButton, 
-  SidebarProvider, 
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent
-} from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/contexts/AuthContext";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ThemeSwitch } from "@/components/ThemeSwitch";
-import { EventSelector } from "@/components/EventHub/EventSelector";
+import { useEvent } from "@/contexts/EventContext";
 
-interface AppLayoutProps {
-  children: React.ReactNode;
-}
+const NAV_ITEMS = [
+  { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Production Hub", href: "/events", icon: Calendar, badge: "Live" },
+  { name: "Communication", href: "/communication", icon: MessageSquare },
+  { name: "CRM & Clients", href: "/crm", icon: Users },
+  { name: "Finance", href: "/finance", icon: CreditCard },
+];
 
-export function AppLayout({ children }: AppLayoutProps) {
+export function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { user, signOut } = useAuth();
-  const { company = "orchestrix" } = router.query;
-
-  const platforms = [
-    {
-      id: "overview",
-      name: "Overview",
-      icon: LayoutDashboard,
-      items: [
-        { name: "Executive Dashboard", href: `/${company}/dashboard`, icon: LayoutDashboard },
-        { name: "Analytics", href: `/${company}/analytics`, icon: BarChart3 },
-        { name: "Activity Feed", href: `/${company}/activity`, icon: Clock },
-      ],
-    },
-    {
-      id: "events",
-      name: "Events",
-      icon: Calendar,
-      subItems: [
-        { name: "Production Hub", href: "/events", icon: LayoutDashboard },
-        { name: "Timelines", href: "/events/timelines", icon: Clock },
-        { name: "Guest List", href: `/${company}/events/guests`, icon: Users },
-        { name: "Vendors", href: `/${company}/events/vendors`, icon: UserPlus },
-        { name: "Seating Plans", href: `/${company}/events/seating`, icon: CheckCircle2 },
-      ],
-    },
-    {
-      id: "communication",
-      name: "Communication",
-      icon: MessageSquare,
-      items: [
-        { name: "Message Center", href: `/${company}/communication`, icon: MessageSquare },
-        { name: "WhatsApp", href: `/${company}/communication/whatsapp`, icon: MessageSquare },
-        { name: "Slack", href: `/${company}/communication/slack`, icon: Slack },
-        { name: "Email", href: `/${company}/communication/email`, icon: Mail },
-      ],
-    },
-    {
-      id: "finance",
-      name: "Finance",
-      icon: DollarSign,
-      items: [
-        { name: "Budget Tracker", href: `/${company}/finance`, icon: DollarSign },
-        { name: "Payments", href: `/${company}/finance/payments`, icon: CreditCard },
-      ],
-    },
-    {
-      id: "crm",
-      name: "CRM",
-      icon: Users,
-      items: [
-        { name: "Client Database", href: `/${company}/crm`, icon: Users },
-        { name: "Inquiries", href: `/${company}/crm/inquiries`, icon: Mail },
-        { name: "Contracts", href: `/${company}/crm/contracts`, icon: FileText },
-      ],
-    },
-  ];
-
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/login");
-  };
+  const { activeEvent, recentEvents, setActiveEvent } = useEvent();
+  const company = (router.query.company as string) || "orchestrix";
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full bg-slate-50">
-        <Sidebar className="border-r border-slate-200 bg-white">
-          <SidebarHeader className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
-                <LayoutDashboard className="h-6 w-6" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 capitalize">
-                  {company}
-                </h1>
-                <p className="text-[10px] font-medium uppercase tracking-widest text-indigo-600">
-                  Operating System
-                </p>
-              </div>
-            </div>
-          </SidebarHeader>
-
-          <SidebarContent className="px-3 pb-6">
-            <div className="mb-6 px-3">
-              <EventSelector />
-            </div>
-
-            {platforms.map((platform) => (
-              <SidebarGroup key={platform.id} className="mb-4">
-                <SidebarGroupLabel className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  {platform.name}
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {platform.items.map((item) => (
-                      <SidebarMenuItem key={item.name}>
-                        <Link href={item.href} passHref legacyBehavior>
-                          <SidebarMenuButton 
-                            asChild
-                            isActive={router.asPath === item.href}
-                            className={cn(
-                              "group flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-200",
-                              router.asPath === item.href 
-                                ? "bg-indigo-50 text-indigo-700 font-semibold shadow-sm ring-1 ring-indigo-100" 
-                                : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                            )}
-                          >
-                            <a>
-                              <item.icon className={cn(
-                                "h-4.5 w-4.5 transition-colors",
-                                router.asPath === item.href ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
-                              )} />
-                              <span className="text-sm">{item.name}</span>
-                            </a>
-                          </SidebarMenuButton>
-                        </Link>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            ))}
-          </SidebarContent>
-
-          <div className="mt-auto border-t border-slate-100 p-4">
-            <Link href={`/${company}/profile`} passHref legacyBehavior>
-              <SidebarMenuButton 
-                asChild
-                className="flex items-center gap-3 rounded-lg px-3 py-2 text-slate-600 hover:bg-slate-50"
-              >
-                <a>
-                  <User className="h-4.5 w-4.5 text-slate-400" />
-                  <span className="text-sm font-medium">My Profile</span>
-                </a>
-              </SidebarMenuButton>
-            </Link>
-            <button
-              onClick={handleLogout}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
-            >
-              <LogOut className="h-4.5 w-4.5" />
-              <span>Sign Out</span>
-            </button>
-          </div>
-        </Sidebar>
-
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white/80 px-8 backdrop-blur-md">
-            <div className="flex items-center gap-4 text-sm font-medium text-slate-500">
-              <span className="capitalize">{company}</span>
-              <ChevronRight className="h-4 w-4 text-slate-300" />
-              <span className="text-slate-900">Dashboard</span>
-            </div>
-
-            <div className="flex items-center gap-6">
-              <div className="relative hidden md:block">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  placeholder="Quick search (⌘K)"
-                  className="h-9 w-64 border-slate-200 bg-slate-50 pl-10 text-sm focus:ring-indigo-200"
-                />
-              </div>
-              <div className="flex items-center gap-3">
-                <ThemeSwitch />
-                <Button variant="ghost" size="icon" className="relative text-slate-600 hover:bg-slate-50">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white"></span>
-                </Button>
-                <div className="h-8 w-8 rounded-full bg-indigo-100 p-0.5 ring-2 ring-indigo-50">
-                   <div className="flex h-full w-full items-center justify-center rounded-full bg-indigo-600 text-[10px] font-bold text-white uppercase">
-                    {user?.email?.[0] || 'U'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          <main className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div className="mx-auto max-w-7xl">
-              {children}
-            </div>
-          </main>
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden lg:flex">
+        <div className="p-6 flex items-center gap-3">
+          <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center text-white font-bold">O</div>
+          <span className="font-serif font-bold text-xl tracking-tight uppercase">Orchestrix</span>
         </div>
-      </div>
-    </SidebarProvider>
+
+        <nav className="flex-1 px-4 space-y-1">
+          <div className="mb-4">
+            <p className="px-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Main Menu</p>
+            {NAV_ITEMS.map((item) => {
+              const isActive = router.pathname.includes(item.href);
+              return (
+                <Link key={item.name} href={`/${company}${item.href}`}>
+                  <span className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors group",
+                    isActive 
+                      ? "bg-slate-900 text-white shadow-lg shadow-slate-200" 
+                      : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                  )}>
+                    <item.icon className={cn("w-4 h-4", isActive ? "text-white" : "text-slate-400 group-hover:text-slate-900")} />
+                    {item.name}
+                    {item.badge && (
+                      <Badge className="ml-auto bg-rose-500 hover:bg-rose-500 text-[10px] h-4 px-1">
+                        {item.badge}
+                      </Badge>
+                    )}
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
+
+          <div>
+            <p className="px-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Quick Access</p>
+            <Button variant="ghost" className="w-full justify-start text-slate-500 hover:text-slate-900 font-medium text-sm">
+              <Sparkles className="w-4 h-4 mr-3 text-amber-500" />
+              AI Assistant
+            </Button>
+            <Button variant="ghost" className="w-full justify-start text-slate-500 hover:text-slate-900 font-medium text-sm">
+              <Briefcase className="w-4 h-4 mr-3 text-blue-500" />
+              Vendor Portal
+            </Button>
+          </div>
+        </nav>
+
+        <div className="p-4 border-t border-slate-100">
+          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
+            <div className="w-10 h-10 rounded-full bg-slate-200" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold truncate">Admin User</p>
+              <p className="text-xs text-slate-500 truncate">Lead Coordinator</p>
+            </div>
+            <Settings className="w-4 h-4 text-slate-400" />
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-white lg:rounded-tl-[32px] lg:mt-2 lg:border-t lg:border-l lg:border-slate-200">
+        {/* Header */}
+        <header className="h-16 flex items-center justify-between px-8 border-b border-slate-100 shrink-0">
+          <div className="flex items-center gap-6">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="h-9 gap-2 border-slate-200 shadow-sm font-medium">
+                  {activeEvent ? activeEvent.title : "Select Active Event"}
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-64">
+                <div className="p-2">
+                  <Input placeholder="Search events..." className="h-8 mb-2" />
+                  {recentEvents.map(event => (
+                    <DropdownMenuItem 
+                      key={event.id}
+                      onClick={() => setActiveEvent(event)}
+                      className="flex flex-col items-start gap-1 py-2"
+                    >
+                      <span className="font-bold text-sm">{event.title}</span>
+                      <span className="text-xs text-slate-500">{event.client} • {event.date}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <div className="relative w-96 hidden md:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input 
+                placeholder="Ask Orchestrix (e.g. 'Show me budget for Santos wedding')" 
+                className="pl-9 h-9 bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-slate-300 transition-all"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" className="relative text-slate-500 hover:text-slate-900">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
+            </Button>
+            <div className="h-8 w-px bg-slate-200 mx-2" />
+            <Button className="bg-slate-900 text-white hover:bg-slate-800 rounded-lg h-9 font-medium shadow-sm">
+              New Project
+            </Button>
+          </div>
+        </header>
+
+        {/* Viewport */}
+        <div className="flex-1 overflow-y-auto bg-white custom-scrollbar">
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }

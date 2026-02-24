@@ -1,4 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import WhatsAppTabletView from '@/components/WhatsApp/WhatsAppTabletView';
 import WhatsAppManagerView from '@/components/WhatsApp/WhatsAppManagerView';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -11,7 +17,13 @@ const WhatsAppPage = () => {
     return <WhatsAppTabletView eventId={selectedEvent} />;
   }
 
-  return <WhatsAppManagerView eventId={selectedEvent} />;
+  return (
+    <ProtectedRoute>
+      <div className="min-h-screen bg-slate-100 flex h-screen overflow-hidden">
+        <WhatsAppManagerView coordinatorId="1" />
+      </div>
+    </ProtectedRoute>
+  );
 };
 
 export default WhatsAppPage;

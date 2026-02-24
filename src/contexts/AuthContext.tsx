@@ -4,8 +4,11 @@ import type { User, Session } from "@supabase/supabase-js";
 import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
 
-// Using simplified function signatures for the context to break the TS2589 infinite recursion
-// The actual implementations in authService still provide full type safety internally.
+/**
+ * STRATEGIC FIX FOR TS2589:
+ * We use simplified function signatures here to stop the TypeScript compiler from 
+ * infinitely recursing through the Supabase Database types.
+ */
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -13,11 +16,11 @@ interface AuthContextType {
   currentOrganization: any | null;
   loading: boolean;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ data: any; error: any }>;
-  signOut: () => Promise<{ error: any }>;
-  resetPasswordRequest: (email: string) => Promise<{ data: any; error: any }>;
-  updatePassword: (password: string) => Promise<{ data: any; error: any }>;
+  signIn: (email: string, password: string) => Promise<any>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<any>;
+  signOut: () => Promise<any>;
+  resetPasswordRequest: (email: string) => Promise<any>;
+  updatePassword: (password: string) => Promise<any>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -61,7 +64,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
@@ -77,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
-  // Explicit casting to satisfy the simplified interface while using the real service methods
+  // Use type erasure during assignment to bypass the recursion check
   const value: AuthContextType = {
     user,
     session,

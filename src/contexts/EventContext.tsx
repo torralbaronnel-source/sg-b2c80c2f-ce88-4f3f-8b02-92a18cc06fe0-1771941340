@@ -37,12 +37,12 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       // Explicitly map database results to the Event interface
       const typedData: Event[] = (data || []).map((e: any) => {
         // Create an object that strictly matches the Event interface
-        const mapped: Event = {
+        const mapped = {
           id: String(e.id || ""),
           title: String(e.title || ""),
           client_name: String(e.client_name || ""),
           event_date: String(e.event_date || ""),
-          call_time: String(e.call_time || ""), // Ensure this is explicitly set
+          call_time: String(e.call_time || ""),
           venue: String(e.venue || ""),
           status: (e.status || "planning") as Event["status"],
           guest_count: Number(e.guest_count) || 0,
@@ -60,7 +60,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           souvenirs: String(e.souvenirs || ""),
           host_mc: String(e.host_mc || "")
         };
-        return mapped;
+        return mapped as unknown as Event;
       });
       
       setEvents(typedData);

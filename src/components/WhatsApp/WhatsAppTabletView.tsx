@@ -75,7 +75,7 @@ const WhatsAppTabletView: React.FC<WhatsAppTabletViewProps> = ({ eventId }) => {
     }
   };
 
-  const useTemplate = async (template: WhatsAppTemplate) => {
+  const sendTemplateMessage = async (template: WhatsAppTemplate) => {
     if (!selectedConversation) return;
 
     try {
@@ -279,7 +279,7 @@ const WhatsAppTabletView: React.FC<WhatsAppTabletViewProps> = ({ eventId }) => {
                           key={template.id}
                           variant="outline"
                           size="sm"
-                          onClick={() => useTemplate(template)}
+                          onClick={() => sendTemplateMessage(template)}
                           className="text-xs h-auto py-2 px-3"
                         >
                           {template.name}

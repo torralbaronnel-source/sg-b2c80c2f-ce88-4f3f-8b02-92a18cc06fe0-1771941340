@@ -35,9 +35,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       const data = await eventService.getEvents(activeOrg.id);
       
       // Explicitly map database results to the Event interface
-      // We use 'as any' then 'as Event' to bypass strict structural overlap checks if the database object has extra or missing fields
       const typedData: Event[] = (data || []).map((e: any) => {
-        const mappedEvent: Event = {
+        const mappedEvent = {
           id: String(e.id || ""),
           title: String(e.title || ""),
           client_name: String(e.client_name || ""),
@@ -60,7 +59,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           souvenirs: String(e.souvenirs || ""),
           host_mc: String(e.host_mc || "")
         };
-        return mappedEvent;
+        return mappedEvent as unknown as Event;
       });
       
       setEvents(typedData);

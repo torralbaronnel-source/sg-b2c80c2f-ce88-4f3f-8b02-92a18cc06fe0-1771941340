@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import Link from 'next/link';
 import { 
   MessageSquare, 
   Phone, 
@@ -36,7 +37,8 @@ import {
   ChevronRight,
   Square,
   Circle,
-  Volume2
+  Volume2,
+  MessageCircle
 } from 'lucide-react';
 
 // Tablet-optimized interfaces

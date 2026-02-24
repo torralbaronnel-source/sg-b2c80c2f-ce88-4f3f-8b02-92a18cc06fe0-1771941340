@@ -40,12 +40,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const fetchProfileAndOrgs = async (userId: string) => {
     try {
-      const { data: profileData } = await supabase
+      // Fetch profile
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", userId)
-        .single();
-      
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("Error fetching profile:", profileError);
+      }
+
       setProfile(profileData);
 
       const orgs = await authService.getUserOrganizations();

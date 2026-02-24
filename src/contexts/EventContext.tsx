@@ -40,9 +40,9 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
       
-      const typedData = (data || []).map((e: any) => {
-        // Explicitly map every property required by the Event interface
-        const mappedEvent = {
+      const typedData: Event[] = (data || []).map((e: any) => {
+        // We define the object with an explicit type to ensure all properties are present
+        const mapped: Event = {
           id: String(e.id || ""),
           title: String(e.title || ""),
           client_name: String(e.client_name || ""),
@@ -65,8 +65,7 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
           souvenirs: String(e.souvenirs || ""),
           host_mc: String(e.host_mc || "")
         };
-        
-        return (mappedEvent as unknown) as Event;
+        return mapped;
       });
       
       setEvents(typedData);

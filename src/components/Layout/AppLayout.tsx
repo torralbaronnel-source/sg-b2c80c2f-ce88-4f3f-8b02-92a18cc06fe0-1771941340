@@ -13,7 +13,11 @@ import {
   Bell,
   Sparkles,
   Briefcase,
-  LogOut
+  LogOut,
+  Check,
+  ChevronsUpDown,
+  PlusCircle,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +26,8 @@ import {
   DropdownMenuContent, 
   DropdownMenuItem, 
   DropdownMenuTrigger,
-  DropdownMenuSeparator
+  DropdownMenuSeparator,
+  DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -53,23 +58,67 @@ const NAV_ITEMS = [
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { activeEvent, recentEvents, setActiveEvent } = useEvent();
-  const { user, signOut } = useAuth();
+  const { user, signOut, activeOrg, setActiveOrg, organizations } = useAuth();
 
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-slate-50 font-sans text-slate-900">
         <Sidebar className="border-r border-slate-200">
-          <SidebarHeader className="border-b border-sidebar-border/50">
-            <div className="p-4 flex items-center justify-center">
-              <div className="relative w-full h-16">
-                <Image
-                  src="/Capture.PNG"
-                  alt="Orchestrix Logo"
-                  fill
-                  className="object-contain mix-blend-multiply brightness-95"
-                  priority
-                />
-              </div>
+          <SidebarHeader className="border-b border-sidebar-border/5">
+            <div className="p-4">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-sidebar-accent transition-colors text-left">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary shrink-0">
+                      {activeOrg?.logo_url ? (
+                        <Image 
+                          src={activeOrg.logo_url} 
+                          alt={activeOrg.name} 
+                          width={40} 
+                          height={40} 
+                          className="rounded-lg object-contain mix-blend-multiply"
+                        />
+                      ) : (
+                        <Building2 className="h-6 w-6" />
+                      )}
+                    </div>
+                    <div className="flex flex-col flex-1 overflow-hidden">
+                      <span className="font-semibold truncate text-sidebar-foreground">
+                        {activeOrg?.name || "Select Organization"}
+                      </span>
+                      <span className="text-xs text-sidebar-foreground/60 truncate capitalize">
+                        {activeOrg?.subscription_plan || "Free Plan"}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className="h-4 w-4 text-sidebar-foreground/40 shrink-0" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[240px]" align="start">
+                  <DropdownMenuLabel className="text-xs text-muted-foreground uppercase">Organizations</DropdownMenuLabel>
+                  {organizations.map((org) => (
+                    <DropdownMenuItem 
+                      key={org.id} 
+                      onClick={() => setActiveOrg(org)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <div className="flex h-6 w-6 items-center justify-center rounded bg-primary/10 text-primary">
+                        {org.logo_url ? (
+                          <Image src={org.logo_url} alt={org.name} width={20} height={20} className="object-contain" />
+                        ) : (
+                          <Building2 className="h-3 w-3" />
+                        )}
+                      </div>
+                      <span className="flex-1 truncate">{org.name}</span>
+                      {activeOrg?.id === org.id && <Check className="h-4 w-4 text-primary" />}
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="flex items-center gap-2 cursor-pointer text-primary">
+                    <PlusCircle className="h-4 w-4" />
+                    <span>Create Organization</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </SidebarHeader>
 

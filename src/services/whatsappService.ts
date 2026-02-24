@@ -101,8 +101,8 @@ class WhatsAppService {
         content,
         message_type: 'text' as const,
         external_id: data.messages[0].id,
-        direction: 'outbound' as const,
-        status: 'sent' as const,
+        direction: 'outbound',
+        status: 'sent',
         created_at: new Date().toISOString()
       };
 
@@ -160,15 +160,11 @@ class WhatsAppService {
         sender_name: 'Coordinator',
         sender_type: 'coordinator' as const,
         content: caption || `Sent ${mediaType}`,
-        message_type: mediaType as const,
+        message_type: mediaType,
         external_id: data.messages[0].id,
-        direction: 'outbound' as const,
-        status: 'sent' as const,
-        created_at: new Date().toISOString(),
-        metadata: {
-          media_url: mediaUrl,
-          file_size: 0 // TODO: Get actual file size
-        }
+        direction: 'outbound',
+        status: 'sent',
+        created_at: new Date().toISOString()
       };
 
       const { data: storedMessage } = await supabase
@@ -206,16 +202,11 @@ class WhatsAppService {
         sender_name: message.from,
         sender_type: 'vendor' as const,
         content: message.text?.body || message.image?.caption || 'Media message',
-        message_type: message.type as const,
+        message_type: message.type,
         external_id: message.id,
-        direction: 'inbound' as const,
-        status: 'delivered' as const,
-        created_at: new Date().toISOString(),
-        metadata: {
-          ...(message.image && { media_url: message.image.link }),
-          ...(message.document && { media_url: message.document.link }),
-          ...(message.video && { media_url: message.video.link })
-        }
+        direction: 'inbound',
+        status: 'delivered',
+        created_at: new Date().toISOString()
       };
 
       await supabase.from('messages').insert(messageData);
@@ -232,7 +223,7 @@ class WhatsAppService {
         .from('messages')
         .select(`
           *,
-          event_vendors(*)
+          event_vendors!messages_vendor_id_fkey(*)
         `)
         .eq('event_id', eventId)
         .eq('platform', 'whatsapp')
@@ -243,9 +234,9 @@ class WhatsAppService {
       // Group messages by vendor and get latest message
       const conversations = new Map<string, WhatsAppConversation>();
 
-      data?.forEach((message) => {
+      data?.forEach((message: any) => {
         const vendorId = message.vendor_id;
-        if (!vendorId || !message.event_vendors) return;
+        if (!vendorId || !message.event_vendors || Array.isArray(message.event_vendors)) return;
 
         if (!conversations.has(vendorId)) {
           conversations.set(vendorId, {
@@ -299,17 +290,17 @@ class WhatsAppService {
 
       return data?.map(msg => ({
         id: msg.id,
-        wa_message_id: msg.external_id,
+        wa_message_id: msg.external_id || '',
         from: msg.direction === 'inbound' ? msg.sender_name : '',
         to: msg.direction === 'outbound' ? msg.sender_name : '',
         content: msg.content,
-        message_type: msg.message_type,
+        message_type: msg.message_type as 'text' | 'image' | 'document' | 'voice' | 'video',
         timestamp: msg.created_at,
-        status: msg.status,
-        direction: msg.direction,
+        status: msg.status as 'sent' | 'delivered' | 'read' | 'failed',
+        direction: msg.direction as 'inbound' | 'outbound',
         vendor_id: msg.vendor_id,
         event_id: msg.event_id,
-        metadata: msg.metadata as any
+        metadata: msg.metadata
       })) || [];
 
     } catch (error) {
@@ -388,7 +379,7 @@ class WhatsAppService {
         .from('messages')
         .select(`
           *,
-          event_vendors(*)
+          event_vendors!messages_vendor_id_fkey(*)
         `)
         .eq('event_id', eventId)
         .eq('platform', 'whatsapp')
@@ -400,9 +391,9 @@ class WhatsAppService {
       // Similar to getConversations, group by vendor
       const conversations = new Map<string, WhatsAppConversation>();
 
-      data?.forEach((message) => {
+      data?.forEach((message: any) => {
         const vendorId = message.vendor_id;
-        if (!vendorId || !message.event_vendors) return;
+        if (!vendorId || !message.event_vendors || Array.isArray(message.event_vendors)) return;
 
         if (!conversations.has(vendorId)) {
           conversations.set(vendorId, {
@@ -457,10 +448,14 @@ class WhatsAppService {
   // Update message status (from webhook)
   async updateMessageStatus(messageId: string, status: string): Promise<void> {
     try {
-      await supabase
+      const { error } = await supabase
         .from('messages')
         .update({ status })
         .eq('external_id', messageId);
+
+      if (error) {
+        console.error('Error updating message status:', error);
+      }
 
     } catch (error) {
       console.error('Error updating message status:', error);

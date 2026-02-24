@@ -95,16 +95,15 @@ class WhatsAppService {
       const messageData = {
         event_id: '', // Will be set by caller
         vendor_id: null, // Will be set by caller
-        platform: 'whatsapp' as const,
+        platform: 'whatsapp',
         sender_name: 'Coordinator',
-        sender_type: 'coordinator' as const,
+        sender_type: 'coordinator',
         content,
-        message_type: 'text' as const,
+        message_type: 'text',
         external_id: data.messages[0].id,
-        direction: 'outbound' as const,
-        status: 'sent' as const,
-        created_at: new Date().toISOString(),
-        timestamp: new Date().toISOString()
+        direction: 'outbound',
+        status: 'sent',
+        created_at: new Date().toISOString()
       };
 
       const { data: storedMessage } = await supabase
@@ -171,16 +170,15 @@ class WhatsAppService {
       const messageData = {
         event_id: '', // Will be set by caller
         vendor_id: null, // Will be set by caller
-        platform: 'whatsapp' as const,
+        platform: 'whatsapp',
         sender_name: 'Coordinator',
-        sender_type: 'coordinator' as const,
+        sender_type: 'coordinator',
         content: caption || `Sent ${mediaType}`,
-        message_type: mediaType as const,
+        message_type: mediaType,
         external_id: data.messages[0].id,
-        direction: 'outbound' as const,
-        status: 'sent' as const,
-        created_at: new Date().toISOString(),
-        timestamp: new Date().toISOString()
+        direction: 'outbound',
+        status: 'sent',
+        created_at: new Date().toISOString()
       };
 
       const { data: storedMessage } = await supabase
@@ -228,16 +226,15 @@ class WhatsAppService {
       const messageData = {
         event_id: '', // TODO: Match to ongoing event
         vendor_id: null, // TODO: Match to vendor
-        platform: 'whatsapp' as const,
+        platform: 'whatsapp',
         sender_name: message.from,
-        sender_type: 'vendor' as const,
+        sender_type: 'vendor',
         content: message.text?.body || message.image?.caption || 'Media message',
-        message_type: message.type as const,
+        message_type: message.type,
         external_id: message.id,
-        direction: 'inbound' as const,
-        status: 'delivered' as const,
-        created_at: new Date().toISOString(),
-        timestamp: new Date().toISOString()
+        direction: 'inbound',
+        status: 'delivered',
+        created_at: new Date().toISOString()
       };
 
       await supabase.from('messages').insert(messageData);
@@ -289,14 +286,20 @@ class WhatsAppService {
             event_name: '' // TODO: Join with events table
           });
         } else {
-          const existing = conversations.get(vendorId)!;
-          if (message.direction === 'inbound' && message.status === 'delivered') {
+          const existing = conversations.get(vendorId);
+          if (existing && message.direction === 'inbound' && message.status === 'delivered') {
             existing.unread_count++;
           }
         }
       });
 
-      return Array.from(conversations.values()).sort((a, b) => 
+      // Convert Map to array and sort
+      const sortedConversations: WhatsAppConversation[] = [];
+      conversations.forEach((conv) => {
+        sortedConversations.push(conv);
+      });
+
+      return sortedConversations.sort((a, b) => 
         new Date(b.last_message.timestamp).getTime() - new Date(a.last_message.timestamp).getTime()
       );
 
@@ -319,19 +322,33 @@ class WhatsAppService {
 
       if (error) throw error;
 
-      return data?.map(msg => ({
-        id: msg.id,
-        wa_message_id: msg.external_id || '',
-        from: msg.direction === 'inbound' ? msg.sender_name : '',
-        to: msg.direction === 'outbound' ? msg.sender_name : '',
-        content: msg.content,
-        message_type: msg.message_type as 'text' | 'image' | 'document' | 'voice' | 'video',
-        timestamp: msg.created_at,
-        status: msg.status as 'sent' | 'delivered' | 'read' | 'failed',
-        direction: msg.direction as 'inbound' | 'outbound',
-        vendor_id: msg.vendor_id,
-        event_id: msg.event_id
-      })) || [];
+      return data?.map(msg => {
+        const messageObj: WhatsAppMessage = {
+          id: msg.id,
+          wa_message_id: msg.external_id || '',
+          from: msg.direction === 'inbound' ? msg.sender_name : '',
+          to: msg.direction === 'outbound' ? msg.sender_name : '',
+          content: msg.content,
+          message_type: msg.message_type as 'text' | 'image' | 'document' | 'voice' | 'video',
+          timestamp: msg.created_at,
+          status: msg.status as 'sent' | 'delivered' | 'read' | 'failed',
+          direction: msg.direction as 'inbound' | 'outbound',
+          vendor_id: msg.vendor_id,
+          event_id: msg.event_id
+        };
+
+        // Add metadata if it exists
+        if (msg.metadata && typeof msg.metadata === 'object') {
+          messageObj.metadata = {
+            media_url: msg.metadata.media_url,
+            media_name: msg.metadata.media_name,
+            voice_duration: msg.metadata.voice_duration,
+            file_size: msg.metadata.file_size
+          };
+        }
+
+        return messageObj;
+      }) || [];
 
     } catch (error) {
       console.error('Error fetching conversation history:', error);
@@ -447,7 +464,13 @@ class WhatsAppService {
         }
       });
 
-      return Array.from(conversations.values());
+      // Convert Map to array and return
+      const searchResults: WhatsAppConversation[] = [];
+      conversations.forEach((conv) => {
+        searchResults.push(conv);
+      });
+
+      return searchResults;
 
     } catch (error) {
       console.error('Error searching conversations:', error);

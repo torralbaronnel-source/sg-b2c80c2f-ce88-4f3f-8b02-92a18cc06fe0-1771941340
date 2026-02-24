@@ -19,7 +19,7 @@ import { useEvent } from "@/contexts/EventContext";
 import { format } from "date-fns";
 
 export function EventSelector() {
-  const { activeEvent, recentEvents, setActiveEvent } = useEvent();
+  const { events, activeEvent, setActiveEvent } = useEvent();
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -46,7 +46,7 @@ export function EventSelector() {
           <CommandList>
             <CommandEmpty>No event found.</CommandEmpty>
             <CommandGroup>
-              {recentEvents.map((event) => (
+              {events.map((event) => (
                 <CommandItem
                   key={event.id}
                   value={event.title}

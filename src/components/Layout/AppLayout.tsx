@@ -62,8 +62,8 @@ const NAV_ITEMS = [
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { activeEvent, recentEvents, setActiveEvent } = useEvent();
-  const { user, signOut, activeOrg, setActiveOrg, organizations } = useAuth();
+  const { events, activeEvent, setActiveEvent } = useEvent();
+  const { user, profile, activeOrg, organizations, setActiveOrg, signOut } = useAuth();
 
   // For now, we'll allow anyone with "owner" role or your specific user ID to see the admin link
   // In production, this would be restricted to platform admins only
@@ -257,7 +257,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 <DropdownMenuContent align="start" className="w-64">
                   <div className="p-2">
                     <Input placeholder="Search events..." className="h-8 mb-2" />
-                    {recentEvents.map(event => (
+                    {events.map(event => (
                       <DropdownMenuItem 
                         key={event.id}
                         onClick={() => setActiveEvent(event)}

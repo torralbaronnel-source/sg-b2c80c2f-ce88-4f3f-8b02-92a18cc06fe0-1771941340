@@ -3,508 +3,643 @@ import {
   Card, 
   CardContent, 
   CardHeader, 
-  CardTitle 
+  CardTitle,
+  CardDescription,
+  CardFooter
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
+  Plus, 
+  Search, 
+  Calendar, 
+  MapPin, 
+  Users, 
+  DollarSign, 
+  Filter,
+  MoreVertical,
+  Clock,
+  ExternalLink,
+  Edit2,
+  CheckCircle2,
+  LayoutGrid,
+  List,
+  Sparkles,
+  Palette,
+  Camera,
+  Music,
+  Utensils,
+  Gift,
+  Mic2,
+  FileText
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { 
-  MapPin, 
-  Users, 
-  Calendar as CalendarIcon, 
-  Activity, 
-  ChevronRight, 
-  Search,
-  Filter,
-  Edit2,
-  DollarSign,
-  Clock,
-  Plus,
-  Sparkles
-} from "lucide-react";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useEvent } from "@/contexts/EventContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
-import { motion } from "framer-motion";
-
-const STATUS_CONFIG = {
-  planning: { color: "bg-slate-100 text-slate-700", label: "Planning" },
-  confirmed: { color: "bg-blue-100 text-blue-700", label: "Confirmed" },
-  in_progress: { color: "bg-amber-100 text-amber-700", label: "Live / In Progress" },
-  completed: { color: "bg-emerald-100 text-emerald-700", label: "Completed" },
-  cancelled: { color: "bg-rose-100 text-rose-700", label: "Cancelled" },
-};
-
-const CreateEventDialog = () => {
-  const { createEvent } = useEvent();
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: "",
-    client_name: "",
-    event_date: format(new Date(), "yyyy-MM-dd'T'18:00"),
-    venue: "",
-    guest_count: 150,
-    budget: 0,
-    status: "planning"
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      await createEvent(formData);
-      setOpen(false);
-      setFormData({
-        title: "",
-        client_name: "",
-        event_date: format(new Date(), "yyyy-MM-dd'T'18:00"),
-        venue: "",
-        guest_count: 150,
-        budget: 0,
-        status: "planning"
-      });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-slate-900 text-white font-bold gap-2 hover:bg-black transition-all shadow-md active:scale-95">
-          <Plus className="w-4 h-4" />
-          Schedule Event
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[550px]">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="font-serif text-2xl text-slate-900">Schedule New Production</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-6 py-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Event Title</Label>
-                <Input 
-                  required
-                  placeholder="e.g. Santos-Reyes Wedding"
-                  value={formData.title} 
-                  onChange={(e) => setFormData({...formData, title: e.target.value})} 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Client Name</Label>
-                <Input 
-                  required
-                  placeholder="Full Name"
-                  value={formData.client_name} 
-                  onChange={(e) => setFormData({...formData, client_name: e.target.value})} 
-                />
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Date & Call Time</Label>
-                <Input 
-                  required
-                  type="datetime-local"
-                  value={formData.event_date} 
-                  onChange={(e) => setFormData({...formData, event_date: e.target.value})} 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Initial Status</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(val) => setFormData({...formData, status: val})}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Venue / Location</Label>
-              <Input 
-                placeholder="Hotel, Ballroom, or Landmark"
-                value={formData.venue} 
-                onChange={(e) => setFormData({...formData, venue: e.target.value})} 
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Target Pax</Label>
-                <Input 
-                  type="number"
-                  value={formData.guest_count} 
-                  onChange={(e) => setFormData({...formData, guest_count: parseInt(e.target.value) || 0})} 
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Budget (PHP)</Label>
-                <Input 
-                  type="number"
-                  value={formData.budget} 
-                  onChange={(e) => setFormData({...formData, budget: parseFloat(e.target.value) || 0})} 
-                />
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button type="submit" disabled={loading} className="bg-slate-900 text-white hover:bg-black min-w-[140px]">
-              {loading ? "Scheduling..." : "Create Production"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-const QuickEditDialog = ({ event, onSave }: { event: any, onSave: (data: any) => Promise<void> }) => {
-  const [formData, setFormData] = useState({
-    title: event.title,
-    client_name: event.client_name || "",
-    event_date: event.event_date ? format(new Date(event.event_date), "yyyy-MM-dd'T'HH:mm") : "",
-    venue: event.venue || "",
-    guest_count: event.guest_count || 0,
-    budget: event.budget || 0,
-    status: event.status || "planning"
-  });
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const handleSave = async () => {
-    setLoading(true);
-    await onSave(formData);
-    setLoading(false);
-    setOpen(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900 transition-colors">
-          <Edit2 className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle className="font-serif text-2xl text-slate-900">Quick Edit Production</DialogTitle>
-        </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Event Name</Label>
-              <Input 
-                value={formData.title} 
-                onChange={(e) => setFormData({...formData, title: e.target.value})} 
-                className="focus-visible:ring-slate-400"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Client Name</Label>
-              <Input 
-                value={formData.client_name} 
-                onChange={(e) => setFormData({...formData, client_name: e.target.value})} 
-                className="focus-visible:ring-slate-400"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Date & Time</Label>
-              <Input 
-                type="datetime-local"
-                value={formData.event_date} 
-                onChange={(e) => setFormData({...formData, event_date: e.target.value})} 
-                className="focus-visible:ring-slate-400"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Status</Label>
-              <Select 
-                value={formData.status} 
-                onValueChange={(val) => setFormData({...formData, status: val})}
-              >
-                <SelectTrigger className="focus:ring-slate-400">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Venue</Label>
-            <Input 
-              value={formData.venue} 
-              onChange={(e) => setFormData({...formData, venue: e.target.value})} 
-              placeholder="e.g., Grand Ballroom, Conrad Manila"
-              className="focus-visible:ring-slate-400"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Expected Guests</Label>
-              <Input 
-                type="number"
-                value={formData.guest_count} 
-                onChange={(e) => setFormData({...formData, guest_count: parseInt(e.target.value) || 0})} 
-                className="focus-visible:ring-slate-400"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">Total Budget (PHP)</Label>
-              <div className="relative">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-medium">₱</span>
-                <Input 
-                  type="number"
-                  className="pl-7 focus-visible:ring-slate-400"
-                  value={formData.budget} 
-                  onChange={(e) => setFormData({...formData, budget: parseFloat(e.target.value) || 0})} 
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)} className="border-slate-200">Cancel</Button>
-          <Button onClick={handleSave} disabled={loading} className="bg-slate-900 text-white hover:bg-black min-w-[120px]">
-            {loading ? "Syncing..." : "Update Event"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
+import { motion, AnimatePresence } from "framer-motion";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 
 export function EventsDashboardView() {
-  const { events, loading, updateEvent, createEvent } = useEvent();
+  const { events, loading, createEvent, updateEvent } = useEvent();
+  const { activeOrg } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const filteredEvents = useMemo(() => {
     return events.filter(event => {
       const matchesSearch = 
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (event.client_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (event.venue || "").toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesStatus = statusFilter === "all" || event.status === statusFilter;
-      
+        event.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        event.venue.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = filterStatus === "all" || event.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [events, searchTerm, statusFilter]);
+  }, [events, searchTerm, filterStatus]);
 
-  const handleSeedData = async () => {
-    await createEvent({
-      title: "Reyes-Santos Wedding",
-      client_name: "Maria & Carlos Reyes-Santos",
-      event_date: format(new Date(), "yyyy-MM-dd'T'15:00"),
-      venue: "Manila Hotel Grand Ballroom",
-      guest_count: 350,
-      budget: 1200000,
-      status: "planning"
+  const CreateEventDialog = () => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({
+      title: "",
+      client_name: "",
+      event_date: "",
+      call_time: "",
+      venue: "",
+      pax: 100,
+      budget: 0,
+      hmu_artist: "",
+      lights_sounds: "",
+      catering: "",
+      photo_video: "",
+      coordination_team: "",
+      backdrop_styling: "",
+      souvenirs: "",
+      host_mc: "",
+      event_notes: ""
     });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      try {
+        await createEvent({
+          ...formData,
+          status: "planning" // Always default to planning
+        });
+        setIsOpen(false);
+        setFormData({
+          title: "", client_name: "", event_date: "", call_time: "", venue: "",
+          pax: 100, budget: 0, hmu_artist: "", lights_sounds: "", catering: "",
+          photo_video: "", coordination_team: "", backdrop_styling: "",
+          souvenirs: "", host_mc: "", event_notes: ""
+        });
+      } catch (error) {
+        console.error("Failed to create event:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button className="bg-indigo-600 hover:bg-indigo-700">
+            <Plus className="mr-2 h-4 w-4" /> Schedule Event
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden flex flex-col">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-indigo-500" />
+              Schedule New Production
+            </DialogTitle>
+            <DialogDescription>
+              Create a detailed event profile. All initial projects start in the Planning phase.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Core Details */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    Core Details
+                  </h3>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Event Title</label>
+                    <Input 
+                      placeholder="e.g., The Wedding of Alex & Sam" 
+                      required 
+                      value={formData.title}
+                      onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Client Name</label>
+                    <Input 
+                      placeholder="Full Name" 
+                      required 
+                      value={formData.client_name}
+                      onChange={(e) => setFormData({...formData, client_name: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-indigo-600 font-bold">Event Date</label>
+                      <Input 
+                        type="date" 
+                        required 
+                        value={formData.event_date}
+                        onChange={(e) => setFormData({...formData, event_date: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Call Time</label>
+                      <Input 
+                        type="time" 
+                        required 
+                        value={formData.call_time}
+                        onChange={(e) => setFormData({...formData, call_time: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Venue</label>
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        className="pl-10" 
+                        placeholder="Location Name / Address" 
+                        required 
+                        value={formData.venue}
+                        onChange={(e) => setFormData({...formData, venue: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Target Pax</label>
+                      <Input 
+                        type="number" 
+                        placeholder="Guest count" 
+                        value={formData.pax}
+                        onChange={(e) => setFormData({...formData, pax: parseInt(e.target.value)})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Initial Budget (₱)</label>
+                      <Input 
+                        type="number" 
+                        placeholder="Budget amount" 
+                        value={formData.budget}
+                        onChange={(e) => setFormData({...formData, budget: parseFloat(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Production & Vendors */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                    <Palette className="h-4 w-4 text-purple-500" />
+                    Production & Vendors
+                  </h3>
+                  <div className="grid grid-cols-1 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Users className="h-3 w-3" /> HMU Artist
+                      </label>
+                      <Input 
+                        placeholder="Hair & Makeup Artist" 
+                        value={formData.hmu_artist}
+                        onChange={(e) => setFormData({...formData, hmu_artist: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Music className="h-3 w-3" /> Lights & Sounds
+                      </label>
+                      <Input 
+                        placeholder="Provider Name" 
+                        value={formData.lights_sounds}
+                        onChange={(e) => setFormData({...formData, lights_sounds: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Utensils className="h-3 w-3" /> Catering
+                      </label>
+                      <Input 
+                        placeholder="Caterer Name" 
+                        value={formData.catering}
+                        onChange={(e) => setFormData({...formData, catering: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Camera className="h-3 w-3" /> Photo & Video
+                      </label>
+                      <Input 
+                        placeholder="Studio / Freelancer" 
+                        value={formData.photo_video}
+                        onChange={(e) => setFormData({...formData, photo_video: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <Separator className="my-8" />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Auxiliary Services</h3>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Coordination Team</label>
+                      <Input 
+                        placeholder="Team Name / Lead" 
+                        value={formData.coordination_team}
+                        onChange={(e) => setFormData({...formData, coordination_team: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Backdrop & Styling</label>
+                      <Input 
+                        placeholder="Event Stylist / Florist" 
+                        value={formData.backdrop_styling}
+                        onChange={(e) => setFormData({...formData, backdrop_styling: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                   <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Extras</h3>
+                   <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Mic2 className="h-3 w-3" /> Host / MC
+                      </label>
+                      <Input 
+                        placeholder="Host Name" 
+                        value={formData.host_mc}
+                        onChange={(e) => setFormData({...formData, host_mc: e.target.value})}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium flex items-center gap-2">
+                        <Gift className="h-3 w-3" /> Souvenirs
+                      </label>
+                      <Input 
+                        placeholder="Souvenir Supplier" 
+                        value={formData.souvenirs}
+                        onChange={(e) => setFormData({...formData, souvenirs: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2 mb-6">
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <FileText className="h-3 w-3" /> Additional Notes
+                </label>
+                <Textarea 
+                  placeholder="Special requirements, dietary restrictions, or important reminders..."
+                  className="min-h-[120px] bg-muted/30"
+                  value={formData.event_notes}
+                  onChange={(e) => setFormData({...formData, event_notes: e.target.value})}
+                />
+              </div>
+            </ScrollArea>
+
+            <DialogFooter className="p-6 border-t bg-muted/10">
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+              <Button 
+                type="submit" 
+                className="bg-indigo-600 hover:bg-indigo-700 min-w-[120px]"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Scheduling..." : "Create Event"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
   };
 
-  if (loading) {
+  const QuickEditDialog = ({ event }: { event: any }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [formData, setFormData] = useState({ ...event });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setIsSubmitting(true);
+      try {
+        await updateEvent(event.id, formData);
+        setIsOpen(false);
+      } catch (error) {
+        console.error("Failed to update event:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
     return (
-      <div className="p-8 flex items-center justify-center min-h-[400px]">
-        <div className="flex flex-col items-center gap-4">
-          <Activity className="h-10 w-10 text-slate-300 animate-pulse" />
-          <p className="text-slate-500 font-medium animate-pulse">Loading Production Data...</p>
-        </div>
-      </div>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="sm" className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50">
+            <Edit2 className="h-4 w-4 mr-2" /> Quick Edit
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col p-0">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle>Edit Production Details</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="flex-1 overflow-hidden flex flex-col">
+            <ScrollArea className="flex-1 p-6">
+              <div className="space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Status</label>
+                    <Select 
+                      value={formData.status} 
+                      onValueChange={(v: any) => setFormData({...formData, status: v})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="planning">Planning</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Venue</label>
+                    <Input 
+                      value={formData.venue}
+                      onChange={(e) => setFormData({...formData, venue: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">HMU Artist</label>
+                    <Input 
+                      value={formData.hmu_artist || ""}
+                      onChange={(e) => setFormData({...formData, hmu_artist: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Lights & Sounds</label>
+                    <Input 
+                      value={formData.lights_sounds || ""}
+                      onChange={(e) => setFormData({...formData, lights_sounds: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Notes</label>
+                  <Textarea 
+                    value={formData.event_notes || ""}
+                    onChange={(e) => setFormData({...formData, event_notes: e.target.value})}
+                    className="min-h-[100px]"
+                  />
+                </div>
+              </div>
+            </ScrollArea>
+            <DialogFooter className="p-6 border-t">
+              <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Close</Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     );
-  }
+  };
+
+  const EventCard = ({ event }: { event: any }) => (
+    <motion.div
+      layout
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      whileHover={{ y: -5, transition: { duration: 0.2 } }}
+      className="h-full"
+    >
+      <Card className="h-full flex flex-col overflow-hidden border-border/50 hover:border-indigo-500/50 transition-colors shadow-sm hover:shadow-xl group">
+        <CardHeader className="pb-4 relative">
+          <div className="flex justify-between items-start mb-2">
+            <Badge 
+              variant={
+                event.status === 'active' ? 'default' : 
+                event.status === 'completed' ? 'secondary' : 
+                event.status === 'cancelled' ? 'destructive' : 'outline'
+              }
+              className={`capitalize ${event.status === 'active' ? 'bg-green-500 hover:bg-green-600' : ''}`}
+            >
+              {event.status}
+            </Badge>
+            <div className="flex gap-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+          <CardTitle className="text-xl group-hover:text-indigo-600 transition-colors leading-tight">
+            {event.title}
+          </CardTitle>
+          <CardDescription className="flex items-center gap-1 font-medium text-foreground/80">
+            <Users className="h-3 w-3" /> {event.client_name}
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="pb-4 flex-1 space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="p-1.5 rounded-md bg-indigo-50 text-indigo-600">
+                <Calendar className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-indigo-500 leading-none mb-1">Date</p>
+                <p className="font-semibold text-foreground">{format(new Date(event.event_date), 'MMM dd, yyyy')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="p-1.5 rounded-md bg-amber-50 text-amber-600">
+                <Clock className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-[10px] uppercase font-bold text-amber-500 leading-none mb-1">Call Time</p>
+                <p className="font-semibold text-foreground">{event.call_time}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 text-sm text-muted-foreground bg-muted/30 p-2 rounded-lg">
+            <MapPin className="h-4 w-4 mt-0.5 text-indigo-500 shrink-0" />
+            <span className="line-clamp-1">{event.venue}</span>
+          </div>
+
+          <div className="flex justify-between items-center text-sm pt-2">
+            <div className="flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-indigo-400" />
+              <span className="font-medium">{event.pax} Pax</span>
+            </div>
+            <div className="flex items-center gap-1.5 font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded-md">
+              <DollarSign className="h-4 w-4" />
+              <span>₱{event.budget?.toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* New Vendor Summaries in Card */}
+          {(event.hmu_artist || event.catering || event.photo_video) && (
+            <div className="pt-2 border-t flex flex-wrap gap-2">
+              {event.hmu_artist && <Badge variant="outline" className="text-[10px] h-5 bg-purple-50">HMU: {event.hmu_artist}</Badge>}
+              {event.catering && <Badge variant="outline" className="text-[10px] h-5 bg-orange-50">Cater: {event.catering}</Badge>}
+              {event.photo_video && <Badge variant="outline" className="text-[10px] h-5 bg-blue-50">P/V: {event.photo_video}</Badge>}
+            </div>
+          )}
+        </CardContent>
+        <CardFooter className="pt-0 border-t bg-muted/5 p-4 flex gap-2">
+          <QuickEditDialog event={event} />
+          <Button variant="outline" size="sm" className="flex-1">
+            Production Hub <ExternalLink className="h-3 w-3 ml-2" />
+          </Button>
+        </CardFooter>
+      </Card>
+    </motion.div>
+  );
 
   return (
-    <div className="p-6 space-y-8 bg-slate-50/50 min-h-full">
+    <div className="p-6 space-y-8 max-w-7xl mx-auto">
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 font-serif">Production Hub</h1>
-          <p className="text-slate-500 mt-1">Directly manage and monitor your event operations</p>
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
+            Production Hub
+            <Badge variant="outline" className="text-indigo-600 bg-indigo-50 border-indigo-200">
+              {events.length} Active Events
+            </Badge>
+          </h1>
+          <p className="text-muted-foreground">Manage, schedule, and oversee your event production timeline.</p>
         </div>
-        <div className="flex items-center gap-3">
-          {events.length === 0 && (
-            <Button variant="outline" onClick={handleSeedData} className="gap-2 border-dashed border-slate-300">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              Seed Sample Event
-            </Button>
-          )}
+        <div className="flex items-center gap-2">
           <CreateEventDialog />
         </div>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <div className="flex flex-1 items-center gap-3 w-full md:w-auto">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input 
-              placeholder="Search by name, client, or venue..." 
-              className="pl-9 bg-slate-50 border-slate-200 focus-visible:ring-slate-400 transition-all"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+      {/* Toolbar */}
+      <Card className="p-4 shadow-sm border-border/60 bg-white/50 backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row gap-4 justify-between">
+          <div className="flex items-center gap-2 flex-1 max-w-md">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search by title, client or venue..." 
+                className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button variant="outline" size="icon">
+              <Filter className="h-4 w-4" />
+            </Button>
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 focus:ring-slate-400">
-              <Filter className="w-4 h-4 mr-2 text-slate-400" />
-              <SelectValue placeholder="All States" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All States</SelectItem>
-              {Object.entries(STATUS_CONFIG).map(([key, config]) => (
-                <SelectItem key={key} value={key}>{config.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {filteredEvents.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEvents.map((event) => {
-            const statusInfo = STATUS_CONFIG[event.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.planning;
-            const isLive = event.status === "in_progress";
-            const eventDate = event.event_date ? new Date(event.event_date) : null;
-
-            return (
-              <motion.div
-                key={event.id}
-                layout
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ 
-                  y: -5,
-                  transition: { duration: 0.2, ease: "easeOut" }
-                }}
-                className="group h-full"
+          
+          <div className="flex items-center gap-4">
+            <div className="flex items-center border rounded-lg p-1 bg-muted/30">
+              <Button 
+                variant={viewMode === 'grid' ? 'secondary' : 'ghost'} 
+                size="sm" 
+                className="h-8 px-3"
+                onClick={() => setViewMode('grid')}
               >
-                <Card className="h-full border-slate-200 transition-all duration-300 group-hover:border-slate-400 group-hover:shadow-xl relative overflow-hidden bg-white">
-                  <div className={cn("h-1.5 w-full", isLive ? "bg-rose-500 animate-pulse" : "bg-slate-200")} />
-                  
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <Badge className={cn("text-[10px] font-bold uppercase tracking-widest px-1.5 py-0 border-none", statusInfo.color)}>
-                        {isLive && <Activity className="h-3 w-3 mr-1 inline-block" />}
-                        {statusInfo.label}
-                      </Badge>
-                      <QuickEditDialog event={event} onSave={(data) => updateEvent(event.id, data)} />
-                    </div>
-                    <CardTitle className="text-xl font-serif mt-2 line-clamp-1 group-hover:text-slate-900 transition-colors">
-                      {event.title}
-                    </CardTitle>
-                    <p className="text-sm text-slate-500 font-medium">{event.client_name || "No Client Assigned"}</p>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="flex flex-col gap-1 p-2 rounded-lg bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:border-slate-200 transition-colors">
-                          <div className="flex items-center gap-1.5 text-slate-400">
-                            <CalendarIcon className="h-3 w-3" />
-                            <span className="text-[10px] uppercase font-bold tracking-wider">Date</span>
-                          </div>
-                          <span className="text-xs font-bold text-slate-900">
-                            {eventDate ? format(eventDate, "MMM dd, yyyy") : "TBD"}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-1 p-2 rounded-lg bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:border-slate-200 transition-colors">
-                          <div className="flex items-center gap-1.5 text-slate-400">
-                            <Clock className="h-3 w-3" />
-                            <span className="text-[10px] uppercase font-bold tracking-wider">Time</span>
-                          </div>
-                          <span className="text-xs font-bold text-slate-900">
-                            {eventDate ? format(eventDate, "hh:mm a") : "TBD"}
-                          </span>
-                        </div>
-                        <div className="flex flex-col gap-1 p-2 rounded-lg bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:border-slate-200 transition-colors">
-                          <div className="flex items-center gap-1.5 text-slate-400">
-                            <Users className="h-3 w-3" />
-                            <span className="text-[10px] uppercase font-bold tracking-wider">Guests</span>
-                          </div>
-                          <span className="text-xs font-bold text-slate-900">{event.guest_count || 0} pax</span>
-                        </div>
-                        <div className="flex flex-col gap-1 p-2 rounded-lg bg-slate-50 border border-slate-100 group-hover:bg-white group-hover:border-slate-200 transition-colors">
-                          <div className="flex items-center gap-1.5 text-slate-400">
-                            <DollarSign className="h-3 w-3" />
-                            <span className="text-[10px] uppercase font-bold tracking-wider">Budget</span>
-                          </div>
-                          <span className="text-xs font-bold text-slate-900">
-                            ₱{(event.budget || 0).toLocaleString()}
-                          </span>
-                        </div>
-                      </div>
+                <LayoutGrid className="h-4 w-4 mr-2" /> Grid
+              </Button>
+              <Button 
+                variant={viewMode === 'list' ? 'secondary' : 'ghost'} 
+                size="sm" 
+                className="h-8 px-3"
+                onClick={() => setViewMode('list')}
+              >
+                <List className="h-4 w-4 mr-2" /> List
+              </Button>
+            </div>
+            
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="planning">Planning</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </Card>
 
-                      <div className="flex items-center gap-2 text-slate-500 bg-slate-50 p-2 rounded-lg border border-slate-100 group-hover:bg-white group-hover:border-slate-200 transition-colors">
-                        <MapPin className="h-4 w-4 text-slate-400 shrink-0" />
-                        <span className="text-xs font-medium truncate">{event.venue || "No Venue Set"}</span>
-                      </div>
-
-                      <Link href={`/events/${event.id}/live`} className="block w-full">
-                        <Button className="w-full bg-slate-900 hover:bg-black text-white text-xs font-bold h-10 gap-2 transition-all group-hover:shadow-md group-hover:scale-[1.02] active:scale-95">
-                          {isLive ? "Enter Command Center" : "Production Overview"}
-                          <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
+      {/* Main Content Area */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="h-[300px] animate-pulse bg-muted/50" />
+          ))}
+        </div>
+      ) : filteredEvents.length > 0 ? (
+        <div className={viewMode === 'grid' 
+          ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+          : "space-y-4"
+        }>
+          <AnimatePresence mode="popLayout">
+            {filteredEvents.map(event => (
+              <EventCard key={event.id} event={event} />
+            ))}
+          </AnimatePresence>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border-2 border-dashed border-slate-200 text-center px-4">
-          <div className="p-4 rounded-full bg-slate-50 mb-4">
-            <CalendarIcon className="w-8 h-8 text-slate-300" />
+        <div className="flex flex-col items-center justify-center py-20 bg-muted/20 rounded-xl border-2 border-dashed border-muted">
+          <div className="p-4 rounded-full bg-indigo-50 text-indigo-500 mb-4">
+            <Calendar className="h-10 w-10" />
           </div>
-          <h3 className="text-xl font-bold text-slate-900">Your Production Calendar is Empty</h3>
-          <p className="text-slate-500 max-w-sm mx-auto mb-6">Schedule your first event or seed sample data to explore the Orchestrix production hub.</p>
-          <div className="flex flex-col sm:flex-row gap-3">
-             <Button variant="outline" onClick={handleSeedData} className="gap-2 border-slate-200">
-              <Sparkles className="w-4 h-4 text-amber-500" />
-              Seed Sample Event
-            </Button>
+          <h3 className="text-xl font-semibold">No productions found</h3>
+          <p className="text-muted-foreground mt-2 max-w-xs text-center">
+            Start by scheduling your first event to see it here in the production hub.
+          </p>
+          <div className="mt-6">
             <CreateEventDialog />
           </div>
         </div>

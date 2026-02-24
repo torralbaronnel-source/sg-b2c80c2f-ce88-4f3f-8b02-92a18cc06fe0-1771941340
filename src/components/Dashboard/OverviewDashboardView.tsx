@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { 
   Card, 
   CardContent, 
@@ -19,39 +19,46 @@ import { useAuth } from "@/contexts/AuthContext";
 import Link from "next/link";
 
 export function OverviewDashboardView() {
-  const { events } = useEvent();
+  const { events, loading } = useEvent();
   const { activeOrg } = useAuth();
 
-  const stats = [
-    {
-      title: "Live Events",
-      value: events.filter(e => e.status === "live").length,
-      icon: Clock,
-      color: "text-rose-500",
-      bg: "bg-rose-50"
-    },
-    {
-      title: "Active Projects",
-      value: events.length,
-      icon: Calendar,
-      color: "text-blue-500",
-      bg: "bg-blue-50"
-    },
-    {
-      title: "Total Guests",
-      value: events.reduce((acc, curr) => acc + (curr.guest_count || 0), 0).toLocaleString(),
-      icon: Users,
-      color: "text-emerald-500",
-      bg: "bg-emerald-50"
-    },
-    {
-      title: "Team Comms",
-      value: "11",
-      icon: MessageSquare,
-      color: "text-purple-500",
-      bg: "bg-purple-50"
-    }
-  ];
+  const stats = useMemo(() => {
+    const active = events.filter(e => e.status === "active").length;
+    const planning = events.filter(e => e.status === "planning").length;
+    const completed = events.filter(e => e.status === "completed").length;
+    const totalGuests = events.reduce((acc, e) => acc + (e.pax || 0), 0);
+
+    return [
+      {
+        title: "Live Events",
+        value: events.filter(e => e.status === "active").length,
+        icon: Clock,
+        color: "text-rose-500",
+        bg: "bg-rose-50"
+      },
+      {
+        title: "Active Projects",
+        value: events.length,
+        icon: Calendar,
+        color: "text-blue-500",
+        bg: "bg-blue-50"
+      },
+      {
+        title: "Total Guests",
+        value: totalGuests.toLocaleString(),
+        icon: Users,
+        color: "text-emerald-500",
+        bg: "bg-emerald-50"
+      },
+      {
+        title: "Team Comms",
+        value: "11",
+        icon: MessageSquare,
+        color: "text-purple-500",
+        bg: "bg-purple-50"
+      }
+    ];
+  }, [events]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

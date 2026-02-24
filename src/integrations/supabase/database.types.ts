@@ -64,45 +64,72 @@ export type Database = {
       }
       events: {
         Row: {
+          backdrop_styling: string | null
           budget: number | null
+          catering: string | null
           client_name: string | null
+          coordination_team: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
           event_date: string | null
+          event_notes: string | null
           guest_count: number | null
+          hmu_artist: string | null
+          host_mc: string | null
           id: string
+          lights_sounds: string | null
           organization_id: string | null
+          photo_video: string | null
+          souvenirs: string | null
           status: string | null
           title: string
           updated_at: string | null
           venue: string | null
         }
         Insert: {
+          backdrop_styling?: string | null
           budget?: number | null
+          catering?: string | null
           client_name?: string | null
+          coordination_team?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           event_date?: string | null
+          event_notes?: string | null
           guest_count?: number | null
+          hmu_artist?: string | null
+          host_mc?: string | null
           id?: string
+          lights_sounds?: string | null
           organization_id?: string | null
+          photo_video?: string | null
+          souvenirs?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
           venue?: string | null
         }
         Update: {
+          backdrop_styling?: string | null
           budget?: number | null
+          catering?: string | null
           client_name?: string | null
+          coordination_team?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           event_date?: string | null
+          event_notes?: string | null
           guest_count?: number | null
+          hmu_artist?: string | null
+          host_mc?: string | null
           id?: string
+          lights_sounds?: string | null
           organization_id?: string | null
+          photo_video?: string | null
+          souvenirs?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null

@@ -41,31 +41,32 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
       if (error) throw error;
       
       const typedData = (data || []).map((e: any) => {
-        // We create the object with explicit type to avoid any mismatch
-        const mapped = {
-          id: e.id,
-          title: e.title || "",
-          client_name: e.client_name || "",
-          event_date: e.event_date || "",
-          call_time: e.call_time || "",
-          venue: e.venue || "",
+        // Explicitly map every property required by the Event interface
+        const mappedEvent = {
+          id: String(e.id || ""),
+          title: String(e.title || ""),
+          client_name: String(e.client_name || ""),
+          event_date: String(e.event_date || ""),
+          call_time: String(e.call_time || ""),
+          venue: String(e.venue || ""),
           status: (e.status || "planning") as Event["status"],
           guest_count: Number(e.guest_count) || 0,
           budget: Number(e.budget) || 0,
-          created_at: e.created_at || "",
-          organization_id: e.organization_id || "",
-          created_by: e.created_by || "",
-          description: e.description || "",
-          hmu_artist: e.hmu_artist || "",
-          lights_sounds: e.lights_sounds || "",
-          catering: e.catering || "",
-          photo_video: e.photo_video || "",
-          coordination_team: e.coordination_team || "",
-          backdrop_styling: e.backdrop_styling || "",
-          souvenirs: e.souvenirs || "",
-          host_mc: e.host_mc || ""
-        };
-        return (mapped as unknown) as Event;
+          created_at: String(e.created_at || ""),
+          organization_id: String(e.organization_id || ""),
+          created_by: String(e.created_by || ""),
+          description: String(e.description || ""),
+          hmu_artist: String(e.hmu_artist || ""),
+          lights_sounds: String(e.lights_sounds || ""),
+          catering: String(e.catering || ""),
+          photo_video: String(e.photo_video || ""),
+          coordination_team: String(e.coordination_team || ""),
+          backdrop_styling: String(e.backdrop_styling || ""),
+          souvenirs: String(e.souvenirs || ""),
+          host_mc: String(e.host_mc || "")
+        } as Event;
+        
+        return mappedEvent;
       });
       
       setEvents(typedData);

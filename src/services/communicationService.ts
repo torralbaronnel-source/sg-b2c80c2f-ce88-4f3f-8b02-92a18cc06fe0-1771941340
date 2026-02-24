@@ -131,14 +131,15 @@ class CommunicationService {
     const messageData = {
       event_id: eventId,
       vendor_id: vendorId,
-      platform: 'whatsapp' as const,
+      platform: 'whatsapp',
       sender_name: 'Coordinator',
-      sender_type: 'coordinator' as const,
+      sender_type: 'coordinator',
       content,
-      message_type: 'text' as const,
+      message_type: 'text',
       external_id: null,
-      direction: 'outbound' as const,
-      status: 'sent' as const,
+      direction: 'outbound',
+      status: 'sent',
+      metadata: {},
       created_at: new Date().toISOString()
     };
 
@@ -154,14 +155,15 @@ class CommunicationService {
     const messageData = {
       event_id: eventId,
       vendor_id: null,
-      platform: 'slack' as const,
+      platform: 'slack',
       sender_name: user.user_metadata?.full_name || 'Coordinator',
-      sender_type: 'coordinator' as const,
+      sender_type: 'coordinator',
       content,
-      message_type: 'text' as const,
+      message_type: 'text',
       external_id: channelId,
-      direction: 'outbound' as const,
-      status: 'sent' as const,
+      direction: 'outbound',
+      status: 'sent',
+      metadata: {},
       created_at: new Date().toISOString()
     };
 
@@ -174,14 +176,15 @@ class CommunicationService {
     const messageData = {
       event_id: eventId,
       vendor_id: null,
-      platform: 'email' as const,
+      platform: 'email',
       sender_name: 'Coordinator',
-      sender_type: 'coordinator' as const,
+      sender_type: 'coordinator',
       content: `Subject: ${subject}\n\n${content}`,
-      message_type: 'text' as const,
+      message_type: 'text',
       external_id: recipientEmail,
-      direction: 'outbound' as const,
-      status: 'sent' as const,
+      direction: 'outbound',
+      status: 'sent',
+      metadata: {},
       created_at: new Date().toISOString()
     };
 
@@ -193,14 +196,15 @@ class CommunicationService {
     const messageData = {
       event_id: eventId,
       vendor_id: vendorId,
-      platform: 'call' as const,
+      platform: 'call',
       sender_name: 'Coordinator',
-      sender_type: 'coordinator' as const,
+      sender_type: 'coordinator',
       content: `Call duration: ${duration} minutes\n\nNotes: ${notes}`,
-      message_type: 'call' as const,
+      message_type: 'call',
       external_id: null,
-      direction: 'outbound' as const,
-      status: 'sent' as const,
+      direction: 'outbound',
+      status: 'sent',
+      metadata: { duration },
       created_at: new Date().toISOString()
     };
 
@@ -225,14 +229,15 @@ class CommunicationService {
     const messageData = {
       event_id: eventId,
       vendor_id: null,
-      platform: platform as any,
+      platform: platform,
       sender_name: user.user_metadata?.full_name || 'Coordinator',
-      sender_type: 'coordinator' as const,
+      sender_type: 'coordinator',
       content,
-      message_type: 'text' as const,
+      message_type: 'text',
       external_id: null,
-      direction: 'outbound' as const,
-      status: 'sent' as const,
+      direction: 'outbound',
+      status: 'sent',
+      metadata: {},
       priority: detectedPriority,
       created_at: new Date().toISOString()
     };

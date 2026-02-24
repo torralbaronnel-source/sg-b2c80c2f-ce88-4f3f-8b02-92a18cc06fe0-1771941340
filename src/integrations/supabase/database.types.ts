@@ -107,6 +107,7 @@ export type Database = {
           external_id: string | null
           id: string
           message_type: string | null
+          metadata: Json | null
           platform: string
           sender_name: string
           sender_type: string
@@ -122,6 +123,7 @@ export type Database = {
           external_id?: string | null
           id?: string
           message_type?: string | null
+          metadata?: Json | null
           platform: string
           sender_name: string
           sender_type: string
@@ -137,6 +139,7 @@ export type Database = {
           external_id?: string | null
           id?: string
           message_type?: string | null
+          metadata?: Json | null
           platform?: string
           sender_name?: string
           sender_type?: string

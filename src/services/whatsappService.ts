@@ -338,7 +338,7 @@ class WhatsAppService {
         };
 
         // Add metadata if it exists
-        if (msg.metadata && typeof msg.metadata === 'object') {
+        if (msg.metadata && typeof msg.metadata === 'object' && !Array.isArray(msg.metadata)) {
           messageObj.metadata = {
             media_url: msg.metadata.media_url,
             media_name: msg.metadata.media_name,

@@ -1,13 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Search, Filter, MoreVertical, Send, Phone, Video } from "lucide-react";
+import { whatsappService, Communication } from "@/services/whatsappService";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export function WhatsAppManagerView() {
-  const [activeChat, setActiveChat] = useState("1");
+  const [activeChat, setActiveChat] = useState<string | null>(null);
+  const [chats, setChats] = useState<Communication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const loadChats = async () => {
+      const data = await whatsappService.getChats();
+      setChats(data);
+      if (data.length > 0 && !activeChat) {
+        setActiveChat(data[0].id);
+      }
+      setLoading(false);
+    };
+    loadChats();
+  }, []);
+
+  const selectedChat = chats.find(c => c.id === activeChat);
 
   return (
     <div className="grid grid-cols-12 h-[calc(100vh-12rem)] gap-4">
@@ -28,19 +49,27 @@ export function WhatsAppManagerView() {
         </CardHeader>
         <ScrollArea className="flex-1">
           <div className="p-2 space-y-1">
-            {[1, 2, 3, 4, 5].map((i) => (
+            {loading ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">Loading chats...</div>
+            ) : chats.length === 0 ? (
+              <div className="p-4 text-center text-sm text-muted-foreground">No messages yet.</div>
+            ) : chats.map((chat) => (
               <div 
-                key={i}
-                onClick={() => setActiveChat(i.toString())}
-                className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${activeChat === i.toString() ? 'bg-accent' : 'hover:bg-accent/50'}`}
+                key={chat.id}
+                onClick={() => setActiveChat(chat.id)}
+                className={`flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors ${activeChat === chat.id ? 'bg-accent' : 'hover:bg-accent/50'}`}
               >
-                <div className="w-10 h-10 rounded-full bg-muted flex-shrink-0" />
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                  {chat.sender_name.substring(0, 2).toUpperCase()}
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline">
-                    <h4 className="font-medium text-sm truncate">Client Name {i}</h4>
-                    <span className="text-[10px] text-muted-foreground">10:45 AM</span>
+                    <h4 className="font-medium text-sm truncate">{chat.sender_name}</h4>
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(chat.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">Latest message from the client regarding...</p>
+                  <p className="text-xs text-muted-foreground truncate">{chat.message_body}</p>
                 </div>
               </div>
             ))}

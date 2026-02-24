@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { 
-  Plus, 
   Search, 
   Filter, 
   Calendar as CalendarIcon, 
@@ -45,14 +44,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useEvent } from "@/contexts/EventContext";
-import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -210,48 +207,8 @@ export function EventsDashboardView() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <Card className="border-none shadow-sm bg-white">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
-                Production Hub
-                <Badge className="bg-rose-500">Live</Badge>
-              </h1>
-              <p className="text-slate-500 mt-1">Manage and track all event logistics and vendor coordination.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 gap-2 h-11 px-6">
-                    <Plus className="w-5 h-5" /> Schedule Event
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-4xl max-h-[90vh]">
-                  <DialogHeader>
-                    <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                      <Sparkles className="w-6 h-6 text-amber-500" /> Schedule New Production
-                    </DialogTitle>
-                    <DialogDescription>
-                      Create a detailed event profile. All initial projects start in the Planning phase.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <EventForm 
-                    onSubmit={async (data) => {
-                      const success = await createEvent(data);
-                      if (success) setIsCreateOpen(false);
-                    }} 
-                    onCancel={() => setIsCreateOpen(false)} 
-                    title="Create New Production"
-                  />
-                </DialogContent>
-              </Dialog>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+    <div className="space-y-6 animate-in fade-in duration-500">
+      {/* Dynamic Filter Bar */}
       <Card className="border-none shadow-sm bg-white">
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">

@@ -1,47 +1,54 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
+  role?: string;
+};
 
 export const profileService = {
   getProfile: async (id: string): Promise<Profile | null> => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", id)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
 
-    if (error) {
-      console.error("Error fetching profile:", error);
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return null;
+      }
+
+      // If profile doesn't exist, create it from auth data
+      if (!data) {
+        const { data: authData } = await supabase.auth.getUser();
+        const user = authData.user;
+        
+        if (user && user.id === id) {
+          const { data: newProfile, error: createError } = await supabase
+            .from("profiles")
+            .insert({
+              id: user.id,
+              email: user.email!,
+              full_name: user.user_metadata?.full_name || "New User",
+              role: "admin" // Default first user/admin role
+            })
+            .select()
+            .single();
+            
+          if (createError) {
+            console.error("Error creating auto-profile:", createError);
+            return null;
+          }
+          return newProfile as Profile;
+        }
+      }
+
+      return data as Profile;
+    } catch (err) {
+      console.error("Unexpected error in getProfile:", err);
       return null;
     }
-
-    // If profile doesn't exist, try to create it from auth metadata
-    if (!data) {
-      const { data: authData } = await supabase.auth.getUser();
-      const user = authData.user;
-      
-      if (user && user.id === id) {
-        const { data: newProfile, error: createError } = await supabase
-          .from("profiles")
-          .insert({
-            id: user.id,
-            email: user.email!,
-            full_name: user.user_metadata?.full_name || "New User",
-            role: "coordinator"
-          })
-          .select()
-          .single();
-          
-        if (createError) {
-          console.error("Error creating auto-profile:", createError);
-          return null;
-        }
-        return newProfile;
-      }
-    }
-
-    return data;
   },
 
   async updateProfile(userId: string, updates: Partial<Profile>) {
@@ -55,12 +62,6 @@ export const profileService = {
     return { data, error };
   },
 
-  /**
-   * STRATEGIC FIX FOR TS2589:
-   * We cast the supabase client to 'any' here to stop the TypeScript compiler
-   * from traversing the massive, recursive database types tree. 
-   * This is necessary for deep joins like organization memberships.
-   */
   async getUserOrganization(profileId: string) {
     const { data, error } = await supabase
       .from("organization_members")

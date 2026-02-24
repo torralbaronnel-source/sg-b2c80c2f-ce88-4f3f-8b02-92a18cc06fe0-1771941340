@@ -84,16 +84,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log("AuthContext: Auth State Change", event, session?.user?.id);
       
       if (session?.user) {
+        setUser(session.user);
+        setSession(session);
+        
         const profileData = await profileService.getProfile(session.user.id);
         setProfile(profileData);
-        setUser(session.user);
         
-        // Only redirect if we're on the login/signup pages
-        if (window.location.pathname === "/login" || window.location.pathname === "/signup" || window.location.pathname === "/") {
+        // Ensure we only redirect once the profile is loaded or created
+        if (profileData && (window.location.pathname === "/login" || window.location.pathname === "/signup" || window.location.pathname === "/")) {
           router.push("/dashboard");
         }
       } else {
         setUser(null);
+        setSession(null);
         setProfile(null);
         setCurrentOrganization(null);
         setIsLoading(false);

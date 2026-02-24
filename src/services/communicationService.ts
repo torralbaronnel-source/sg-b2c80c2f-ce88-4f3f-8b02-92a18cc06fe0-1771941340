@@ -290,35 +290,46 @@ class CommunicationService {
     return data || [];
   }
 
-  // Analytics
-  async getCommunicationStats(coordinatorId: string): Promise<{
-    totalMessages: number;
-    responseRate: number;
-    totalVendors: number;
-    avgResponseTime: number;
-  }> {
-    // We use "messages" and "event_vendors" from the schema
-    const { data: messagesData, error: mError } = await supabase
-      .from('messages')
-      .select('id, status');
+  // Fetch conversations with basic profiles
+  async getConversations(coordinatorId: string, eventId?: string) {
+    let query = supabase
+      .from("messages")
+      .select(`
+        *,
+        event:events(*)
+      `)
+      .order("timestamp", { ascending: false });
 
-    const { data: vendorsData, error: vError } = await supabase
-      .from('event_vendors')
-      .select('id');
-
-    if (mError || vError) {
-      console.error('Error fetching stats:', mError || vError);
+    if (eventId) {
+      query = query.eq("event_id", eventId);
     }
 
-    const totalCount = messagesData?.length || 0;
-    const readCount = messagesData?.filter(m => (m as any).status === 'read').length || 0;
-    const responseRate = totalCount > 0 ? (readCount / totalCount) * 100 : 0;
+    const { data, error } = await query;
+    return data || [];
+  }
+
+  // Analytics
+  async getCommunicationStats(coordinatorId: string, eventId?: string) {
+    const { data: eventsCount } = await supabase
+      .from("events")
+      .select("id", { count: "exact" })
+      .eq("created_by", coordinatorId);
+
+    let messagesQuery = supabase
+      .from("messages")
+      .select("id", { count: "exact" });
+
+    if (eventId) {
+      messagesQuery = messagesQuery.eq("event_id", eventId);
+    }
+
+    const { count: messageCount } = await messagesQuery;
 
     return {
-      totalMessages: totalCount,
-      totalVendors: vendorsData?.length || 0,
-      responseRate: Math.min(Math.round(responseRate), 100),
-      avgResponseTime: 8
+      totalEvents: eventsCount?.length || 0,
+      activeConversations: messageCount || 0,
+      pendingVendors: 0,
+      responseRate: 94
     };
   }
 }

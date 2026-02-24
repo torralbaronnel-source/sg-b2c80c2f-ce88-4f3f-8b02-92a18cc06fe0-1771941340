@@ -47,6 +47,9 @@ import {
   Circle,
   XCircle
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEventHub } from "@/contexts/EventContext";
+import { communicationService } from "@/services/communicationService";
 
 const CommunicationPage = () => {
   const [messages, setMessages] = useState<any[]>([]);
@@ -56,6 +59,9 @@ const CommunicationPage = () => {
   const [selectedPlatform, setSelectedPlatform] = useState("all");
   const [messageContent, setMessageContent] = useState("");
   const [isUrgent, setIsUrgent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useAuth();
+  const { activeEvent } = useEventHub();
 
   useEffect(() => {
     // Mock data initialization
@@ -78,13 +84,32 @@ const CommunicationPage = () => {
       { id: "2", name: "Alex Chen", status: "On-site", isOnline: true, avatar: "" },
       { id: "3", name: "Maria Santos", status: "Offline", isOnline: false, avatar: "" }
     ]);
-
-    setMessages([
-      { id: "1", sender: "Alex Chen", time: "2 mins ago", content: "Main ballroom setup is 80% complete. Need florist to check stage decor.", platform: "WhatsApp", isUrgent: false },
-      { id: "2", sender: "Maria Santos", time: "5 mins ago", content: "Catering team has arrived at the service entrance.", platform: "Slack", isUrgent: false },
-      { id: "3", sender: "Security Lead", time: "10 mins ago", content: "Loading dock clearance required for VIP transport.", platform: "Radio", isUrgent: true }
-    ]);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      const fetchConversations = async () => {
+        setIsLoading(true);
+        try {
+          const data = await communicationService.getConversations(user.id, activeEvent?.id);
+          setMessages(data.map((m: any) => ({
+            id: m.id,
+            sender: m.sender_name,
+            time: new Date(m.timestamp).toLocaleTimeString(),
+            content: m.content,
+            platform: m.platform,
+            isUrgent: m.priority === 'critical'
+          })));
+        } catch (error) {
+          console.error("Error fetching conversations:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchConversations();
+    }
+  }, [user, activeEvent]);
 
   return (
     <ProtectedRoute>

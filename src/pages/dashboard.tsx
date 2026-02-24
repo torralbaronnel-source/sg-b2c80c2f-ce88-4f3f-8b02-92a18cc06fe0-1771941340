@@ -35,11 +35,18 @@ import {
   Eye,
   Info
 } from 'lucide-react';
+import { useAuth } from "@/contexts/AuthContext";
+import { useEventHub } from "@/contexts/EventContext";
+import { communicationService } from "@/services/communicationService";
 
 const UnifiedEventDashboard = () => {
   const router = useRouter();
   const [eventId, setEventId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const { activeEvent } = useEventHub();
+  const [stats, setStats] = useState<any>(null);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
   useEffect(() => {
     if (router.isReady) {
@@ -50,6 +57,27 @@ const UnifiedEventDashboard = () => {
       setIsLoading(false);
     }
   }, [router.isReady, router.query]);
+
+  useEffect(() => {
+    if (user) {
+      const fetchDashboardData = async () => {
+        setIsLoading(true);
+        try {
+          const statsData = await communicationService.getCommunicationStats(user.id, activeEvent?.id);
+          setStats(statsData);
+          
+          const conversationsData = await communicationService.getConversations(user.id, activeEvent?.id);
+          setRecentActivity(Array.isArray(conversationsData) ? conversationsData.slice(0, 5) : []);
+        } catch (error) {
+          console.error("Error fetching dashboard data:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      fetchDashboardData();
+    }
+  }, [user, activeEvent]);
 
   if (isLoading) {
     return (

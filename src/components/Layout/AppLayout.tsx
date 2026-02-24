@@ -4,20 +4,20 @@ import { useRouter } from "next/router";
 import { 
   LayoutDashboard, 
   Calendar, 
-  MessageSquare, 
   Users, 
-  CreditCard, 
-  Settings, 
-  ChevronDown,
+  Wallet, 
+  MessageSquare,
+  Sparkles,
+  Settings,
+  ShieldAlert,
+  Menu,
+  ChevronLeft,
   Search,
   Bell,
-  Sparkles,
-  Briefcase,
   LogOut,
-  Check,
-  ChevronsUpDown,
-  PlusCircle,
+  User,
   Building2,
+  Terminal,
   ShieldCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -77,6 +77,21 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       { name: "Super Admin", href: "/admin", icon: ShieldCheck },
     ]
   };
+
+  const mainMenuItems = [
+    { title: "Overview", icon: LayoutDashboard, url: "/dashboard" },
+    { title: "Production Hub", icon: Sparkles, url: "/events", badge: "Live" },
+    { title: "Communication", icon: MessageSquare, url: "/communication" },
+    { title: "CRM & Clients", icon: Users, url: "/crm" },
+    { title: "Finance", icon: Wallet, url: "/finance" },
+    { title: "Portal Admin", icon: ShieldCheck, url: "/admin" },
+  ];
+
+  const developerItems = [
+    { title: "AI Assistant", icon: Terminal, url: "#" },
+    { title: "Vendor Portal", icon: Building2, url: "#" },
+    { title: "Super Admin", icon: ShieldAlert, url: "/admin/super" },
+  ];
 
   return (
     <SidebarProvider>
@@ -141,75 +156,45 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </SidebarHeader>
 
           <SidebarContent className="px-3 py-2">
-            <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 mt-4">Main Menu</p>
-            <SidebarMenu>
-              {NAV_ITEMS.map((item) => {
-                const isActive = router.pathname === item.href;
-                return (
-                  <SidebarMenuItem key={item.name}>
-                    <SidebarMenuButton 
-                      asChild 
-                      isActive={isActive}
-                      tooltip={item.name}
-                      className={cn(
-                        "transition-all duration-200",
-                        isActive ? "bg-slate-900 text-white hover:bg-slate-800" : "text-slate-500 hover:bg-slate-100"
-                      )}
-                    >
-                      <Link href={item.href}>
-                        <item.icon className={cn("w-4 h-4", isActive ? "text-white" : "text-slate-400")} />
-                        <span>{item.name}</span>
-                        {item.badge && (
-                          <Badge className="ml-auto bg-rose-500 hover:bg-rose-500 text-[10px] h-4 px-1">
-                            {item.badge}
-                          </Badge>
-                        )}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 mb-2">Main Platforms</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {mainMenuItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={router.pathname === item.url} className="px-4 py-2 hover:bg-slate-50 transition-colors">
+                        <Link href={item.url} className="flex items-center gap-3">
+                          <item.icon className={cn("w-5 h-5", router.pathname === item.url ? "text-primary" : "text-slate-500")} />
+                          <span className={cn("font-bold text-sm", router.pathname === item.url ? "text-slate-900" : "text-slate-600")}>{item.title}</span>
+                          {item.badge && (
+                            <Badge className="ml-auto bg-rose-500 text-white text-[10px] px-1 h-4 border-none">{item.badge}</Badge>
+                          )}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
 
-            <p className="px-3 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2 mt-6">Quick Access</p>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="AI Assistant" className="text-slate-500">
-                  <Sparkles className="w-4 h-4 mr-2 text-amber-500" />
-                  <span>AI Assistant</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton tooltip="Vendor Portal" className="text-slate-500">
-                  <Briefcase className="w-4 h-4 mr-2 text-blue-500" />
-                  <span>Vendor Portal</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-
-            {isSuperAdmin && (
-              <SidebarGroup>
-                <SidebarGroupLabel>Platform</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {navigation.admin.map((item) => (
-                      <SidebarMenuItem key={item.name}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={router.pathname === item.href}
-                          tooltip={item.name}
-                        >
-                          <Link href={item.href}>
-                            <item.icon />
-                            <span>{item.name}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            )}
+            {/* System & Dev Tools - Only visible to Super Admins (mock check for now) */}
+            <SidebarGroup className="mt-4">
+              <SidebarGroupLabel className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-4 mb-2">System & Dev</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {developerItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild isActive={router.pathname === item.url} className="px-4 py-2 hover:bg-slate-50 transition-colors opacity-60 hover:opacity-100">
+                        <Link href={item.url} className="flex items-center gap-3">
+                          <item.icon className="w-5 h-5 text-slate-400" />
+                          <span className="font-bold text-sm text-slate-500">{item.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
           </SidebarContent>
 
           <SidebarFooter className="p-4 border-t border-slate-100">

@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
+import { useRouter } from "next/navigation";
 
 // Global cache for session to prevent flickering during navigation
 const cachedSession: any = null;
@@ -35,6 +36,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<any | null>(null);
   const [currentOrganization, setCurrentOrganization] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const router = useRouter();
 
   const loadUserData = async (userId: string) => {
     try {
@@ -62,16 +64,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Initial session check
     const initSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        console.log("AuthContext: Initial session check", !!session);
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("AuthContext: Initial session", session?.user?.id);
         if (session) {
           await loadUserData(session.user.id);
+        } else {
+          setIsLoading(false);
         }
       } catch (error) {
-        console.error("AuthContext: Error initializing session", error);
-      } finally {
+        console.error("AuthContext: Init error", error);
         setIsLoading(false);
       }
     };
@@ -80,16 +81,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("AuthContext: Auth event detected", event, !!session);
+      console.log("AuthContext: Auth State Change", event, session?.user?.id);
       
-      if (session) {
-        await loadUserData(session.user.id);
+      if (session?.user) {
+        const profileData = await profileService.getProfile(session.user.id);
+        setProfile(profileData);
+        setUser(session.user);
+        
+        // Only redirect if we're on the login/signup pages
+        if (window.location.pathname === "/login" || window.location.pathname === "/signup" || window.location.pathname === "/") {
+          router.push("/dashboard");
+        }
       } else {
         setUser(null);
         setProfile(null);
         setCurrentOrganization(null);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();

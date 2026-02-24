@@ -1,16 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-export interface Profile {
-  id: string;
-  email: string;
-  full_name: string;
-  avatar_url: string;
-  created_at: string;
-  updated_at: string;
-}
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 export const profileService = {
-  async getProfile(id: string): Promise<Profile | null> {
+  getProfile: async (id: string): Promise<Profile | null> => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -22,7 +16,32 @@ export const profileService = {
       return null;
     }
 
-    return data as Profile | null;
+    // If profile doesn't exist, try to create it from auth metadata
+    if (!data) {
+      const { data: authData } = await supabase.auth.getUser();
+      const user = authData.user;
+      
+      if (user && user.id === id) {
+        const { data: newProfile, error: createError } = await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            email: user.email!,
+            full_name: user.user_metadata?.full_name || "New User",
+            role: "coordinator"
+          })
+          .select()
+          .single();
+          
+        if (createError) {
+          console.error("Error creating auto-profile:", createError);
+          return null;
+        }
+        return newProfile;
+      }
+    }
+
+    return data;
   },
 
   async updateProfile(userId: string, updates: Partial<Profile>) {

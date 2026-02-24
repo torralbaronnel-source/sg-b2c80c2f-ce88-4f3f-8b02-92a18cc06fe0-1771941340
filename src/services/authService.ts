@@ -2,20 +2,49 @@ import { supabase } from "@/integrations/supabase/client";
 import type { AuthResponse, Session, User as AuthUser } from "@supabase/supabase-js";
 
 export const authService = {
-  async signIn(email: string, password: string): Promise<AuthResponse> {
-    return await supabase.auth.signInWithPassword({ email, password });
-  },
-
-  async signUp(email: string, password: string, fullName?: string): Promise<AuthResponse> {
-    return await supabase.auth.signUp({
+  async signIn(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
+    });
+
+    if (error) {
+      return { data: null, error };
+    }
+
+    // Verify profile exists
+    if (data.user) {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      if (profileError || !profile) {
+        // If no profile exists, sign out immediately to prevent partial sessions
+        await this.logout();
+        return { 
+          data: null, 
+          error: new Error("Account found but profile is missing. Please contact support or sign up again.") 
+        };
+      }
+    }
+
+    return { data, error: null };
+  },
+
+  signUp: async (email: string, pass: string, fullName: string) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: pass,
       options: {
         data: {
           full_name: fullName,
         },
+        emailRedirectTo: `${window.location.origin}/dashboard`,
       },
     });
+    return { data, error };
   },
 
   async signOut() {
@@ -60,19 +89,6 @@ export const authService = {
       return !!data;
     } catch {
       return false;
-    }
-  },
-
-  async trackLoginAttempt(email: string, success: boolean, userId?: string) {
-    try {
-      await supabase.from("login_attempts").insert({
-        email,
-        success,
-        user_id: userId,
-        attempt_time: new Date().toISOString(),
-      });
-    } catch (error) {
-      // Silently fail if table doesn't exist yet to prevent blocking auth flow
     }
   }
 };

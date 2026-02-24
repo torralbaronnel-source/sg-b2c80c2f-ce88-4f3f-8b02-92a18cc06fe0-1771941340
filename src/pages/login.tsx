@@ -59,18 +59,24 @@ const LoginPage: NextPage = () => {
       
       if (error) {
         toast({
-          title: "Login failed",
-          description: error.message,
           variant: "destructive",
+          title: "Login Failed",
+          description: error.message,
         });
-        await authService.trackLoginAttempt(email, false);
-      } else {
+        setIsLoading(false);
+        return;
+      }
+
+      if (data?.user) {
         toast({
-          title: "Welcome back!",
-          description: "Logged in successfully.",
+          title: "Success",
+          description: "Verified account. Redirecting to dashboard...",
         });
-        await authService.trackLoginAttempt(email, true, data.user?.id);
-        // The useEffect above will handle redirection
+        
+        // Use a small delay to allow AuthContext to catch the session update
+        setTimeout(() => {
+          router.push("/dashboard");
+        }, 500);
       }
     } catch (error: any) {
       toast({

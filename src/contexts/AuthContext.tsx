@@ -4,7 +4,8 @@ import type { User, Session } from "@supabase/supabase-js";
 import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
 
-// Breaking the circular dependency by using simplified function types
+// Using simplified function signatures for the context to break the TS2589 infinite recursion
+// The actual implementations in authService still provide full type safety internally.
 interface AuthContextType {
   user: User | null;
   session: Session | null;
@@ -12,11 +13,11 @@ interface AuthContextType {
   currentOrganization: any | null;
   loading: boolean;
   isLoading: boolean;
-  signIn: (email: string, password: string) => Promise<any>;
-  signUp: (email: string, password: string, fullName?: string) => Promise<any>;
-  signOut: () => Promise<any>;
-  resetPasswordRequest: (email: string) => Promise<any>;
-  updatePassword: (password: string) => Promise<any>;
+  signIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ data: any; error: any }>;
+  signOut: () => Promise<{ error: any }>;
+  resetPasswordRequest: (email: string) => Promise<{ data: any; error: any }>;
+  updatePassword: (password: string) => Promise<{ data: any; error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -76,6 +77,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, []);
 
+  // Explicit casting to satisfy the simplified interface while using the real service methods
   const value: AuthContextType = {
     user,
     session,
@@ -83,11 +85,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentOrganization,
     loading: isLoading,
     isLoading,
-    signIn: authService.signIn,
-    signUp: authService.signUp,
-    signOut: authService.signOut,
-    resetPasswordRequest: authService.resetPasswordRequest,
-    updatePassword: authService.updatePassword,
+    signIn: authService.signIn as any,
+    signUp: authService.signUp as any,
+    signOut: authService.signOut as any,
+    resetPasswordRequest: authService.resetPasswordRequest as any,
+    updatePassword: authService.updatePassword as any,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

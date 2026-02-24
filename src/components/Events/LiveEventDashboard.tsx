@@ -11,10 +11,11 @@ import {
   Activity,
   ArrowLeft
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 
 interface Milestone {
@@ -165,7 +166,7 @@ export function LiveEventDashboard({ eventId }: { eventId: string }) {
                     <span className="font-medium text-slate-300">{v.name}</span>
                     <span className={v.alert ? "text-rose-400 font-bold" : "text-emerald-400"}>{v.status}</span>
                   </div>
-                  <Progress value={v.level} className="h-1 bg-slate-800" indicatorClassName={v.alert ? "bg-rose-500" : "bg-emerald-500"} />
+                  <Progress value={v.level} className={cn("h-1 bg-slate-800", v.alert ? "[&>div]:bg-rose-500" : "[&>div]:bg-emerald-500")} />
                 </div>
               ))}
             </div>

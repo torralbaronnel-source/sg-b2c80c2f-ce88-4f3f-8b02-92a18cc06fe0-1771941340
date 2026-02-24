@@ -113,7 +113,21 @@ class WhatsAppService {
         .select()
         .single();
 
-      return storedMessage;
+      if (!storedMessage) return null;
+
+      return {
+        id: storedMessage.id,
+        wa_message_id: storedMessage.external_id || '',
+        from: '',
+        to: to,
+        content: storedMessage.content,
+        message_type: storedMessage.message_type as 'text' | 'image' | 'document' | 'voice' | 'video',
+        timestamp: storedMessage.created_at,
+        status: storedMessage.status as 'sent' | 'delivered' | 'read' | 'failed',
+        direction: storedMessage.direction as 'inbound' | 'outbound',
+        vendor_id: storedMessage.vendor_id,
+        event_id: storedMessage.event_id
+      };
 
     } catch (error) {
       console.error('Error sending WhatsApp message:', error);
@@ -175,7 +189,21 @@ class WhatsAppService {
         .select()
         .single();
 
-      return storedMessage;
+      if (!storedMessage) return null;
+
+      return {
+        id: storedMessage.id,
+        wa_message_id: storedMessage.external_id || '',
+        from: '',
+        to: to,
+        content: storedMessage.content,
+        message_type: storedMessage.message_type as 'text' | 'image' | 'document' | 'voice' | 'video',
+        timestamp: storedMessage.created_at,
+        status: storedMessage.status as 'sent' | 'delivered' | 'read' | 'failed',
+        direction: storedMessage.direction as 'inbound' | 'outbound',
+        vendor_id: storedMessage.vendor_id,
+        event_id: storedMessage.event_id
+      };
 
     } catch (error) {
       console.error('Error sending WhatsApp media:', error);
@@ -302,8 +330,7 @@ class WhatsAppService {
         status: msg.status as 'sent' | 'delivered' | 'read' | 'failed',
         direction: msg.direction as 'inbound' | 'outbound',
         vendor_id: msg.vendor_id,
-        event_id: msg.event_id,
-        metadata: msg.metadata
+        event_id: msg.event_id
       })) || [];
 
     } catch (error) {

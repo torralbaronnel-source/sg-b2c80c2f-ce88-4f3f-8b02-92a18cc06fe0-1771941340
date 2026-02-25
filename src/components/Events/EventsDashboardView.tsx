@@ -160,7 +160,7 @@ export function EventsDashboardView() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                            <Link href={`/events/${event.id}`} className="hover:underline text-primary font-semibold">
+                            <Link href={`/events/${event.id}`} className="hover:underline">
                               {event.title}
                             </Link>
                           </h3>

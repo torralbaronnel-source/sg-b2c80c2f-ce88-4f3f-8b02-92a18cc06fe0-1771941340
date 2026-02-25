@@ -33,14 +33,24 @@ function RouteProgress() {
 }
 
 export default function App({ Component, pageProps }: AppProps) {
+  const router = useRouter();
+  
+  // Public pages that don't need the dashboard layout
+  const publicPages = ["/login", "/signup", "/forgot-password", "/reset-password", "/404", "/terms", "/privacy"];
+  const isPublicPage = publicPages.includes(router.pathname);
+
   return (
     <ThemeProvider>
       <AuthProvider>
         <EventProvider>
           <RouteProgress />
-          <AppLayout>
+          {isPublicPage ? (
             <Component {...pageProps} />
-          </AppLayout>
+          ) : (
+            <AppLayout>
+              <Component {...pageProps} />
+            </AppLayout>
+          )}
           <Toaster />
         </EventProvider>
       </AuthProvider>

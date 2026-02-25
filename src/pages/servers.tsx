@@ -31,13 +31,21 @@ import { Badge } from "@/components/ui/badge";
 
 const PAGE_SIZE = 6;
 
+interface Server {
+  id: string;
+  name: string;
+  userRole: string;
+  created_at: string;
+  server_handle: string;
+}
+
 // Utility for class names
 function cn(...classes: any[]) {
   return classes.filter(Boolean).join(" ");
 }
 
 export default function ServersPage() {
-  const [servers, setServers] = useState<any[]>([]);
+  const [servers, setServers] = useState<Server[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,9 +64,9 @@ export default function ServersPage() {
   const loadServers = useCallback(async (page: number) => {
     setLoading(true);
     try {
-      const { servers: data, totalCount: count } = await serverService.getMyServers(page, PAGE_SIZE);
-      setServers(data || []);
-      setTotalCount(count);
+      const result = await serverService.getMyServers(page, PAGE_SIZE);
+      setServers(result.servers);
+      setTotalCount(result.totalCount);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Connection Error", description: error.message });
     } finally {

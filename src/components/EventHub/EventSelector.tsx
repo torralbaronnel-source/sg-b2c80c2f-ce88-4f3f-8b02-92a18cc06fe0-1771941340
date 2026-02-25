@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/popover";
 import { useEvent } from "@/contexts/EventContext";
 import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
 
 export function EventSelector() {
   const { events, activeEvent, setActiveEvent } = useEvent();
@@ -56,20 +57,16 @@ export function EventSelector() {
                   }}
                   className="flex flex-col items-start gap-1 py-3 cursor-pointer"
                 >
-                  <div className="flex items-center justify-between w-full">
+                  <div className="flex flex-col items-start gap-1">
                     <span className="font-medium">{event.title}</span>
-                    <Check
-                      className={cn(
-                        "ml-auto h-4 w-4",
-                        activeEvent?.id === event.id ? "opacity-100" : "opacity-0"
-                      )}
-                    />
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      {new Date(event.event_date).toLocaleDateString()}
+                      <Badge variant="outline" className="text-[10px] py-0 h-4">
+                        {event.type}
+                      </Badge>
+                    </div>
                   </div>
-                  {event.event_date && (
-                    <span className="text-xs text-zinc-400">
-                      {format(new Date(event.event_date), "MMM dd, yyyy")}
-                    </span>
-                  )}
                 </CommandItem>
               ))}
             </CommandGroup>

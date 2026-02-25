@@ -528,6 +528,7 @@ export type Database = {
           server_id: string | null
           status: string | null
           title: string
+          type: string | null
           updated_at: string | null
         }
         Insert: {
@@ -546,6 +547,7 @@ export type Database = {
           server_id?: string | null
           status?: string | null
           title: string
+          type?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -564,6 +566,7 @@ export type Database = {
           server_id?: string | null
           status?: string | null
           title?: string
+          type?: string | null
           updated_at?: string | null
         }
         Relationships: [

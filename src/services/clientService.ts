@@ -14,6 +14,26 @@ export interface ClientData {
   status?: string;
 }
 
+export interface ClientWithRelations extends Record<string, any> {
+  id: string;
+  full_name: string;
+  email?: string;
+  phone?: string;
+  company_name?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  notes?: string;
+  source?: string;
+  status?: string;
+  total_spent?: number;
+  total_events?: number;
+  events: Record<string, any>[];
+  quotes: Record<string, any>[];
+  invoices: Record<string, any>[];
+  communications: Record<string, any>[];
+}
+
 export const clientService = {
   async getClients() {
     try {
@@ -161,7 +181,7 @@ export const clientService = {
     }
   },
 
-  async getClientWithRelations(clientId: string) {
+  async getClientWithRelations(clientId: string): Promise<ClientWithRelations | null> {
     try {
       const { data: client, error: clientError } = await supabase
         .from("clients")
@@ -192,7 +212,7 @@ export const clientService = {
         .eq("client_id", clientId);
 
       return {
-        ...client,
+        ...(client as Record<string, any>),
         events: events || [],
         quotes: quotes || [],
         invoices: invoices || [],

@@ -1,40 +1,48 @@
-import "@/styles/globals.css";
+import React from "react";
 import type { AppProps } from "next/app";
+import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { EventProvider } from "@/contexts/EventContext";
-import { AppLayout } from "@/components/Layout/AppLayout";
-import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
-import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import "@/styles/globals.css";
 
-export default function App({ Component, pageProps }: AppProps) {
-  const router = useRouter();
-  const [isRouteChanging, setIsRouteChanging] = useState(false);
+// Public routes that don’t need the app shell
+const PUBLIC_ROUTES = [
+  "/",
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/terms",
+  "/privacy",
+];
 
-  useEffect(() => {
-    const handleStart = () => setIsRouteChanging(true);
-    const handleComplete = () => setIsRouteChanging(false);
+function App({ Component, pageProps, router }: AppProps) {
+  const isPublicRoute = PUBLIC_ROUTES.includes(router.pathname);
+  if (isPublicRoute) {
+    return (
+      <ThemeProvider defaultTheme="light" storageKey="orchestrix-theme">
+        <AuthProvider>
+          <EventProvider>
+            <Component {...pageProps} />
+            <Toaster />
+          </EventProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    );
+  }
 
-    router.events.on("routeChangeStart", handleStart);
-    router.events.on("routeChangeComplete", handleComplete);
-    router.events.on("routeChangeError", handleComplete);
-
-    return () => {
-      router.events.off("routeChangeStart", handleStart);
-      router.events.off("routeChangeComplete", handleComplete);
-      router.events.off("routeChangeError", handleComplete);
-    };
-  }, [router]);
-
+  // Authenticated pages: wrap in global app layout (sidebar + top bar)
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider defaultTheme="light" storageKey="orchestrix-theme">
       <AuthProvider>
-        <div className={isRouteChanging ? "opacity-70 transition-opacity duration-200 pointer-events-none" : "opacity-100 transition-opacity duration-200"}>
+        <EventProvider>
           <Component {...pageProps} />
-        </div>
-        <Toaster />
+          <Toaster />
+        </EventProvider>
       </AuthProvider>
     </ThemeProvider>
   );
 }
+
+export default App;

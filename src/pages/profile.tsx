@@ -1,15 +1,14 @@
-import React from "react";
-import { AppLayout } from "@/components/Layout/AppLayout";
 import { ProfileView } from "@/components/Profile/ProfileView";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SEO } from "@/components/SEO";
 
 export default function ProfilePage() {
   return (
     <ProtectedRoute>
       <AppLayout>
-        <div className="container py-10 px-4 md:px-8">
-          <ProfileView />
-        </div>
+        <SEO title="Profile | Orchestrix" />
+        <ProfileView />
       </AppLayout>
     </ProtectedRoute>
   );

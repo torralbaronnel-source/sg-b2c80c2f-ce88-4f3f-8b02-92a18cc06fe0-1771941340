@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -209,6 +209,54 @@ export type Database = {
           subscription_status?: string | null
           subscription_tier?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      private_concierge_requests: {
+        Row: {
+          company_name: string | null
+          created_at: string | null
+          customization_details: string | null
+          email: string
+          full_name: string
+          id: string
+          interested_modules: string[] | null
+          phone: string | null
+          priority: string | null
+          request_type: string
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string | null
+          customization_details?: string | null
+          email: string
+          full_name: string
+          id?: string
+          interested_modules?: string[] | null
+          phone?: string | null
+          priority?: string | null
+          request_type: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string | null
+          customization_details?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          interested_modules?: string[] | null
+          phone?: string | null
+          priority?: string | null
+          request_type?: string
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

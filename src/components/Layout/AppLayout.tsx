@@ -16,9 +16,9 @@ export const AppLayout = memo(({ children }: { children: React.ReactNode }) => {
   
   const isPublicPage = PUBLIC_PAGES.includes(router.pathname);
 
-  // If it's a public page, don't wrap in Sidebar/Layout structure
+  // Do not render shell on public pages to avoid double-wrapping
   if (isPublicPage) {
-    return <main className="min-h-screen bg-background">{children}</main>;
+    return <>{children}</>;
   }
 
   return (

@@ -81,9 +81,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b px-4 py-4">
-        <div className="flex items-center gap-2 font-semibold">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+      <SidebarHeader className="border-b px-4 py-4 bg-brand-secondary/30">
+        <div className="flex items-center gap-2 font-display font-semibold">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-brand-primary to-brand-accent text-white">
             <Calendar className="h-5 w-5" />
           </div>
           <span className="truncate group-data-[collapsible=icon]:hidden">Orchestrix</span>
@@ -139,7 +139,7 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t p-4">
+      <SidebarFooter className="border-t p-4 bg-brand-secondary/20">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>

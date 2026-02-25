@@ -12,7 +12,8 @@ import {
   Users, 
   TrendingUp, 
   Clock,
-  ArrowRight
+  ArrowRight,
+  Server
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -34,11 +35,19 @@ export function OverviewDashboardView() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Welcome back, {user?.email?.split('@')[0]}</h1>
-        <p className="text-muted-foreground">
-          Here's what's happening with {activeOrg?.name || "your organization"} today.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Welcome back, {user?.email?.split('@')[0]}</h1>
+          <p className="text-muted-foreground">
+            Here's what's happening with {activeOrg?.name || "your organization"} today.
+          </p>
+        </div>
+        <Link href="/servers">
+          <Button variant="outline" className="flex items-center gap-2">
+            <Server className="h-4 w-4" />
+            Manage Infrastructure
+          </Button>
+        </Link>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

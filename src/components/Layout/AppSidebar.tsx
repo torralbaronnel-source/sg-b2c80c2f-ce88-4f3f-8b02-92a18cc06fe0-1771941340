@@ -1,15 +1,26 @@
 import * as React from "react"
 import {
-  Calendar,
-  LayoutDashboard,
-  MessageSquare,
+  Search,
   Users,
-  Wallet,
+  Calendar,
+  DollarSign,
+  MessageSquare,
   Settings,
+  LayoutDashboard,
+  LogOut,
+  MapPin,
+  Briefcase,
+  Package,
+  Heart,
+  FileText,
+  Clock,
   ShieldCheck,
-  Zap,
-  Bot,
-  UserCircle
+  Truck,
+  Database,
+  Users2,
+  PhoneCall,
+  ClipboardList,
+  Store,
 } from "lucide-react"
 
 import {
@@ -30,54 +41,57 @@ import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
 import { memo } from "react"
 
-const navItems = [
+const navigation = [
+  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   {
-    title: "Overview",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Production Hub",
-    url: "/events",
-    icon: Zap,
-    badge: "Live"
-  },
-  {
-    title: "Communication",
-    url: "/communication",
-    icon: MessageSquare,
-  },
-  {
-    title: "Business Consultation",
-    url: "#",
-    icon: MessageSquare,
-    onClick: () => {
-      // This will be handled by the parent layout or context if needed
-      window.dispatchEvent(new CustomEvent("open-concierge", { detail: "Business Consultation" }));
-    }
-  },
-  {
-    title: "CRM & Clients",
-    url: "/crm",
+    name: "CRM & Clients",
     icon: Users,
+    children: [
+      { name: "Clients", href: "/crm" },
+      { name: "Leads & Pipeline", href: "/leads" },
+      { name: "Communication Log", href: "/communications" },
+    ],
   },
   {
-    title: "Finance",
-    url: "/finance",
-    icon: Wallet,
+    name: "Event Management",
+    icon: Calendar,
+    children: [
+      { name: "All Events", href: "/events" },
+      { name: "Event Timelines", href: "/timelines" },
+      { name: "Venues", href: "/venues" },
+      { name: "Guest Lists", href: "/guests" },
+    ],
   },
   {
-    title: "Portal Admin",
-    url: "/admin",
-    icon: ShieldCheck,
+    name: "Finance",
+    icon: DollarSign,
+    children: [
+      { name: "Quotes", href: "/quotes" },
+      { name: "Invoices", href: "/invoices" },
+      { name: "Payments", href: "/finance" },
+      { name: "Contracts", href: "/contracts" },
+    ],
   },
+  {
+    name: "Resources",
+    icon: Briefcase,
+    children: [
+      { name: "Services & Packages", href: "/services" },
+      { name: "Staff & Crew", href: "/staff" },
+      { name: "Vendors", href: "/vendors" },
+      { name: "Equipment", href: "/equipment" },
+    ],
+  },
+  { name: "Tasks", href: "/tasks", icon: ClipboardList },
+  { name: "WhatsApp", href: "/whatsapp", icon: MessageSquare },
+  { name: "Settings", href: "/profile", icon: Settings },
 ]
 
 const systemItems = [
   {
     title: "AI Assistant",
     url: "/whatsapp",
-    icon: Bot,
+    icon: MessageSquare,
   },
   {
     title: "Super Admin",

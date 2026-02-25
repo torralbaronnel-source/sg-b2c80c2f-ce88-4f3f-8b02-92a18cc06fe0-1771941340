@@ -325,9 +325,9 @@ export function CRMDashboardView() {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
+        <div className="invisible h-0 w-0 overflow-hidden">
+          {/* Hidden title for SEO/Structure but removed visually per user request */}
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">CRM & Client Management</h1>
-          <p className="text-muted-foreground mt-2">Manage client relationships, track pipeline, and monitor comprehensive event operations.</p>
         </div>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>

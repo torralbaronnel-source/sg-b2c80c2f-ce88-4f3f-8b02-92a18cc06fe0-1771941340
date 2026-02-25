@@ -1,221 +1,220 @@
-import * as React from "react"
-import {
-  Search,
-  Users,
-  Calendar,
-  DollarSign,
-  MessageSquare,
-  Settings,
-  LayoutDashboard,
-  LogOut,
-  MapPin,
-  Briefcase,
-  Package,
-  Heart,
-  FileText,
-  Clock,
-  ShieldCheck,
-  Truck,
-  Database,
-  Users2,
-  PhoneCall,
-  ClipboardList,
-  Store,
-  ChevronDown,
-  ChevronRight,
-  User as UserIcon,
-} from "lucide-react"
-
+import React from "react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-} from "@/components/ui/sidebar"
-import Link from "next/link"
-import { useRouter } from "next/router"
-import { useAuth } from "@/contexts/AuthContext"
-import { cn } from "@/lib/utils"
-import { memo } from "react"
+  SidebarFooter,
+  SidebarSeparator,
+} from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
+  LayoutDashboard,
+  Users,
+  Calendar,
+  Settings,
+  Shield,
+  MessageSquare,
+  DollarSign,
+  Package,
+  FileText,
+  Clock,
+  MapPin,
+  ClipboardList,
+  CreditCard,
+  Briefcase,
+  ChevronDown,
+  LayoutGrid,
+  Zap,
+  PlayCircle
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { cn } from "@/lib/utils";
 
-const navigation = [
+const navigationItems = [
   {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: LayoutDashboard,
+    title: "Main Platforms",
+    items: [
+      {
+        title: "Dashboard",
+        icon: LayoutDashboard,
+        url: "/",
+      },
+    ],
   },
   {
     title: "CRM & Clients",
     icon: Users,
-    children: [
-      { title: "Clients", url: "/crm" },
-      { title: "Leads & Pipeline", url: "/leads" },
-      { title: "Communication Log", url: "/communications" },
+    items: [
+      { title: "Clients", url: "/crm", icon: Users },
+      { title: "Leads & Pipeline", url: "/leads", icon: Zap },
+      { title: "Communication Log", url: "/communication", icon: MessageSquare },
     ],
   },
   {
     title: "Event Management",
     icon: Calendar,
-    children: [
-      { title: "All Events", url: "/events" },
-      { title: "Event Timelines", url: "/timelines" },
-      { title: "Venues", url: "/venues" },
-      { title: "Guest Lists", url: "/guests" },
+    items: [
+      { title: "All Events", url: "/events", icon: Calendar },
+      { title: "Production Hub", url: "/production", icon: PlayCircle },
+      { title: "Event Timelines", url: "/timelines", icon: Clock },
+      { title: "Venues", url: "/venues", icon: MapPin },
+      { title: "Guest Lists", url: "/guests", icon: Users },
     ],
   },
   {
     title: "Finance",
     icon: DollarSign,
-    children: [
-      { title: "Quotes", url: "/quotes" },
-      { title: "Invoices", url: "/invoices" },
-      { title: "Payments", url: "/finance" },
-      { title: "Contracts", url: "/contracts" },
+    items: [
+      { title: "Quotes", url: "/quotes", icon: FileText },
+      { title: "Invoices", url: "/invoices", icon: CreditCard },
+      { title: "Payments", url: "/finance", icon: DollarSign },
+      { title: "Contracts", url: "/terms", icon: Shield },
     ],
   },
   {
     title: "Resources",
-    icon: Briefcase,
-    children: [
-      { title: "Services & Packages", url: "/services" },
-      { title: "Staff & Crew", url: "/staff" },
-      { title: "Vendors", url: "/vendors" },
-      { title: "Equipment", url: "/equipment" },
+    icon: Package,
+    items: [
+      { title: "Staff & Teams", url: "/admin", icon: Users },
+      { title: "Vendor Directory", url: "/crm", icon: Briefcase },
+      { title: "Global Modules", url: "/modules", icon: LayoutGrid },
     ],
   },
-  { title: "Tasks", url: "/tasks", icon: ClipboardList },
-  { title: "WhatsApp", url: "/whatsapp", icon: MessageSquare },
-  { title: "Settings", url: "/profile", icon: Settings },
-]
+];
 
-const systemItems = [
-  {
-    title: "AI Assistant",
-    url: "/whatsapp",
-    icon: MessageSquare,
-  },
-  {
-    title: "Super Admin",
-    url: "/admin?tab=super",
-    icon: Settings,
-  }
-]
-
-function NavItem({ item, isActive }: { item: any, isActive: boolean }) {
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        asChild
-        isActive={isActive}
-        tooltip={item.title}
-        className={cn(
-          "transition-all duration-200",
-          isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
-        )}
-      >
-        <Link href={item.url} prefetch={true}>
-          <item.icon className={cn("h-4 w-4", isActive && "text-primary")} />
-          <span>{item.title}</span>
-        </Link>
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
-}
-
-const MemoizedNavItem = memo(NavItem);
-
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const router = useRouter()
-  const { profile, currentServer } = useAuth()
+export function AppSidebar() {
+  const router = useRouter();
 
   return (
-    <Sidebar className="border-r border-neutral-100 bg-white" {...props}>
-      <SidebarHeader className="border-b border-sidebar-border/50 p-4">
+    <Sidebar className="border-r border-slate-200 bg-white">
+      <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
-          <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
-            <span className="text-xl font-black italic">
-              {currentServer?.name?.[0] || "O"}
-            </span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/20">
+            <Shield className="h-6 w-6" />
           </div>
-          <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-bold text-sm tracking-tight text-foreground uppercase">
-              {currentServer?.name || "ORCHESTRIX"}
-            </span>
-            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
-              {currentServer ? "Active Production Node" : "Operating System"}
-            </span>
+          <div className="flex flex-col">
+            <span className="text-xl font-black tracking-tight text-slate-900 leading-none">ORCHESTRIX</span>
+            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-1">Management Suite</span>
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-4">
-        <SidebarGroup>
-          <SidebarGroupLabel>Main Platforms</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {navigation.map((item) => (
-                <React.Fragment key={item.title}>
-                  {item.children ? (
-                    <SidebarMenuItem>
-                      <SidebarMenuButton tooltip={item.title}>
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </SidebarMenuButton>
-                      <SidebarMenu className="ml-6 border-l border-slate-100 pl-2">
-                        {item.children.map((child) => (
-                          <SidebarMenuItem key={child.title}>
-                            <SidebarMenuButton asChild isActive={router.pathname === child.url}>
-                              <Link href={child.url}>
-                                <span>{child.title}</span>
-                              </Link>
-                            </SidebarMenuButton>
-                          </SidebarMenuItem>
-                        ))}
-                      </SidebarMenu>
-                    </SidebarMenuItem>
-                  ) : (
-                    <MemoizedNavItem 
-                      item={item} 
-                      isActive={router.pathname === item.url} 
-                    />
-                  )}
-                </React.Fragment>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
 
-        <SidebarGroup>
-          <SidebarGroupLabel>System & Dev</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {systemItems.map((item) => (
-                <MemoizedNavItem 
-                  key={item.title} 
-                  item={item} 
-                  isActive={router.pathname === item.url} 
-                />
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+      <SidebarContent className="px-4 pb-4">
+        <SidebarMenu>
+          {navigationItems.map((group, idx) => {
+            // Dashboard is top-level, not collapsible
+            if (group.title === "Main Platforms") {
+              return (
+                <SidebarGroup key={idx}>
+                  <SidebarGroupLabel className="px-2 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2">
+                    {group.title}
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    {group.items.map((item) => (
+                      <SidebarMenuItem key={item.title}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={router.pathname === item.url}
+                          className={cn(
+                            "h-11 transition-all duration-200 rounded-xl px-3",
+                            router.pathname === item.url
+                              ? "bg-blue-50 text-blue-700 font-bold shadow-sm ring-1 ring-blue-100"
+                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          )}
+                        >
+                          <Link href={item.url} className="flex items-center gap-3">
+                            <item.icon className={cn("h-5 w-5", router.pathname === item.url ? "text-blue-600" : "text-slate-400")} />
+                            <span className="text-sm">{item.title}</span>
+                          </Link>
+                        </SidebarMenuButton>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              );
+            }
+
+            // Other groups are collapsible
+            const isGroupActive = group.items.some(item => router.pathname === item.url);
+
+            return (
+              <Collapsible
+                key={group.title}
+                defaultOpen={isGroupActive}
+                className="group/collapsible w-full mb-2"
+              >
+                <SidebarMenuItem className="list-none">
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton 
+                      className={cn(
+                        "w-full h-11 justify-between transition-all duration-200 rounded-xl px-3",
+                        isGroupActive ? "text-slate-900 font-bold" : "text-slate-600 hover:bg-slate-50"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        {group.icon && <group.icon className={cn("h-5 w-5", isGroupActive ? "text-blue-600" : "text-slate-400")} />}
+                        <span className="text-sm">{group.title}</span>
+                      </div>
+                      <ChevronDown className="h-4 w-4 text-slate-400 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="animate-in slide-in-from-top-1 duration-200">
+                    <SidebarMenu className="mt-1 space-y-1 pl-4 border-l border-slate-100 ml-5">
+                      {group.items.map((item) => (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={router.pathname === item.url}
+                            className={cn(
+                              "h-9 transition-all duration-200 rounded-lg px-3",
+                              router.pathname === item.url
+                                ? "bg-blue-50 text-blue-700 font-bold"
+                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
+                            )}
+                          >
+                            <Link href={item.url} className="flex items-center gap-3">
+                              {item.icon && <item.icon className={cn("h-4 w-4", router.pathname === item.url ? "text-blue-600" : "text-slate-400")} />}
+                              <span className="text-xs">{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </CollapsibleContent>
+                </SidebarMenuItem>
+              </Collapsible>
+            );
+          })}
+        </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="border-t p-4 bg-brand-secondary/20">
+
+      <SidebarSeparator className="mx-4 opacity-50" />
+
+      <SidebarFooter className="p-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href="/profile" className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                  <UserIcon className="h-5 w-5 text-gray-600" />
+            <SidebarMenuButton
+              asChild
+              className="h-12 w-full justify-start gap-4 rounded-xl px-4 hover:bg-slate-50 transition-colors"
+            >
+              <Link href="/profile">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 font-bold">
+                  RT
                 </div>
-                <div className="flex flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
-                  <span className="text-sm font-medium">{profile?.full_name || "Admin User"}</span>
-                  <span className="text-xs text-gray-500">Lead Coordinator</span>
+                <div className="flex flex-col items-start overflow-hidden">
+                  <span className="text-sm font-bold text-slate-900 truncate w-full">Ronnel Torralba</span>
+                  <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Super Admin</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -223,5 +222,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

@@ -350,7 +350,7 @@ export function CRMDashboardView() {
               {createStep === 1 && (
                 <div className="space-y-4 animate-in fade-in-50 duration-300">
                   <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                    <User className="h-4 w-4" />
+                    <Users className="h-4 w-4" />
                     Personal Information
                   </h3>
                   <div className="grid grid-cols-2 gap-4">
@@ -797,7 +797,7 @@ export function CRMDashboardView() {
                               <Card className="col-span-2 md:col-span-1 border-gray-200">
                                 <CardHeader className="pb-3">
                                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                                    <User className="h-4 w-4" />
+                                    <Users className="h-4 w-4" />
                                     Personal Information
                                   </CardTitle>
                                 </CardHeader>

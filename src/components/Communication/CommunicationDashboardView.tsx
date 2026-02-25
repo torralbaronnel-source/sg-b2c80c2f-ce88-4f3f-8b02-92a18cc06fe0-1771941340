@@ -50,7 +50,6 @@ export function CommunicationDashboardView() {
   const typingServiceRef = useRef<any>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Fetch real communications
   useEffect(() => {
     const fetchComms = async () => {
       setLoading(true);
@@ -63,7 +62,6 @@ export function CommunicationDashboardView() {
     fetchComms();
   }, []);
 
-  // Fetch messages and subscribe when chat changes
   useEffect(() => {
     if (selectedChat) {
       const fetchMessages = async () => {
@@ -77,7 +75,6 @@ export function CommunicationDashboardView() {
 
       const unsubscribe = communicationService.subscribeToMessages(selectedChat.id, (payload: any) => {
         setMessages((prev) => {
-          // Prevent duplicates from real-time and optimistic updates if we add them later
           if (prev.find(m => m.id === payload.id)) return prev;
           return [...prev, payload];
         });
@@ -89,10 +86,9 @@ export function CommunicationDashboardView() {
     }
   }, [selectedChat]);
 
-  // Presence for typing
   useEffect(() => {
     if (selectedChat && user) {
-      const userName = user.email?.split('@')[0] || "User";
+      const userName = user.email?.split("@")[0] || "User";
       const service = communicationService.subscribeToTyping(selectedChat.id, userName, (users) => {
         setTypingUsers(users);
       });
@@ -123,18 +119,17 @@ export function CommunicationDashboardView() {
     if (!newMessage.trim() || !selectedChat || !user) return;
     
     const content = newMessage;
-    setNewMessage(""); // Clear input early for better UX
+    const senderName = user.email?.split("@")[0] || "Me";
+    setNewMessage("");
 
     const { error } = await communicationService.sendMessage({
       communicationId: selectedChat.id,
-      senderId: user.id,
-      content: content,
-      platform: selectedChat.platform || "WhatsApp"
+      senderName: senderName,
+      content: content
     });
 
     if (error) {
       console.error("Failed to send message:", error);
-      // Optionally show toast or revert optimistic update
     } else {
       typingServiceRef.current?.setTyping(false);
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
@@ -150,8 +145,7 @@ export function CommunicationDashboardView() {
   };
 
   return (
-    <div className="flex h-screen w-full bg-white overflow-hidden text-xs md:text-sm">
-      {/* Activity Bar */}
+    <div className="flex h-full w-full bg-white overflow-hidden text-xs md:text-sm">
       <div className={cn(
         "bg-[#201f1f] flex-col items-center py-4 space-y-4 transition-all duration-300 shrink-0",
         sidebarOpen ? "w-10 flex" : "w-0 hidden md:flex md:w-10"
@@ -176,14 +170,13 @@ export function CommunicationDashboardView() {
         </Button>
       </div>
 
-      {/* Chat List Sidebar */}
       <div className={cn(
         "border-r flex flex-col transition-all duration-300 bg-[#f5f5f5] shrink-0",
         sidebarOpen ? "w-full md:w-56 lg:w-60" : "w-0 hidden md:flex md:w-56 lg:w-60",
         viewMode === "Chat" && "hidden md:flex"
       )}>
         <div className="p-2.5 flex items-center justify-between shrink-0">
-          <h1 className="font-bold text-sm md:text-base">Chat</h1>
+          <h1 className="font-bold text-sm md:text-base">Team Chats</h1>
           <div className="flex gap-0.5">
             <Button variant="ghost" size="icon" className="h-6 w-6"><Search className="h-3 w-3" /></Button>
             <Button variant="ghost" size="icon" className="h-6 w-6"><Plus className="h-3 w-3" /></Button>
@@ -211,45 +204,42 @@ export function CommunicationDashboardView() {
                 <p className="text-[10px]">No active chats found.</p>
               </div>
             ) : (
-              <>
-                <div>
-                  <p className="px-2 pb-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Recent Chats</p>
-                  {communications.map(chat => (
-                    <button
-                      key={chat.id}
-                      onClick={() => selectChat(chat)}
-                      className={cn(
-                        "w-full flex items-center gap-2 p-1.5 rounded-md transition-colors text-left",
-                        selectedChat?.id === chat.id ? "bg-white shadow-sm" : "hover:bg-white/50"
-                      )}
-                    >
-                      <div className="relative shrink-0">
-                        <Avatar className="h-6 w-6">
-                          <AvatarFallback className="text-[9px] font-bold bg-muted">{chat.contact_name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div className="absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full border border-white bg-green-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-baseline">
-                          <p className="font-semibold text-[10px] truncate">{chat.contact_name}</p>
-                          <p className="text-[8px] text-muted-foreground">
-                            {chat.updated_at ? format(new Date(chat.updated_at), "HH:mm") : ""}
-                          </p>
-                        </div>
-                        <p className="text-[9px] text-muted-foreground truncate leading-none mt-0.5">
-                          {chat.last_message || "Active"}
+              <div>
+                <p className="px-2 pb-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">All Channels</p>
+                {communications.map(chat => (
+                  <button
+                    key={chat.id}
+                    onClick={() => selectChat(chat)}
+                    className={cn(
+                      "w-full flex items-center gap-2 p-1.5 rounded-md transition-colors text-left",
+                      selectedChat?.id === chat.id ? "bg-white shadow-sm" : "hover:bg-white/50"
+                    )}
+                  >
+                    <div className="relative shrink-0">
+                      <Avatar className="h-6 w-6">
+                        <AvatarFallback className="text-[9px] font-bold bg-muted">{chat.contact_name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="absolute bottom-0 right-0 h-1.5 w-1.5 rounded-full border border-white bg-green-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-baseline">
+                        <p className="font-semibold text-[10px] truncate">{chat.contact_name}</p>
+                        <p className="text-[8px] text-muted-foreground">
+                          {chat.updated_at ? format(new Date(chat.updated_at), "HH:mm") : ""}
                         </p>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </>
+                      <p className="text-[9px] text-muted-foreground truncate leading-none mt-0.5">
+                        {chat.last_message || "Active"}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
         </ScrollArea>
       </div>
 
-      {/* Chat Content Area */}
       <div className={cn(
         "flex-1 flex flex-col min-w-0 bg-white",
         viewMode === "List" && "hidden md:flex"
@@ -413,18 +403,10 @@ export function CommunicationDashboardView() {
             <div className="h-12 w-12 rounded-full bg-white shadow-sm flex items-center justify-center mb-3">
               <MessageSquare className="h-6 w-6 text-[#6264a7]" />
             </div>
-            <h3 className="text-xs font-bold">Coordination Hub</h3>
+            <h3 className="text-xs font-bold">Team Coordination</h3>
             <p className="text-[9px] text-muted-foreground max-w-[180px] mt-1.5 leading-relaxed">
-              Select a chat to begin collaborating with your team or vendors.
+              Select a channel to begin collaborating with your team.
             </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-4 text-[9px] h-7 px-3 md:hidden"
-              onClick={() => setViewMode("List")}
-            >
-              View Channels
-            </Button>
           </div>
         )}
       </div>

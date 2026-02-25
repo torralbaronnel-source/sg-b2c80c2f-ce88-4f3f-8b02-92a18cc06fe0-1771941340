@@ -6,10 +6,12 @@ export type CommunicationMessage = Database["public"]["Tables"]["whatsapp_messag
 
 export const communicationService = {
   async getCommunications() {
-    return await supabase
+    const { data, error } = await supabase
       .from("communications")
       .select("*")
       .order("updated_at", { ascending: false });
+    
+    return { data, error };
   },
 
   async getMessages(communicationId: string) {
@@ -22,17 +24,29 @@ export const communicationService = {
 
   async sendMessage(params: {
     communicationId: string;
-    senderId: string;
+    senderName: string;
     content: string;
-    platform: string;
   }) {
-    return await supabase.from("whatsapp_messages").insert({
+    const { error } = await supabase.from("whatsapp_messages").insert({
       communication_id: params.communicationId,
-      sender_name: "You", // Fallback since sender_id isn't in the table schema currently
       content: params.content,
+      sender_name: params.senderName,
       is_from_me: true,
       status: "Sent"
     });
+    
+    // Also update the last_message in communications table
+    if (!error) {
+      await supabase
+        .from("communications")
+        .update({ 
+          last_message: params.content,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", params.communicationId);
+    }
+    
+    return { error };
   },
 
   subscribeToMessages(communicationId: string, callback: (payload: any) => void) {

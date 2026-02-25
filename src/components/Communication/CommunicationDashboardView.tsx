@@ -2,77 +2,64 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Search, 
   MessageSquare, 
-  Hash, 
+  Users, 
+  Calendar, 
+  CheckSquare, 
+  FileText, 
+  Bell, 
+  Plus, 
+  Filter, 
+  Send, 
+  MoreHorizontal, 
   Paperclip, 
   Smile, 
   AtSign, 
   Bold, 
   Italic, 
-  Send,
-  MoreVertical,
-  Reply,
-  Calendar,
-  CheckSquare,
-  FileText,
-  Zap,
-  Bell,
-  Users,
-  Menu,
-  Phone,
-  Video,
-  Info,
-  Plus
+  Video, 
+  Info, 
+  ChevronLeft,
+  Menu
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { communicationService, type Communication, type CommunicationMessage } from "@/services/communicationService";
+import { communicationService } from "@/services/communicationService";
 import { useAuth } from "@/contexts/AuthContext";
-import { useIsMobile } from "@/hooks/use-mobile";
+
+type TabType = "Chat" | "Files" | "Tasks" | "AI Insights";
+type ViewMode = "List" | "Chat";
 
 export function CommunicationDashboardView() {
   const { user } = useAuth();
-  const isMobile = useIsMobile();
-  const [activeTab, setActiveTab] = useState("chat");
-  const [activeChannel, setActiveChannel] = useState<Communication | null>(null);
-  const [messages, setMessages] = useState<CommunicationMessage[]>([]);
-  const [channels, setChannels] = useState<Communication[]>([]);
-  const [messageInput, setMessageInput] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
+  const [activeTab, setActiveTab] = useState<TabType>("Chat");
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>("List");
+  const [messages, setMessages] = useState<any[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const loadChannels = async () => {
-      const { data } = await communicationService.getCommunications();
-      if (data) {
-        setChannels(data);
-        if (data.length > 0 && !activeChannel) {
-          setActiveChannel(data[0]);
-        }
-      }
-    };
-    loadChannels();
-  }, []);
+  const channels = [
+    { id: "1", name: "General Logistics", lastMsg: "Welcome to the logistics channel.", time: "2:34 PM", type: "Channel", unread: 0 },
+    { id: "2", name: "Catering Coordination", lastMsg: "Menu has been finalized.", time: "Yesterday", type: "Channel", unread: 2 },
+    { id: "3", name: "Sarah Tan (Catering)", lastMsg: "Looking forward to the tasting session.", time: "Monday", type: "DM", unread: 0, status: "online" },
+    { id: "4", name: "Marc Cruz (Photo)", lastMsg: "Sent the shot list for review.", time: "Monday", type: "DM", unread: 0, status: "away" },
+  ];
 
   useEffect(() => {
-    if (activeChannel) {
-      const loadMessages = async () => {
-        const { data } = await communicationService.getMessages(activeChannel.id);
-        if (data) setMessages(data);
-      };
-      loadMessages();
-
-      const unsubscribe = communicationService.subscribeToMessages(activeChannel.id, () => {
-        loadMessages();
+    if (selectedChat) {
+      const unsubscribe = communicationService.subscribeToMessages(selectedChat.id, (payload: any) => {
+        setMessages((prev) => [...prev, payload]);
       });
-
       return () => {
-        unsubscribe();
+        if (typeof unsubscribe === "function") unsubscribe();
       };
     }
-  }, [activeChannel]);
+  }, [selectedChat]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -80,260 +67,333 @@ export function CommunicationDashboardView() {
     }
   }, [messages]);
 
+  // Handle auto-collapse on mobile
   useEffect(() => {
-    setSidebarOpen(!isMobile);
-  }, [isMobile]);
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setSidebarOpen(false);
+      } else {
+        setSidebarOpen(true);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  const handleSendMessage = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!messageInput.trim() || !activeChannel || !user) return;
-
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedChat || !user) return;
+    
     const { error } = await communicationService.sendMessage({
-      communicationId: activeChannel.id,
+      communicationId: selectedChat.id,
       senderId: user.id,
-      content: messageInput,
+      content: newMessage,
       platform: "WhatsApp"
     });
 
-    if (!error) setMessageInput("");
+    if (!error) {
+      setNewMessage("");
+    }
+  };
+
+  const selectChat = (chat: any) => {
+    setSelectedChat(chat);
+    if (window.innerWidth < 768) {
+      setViewMode("Chat");
+    }
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-white dark:bg-zinc-950">
-      {/* Activity Bar (Tier 1) */}
-      <div className="hidden sm:flex w-16 flex-col items-center py-4 bg-[#201f1f] text-zinc-400 gap-6 border-r border-zinc-800 shrink-0">
-        <button className="p-2 hover:text-white transition-colors"><Bell className="w-6 h-6" /></button>
-        <button className={cn("p-2 transition-colors", activeTab === "chat" ? "text-white bg-white/10 rounded-lg" : "hover:text-white")} onClick={() => setActiveTab("chat")}><MessageSquare className="w-6 h-6" /></button>
-        <button className="p-2 hover:text-white transition-colors"><Users className="w-6 h-6" /></button>
-        <button className="p-2 hover:text-white transition-colors"><Calendar className="w-6 h-6" /></button>
-        <button className="p-2 hover:text-white transition-colors"><CheckSquare className="w-6 h-6" /></button>
-        <button className="p-2 hover:text-white transition-colors"><FileText className="w-6 h-6" /></button>
-        <div className="mt-auto flex flex-col items-center gap-4">
-          <button className="p-2 hover:text-white transition-colors"><Zap className="w-6 h-6 text-amber-400" /></button>
-        </div>
+    <div className="flex h-screen w-full bg-white overflow-hidden text-sm sm:text-base">
+      {/* Activity Bar - Collapsible or Hidden on Mobile */}
+      <div className={cn(
+        "bg-[#201f1f] flex-col items-center py-4 space-y-4 transition-all duration-300",
+        sidebarOpen ? "w-16 flex" : "w-0 hidden md:flex md:w-16"
+      )}>
+        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
+          <Bell className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon" className="text-white bg-white/10">
+          <MessageSquare className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
+          <Users className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
+          <Calendar className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
+          <CheckSquare className="h-5 w-5" />
+        </Button>
+        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
+          <FileText className="h-5 w-5" />
+        </Button>
       </div>
 
-      {/* Main Sidebar */}
+      {/* Chat List Sidebar */}
       <div className={cn(
-        "flex flex-col border-r border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 transition-all duration-300 shrink-0",
-        sidebarOpen ? "w-72" : "w-0 overflow-hidden sm:w-0"
+        "border-r flex flex-col transition-all duration-300 bg-[#f5f5f5]",
+        sidebarOpen ? "w-full md:w-64 lg:w-72" : "w-0 hidden md:flex md:w-64 lg:w-72",
+        viewMode === "Chat" && "hidden md:flex"
       )}>
-        <div className="p-4 flex items-center justify-between border-b border-zinc-200 dark:border-zinc-800">
-          <h2 className="font-bold text-xl">Chat</h2>
+        <div className="p-4 flex items-center justify-between">
+          <h1 className="font-bold text-lg md:text-xl">Chat</h1>
           <div className="flex gap-1">
             <Button variant="ghost" size="icon" className="h-8 w-8"><Search className="h-4 w-4" /></Button>
             <Button variant="ghost" size="icon" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
           </div>
         </div>
+        
+        <div className="px-4 pb-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-3 w-3 text-muted-foreground" />
+            <Input 
+              placeholder="Search or start a new chat" 
+              className="pl-8 h-8 text-xs bg-white border-none shadow-sm"
+            />
+          </div>
+        </div>
 
-        <ScrollArea className="flex-1">
+        <ScrollArea className="flex-1 no-scrollbar">
           <div className="p-2 space-y-4">
             <div>
-              <div className="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Event Channels</div>
-              <div className="space-y-1">
-                {channels.filter(c => c.type === "Internal").map((channel) => (
-                  <button
-                    key={channel.id}
-                    onClick={() => {
-                      setActiveChannel(channel);
-                      if (isMobile) setSidebarOpen(false);
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-left",
-                      activeChannel?.id === channel.id 
-                        ? "bg-[#6264a7]/10 text-[#6264a7] font-medium" 
-                        : "hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
-                    )}
-                  >
-                    <Hash className="w-4 h-4 shrink-0" />
-                    <span className="truncate flex-1 text-sm">{channel.contact_name}</span>
-                  </button>
-                ))}
-              </div>
+              <p className="px-2 pb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Event Channels</p>
+              {channels.filter(c => c.type === "Channel").map(channel => (
+                <button
+                  key={channel.id}
+                  onClick={() => selectChat(channel)}
+                  className={cn(
+                    "w-full flex items-center gap-2 p-2 rounded-md transition-colors text-left group",
+                    selectedChat?.id === channel.id ? "bg-white shadow-sm" : "hover:bg-white/50"
+                  )}
+                >
+                  <div className="h-8 w-8 rounded bg-[#6264a7] flex items-center justify-center text-white shrink-0">
+                    <span className="text-xs font-bold">#</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline">
+                      <p className="font-semibold text-xs truncate">{channel.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{channel.time}</p>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground truncate">{channel.lastMsg}</p>
+                  </div>
+                </button>
+              ))}
             </div>
 
             <div>
-              <div className="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider">Recent Chats</div>
-              <div className="space-y-1">
-                {channels.filter(c => c.type !== "Internal").map((chat) => (
-                  <button
-                    key={chat.id}
-                    onClick={() => {
-                      setActiveChannel(chat);
-                      if (isMobile) setSidebarOpen(false);
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-3 px-3 py-2 rounded-md transition-colors text-left",
-                      activeChannel?.id === chat.id 
-                        ? "bg-[#6264a7]/10 text-[#6264a7] font-medium" 
-                        : "hover:bg-zinc-200 dark:hover:bg-zinc-800 text-zinc-700 dark:text-zinc-300"
+              <p className="px-2 pb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Recent Chats</p>
+              {channels.filter(c => c.type === "DM").map(chat => (
+                <button
+                  key={chat.id}
+                  onClick={() => selectChat(chat)}
+                  className={cn(
+                    "w-full flex items-center gap-2 p-2 rounded-md transition-colors text-left",
+                    selectedChat?.id === chat.id ? "bg-white shadow-sm" : "hover:bg-white/50"
+                  )}
+                >
+                  <div className="relative shrink-0">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src="" />
+                      <AvatarFallback className="text-[10px] font-bold bg-muted">{chat.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    </Avatar>
+                    {chat.status && (
+                      <div className={cn(
+                        "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white",
+                        chat.status === "online" ? "bg-green-500" : "bg-yellow-500"
+                      )} />
                     )}
-                  >
-                    <div className="relative shrink-0">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="text-xs bg-zinc-200">{chat.contact_name[0]}</AvatarFallback>
-                      </Avatar>
-                      <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-zinc-50 dark:border-zinc-900 rounded-full"></div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline">
+                      <p className="font-semibold text-xs truncate">{chat.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{chat.time}</p>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm truncate">{chat.contact_name}</div>
-                      <div className="text-xs text-zinc-500 truncate">{chat.status}</div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    <p className="text-[10px] text-muted-foreground truncate">{chat.lastMsg}</p>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
         </ScrollArea>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-zinc-950 relative">
-        {activeChannel ? (
+      {/* Chat Content Area */}
+      <div className={cn(
+        "flex-1 flex flex-col min-w-0 bg-white",
+        viewMode === "List" && "hidden md:flex"
+      )}>
+        {selectedChat ? (
           <>
             {/* Header */}
-            <div className="h-14 border-b border-zinc-200 dark:border-zinc-800 flex items-center justify-between px-4 shrink-0">
-              <div className="flex items-center gap-3 min-w-0">
+            <div className="h-12 border-b flex items-center justify-between px-3 md:px-4 shrink-0">
+              <div className="flex items-center gap-2 min-w-0">
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="sm:hidden -ml-2" 
-                  onClick={() => setSidebarOpen(true)}
+                  className="md:hidden h-8 w-8"
+                  onClick={() => setViewMode("List")}
                 >
-                  <Menu className="h-5 w-5" />
+                  <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className="bg-[#6264a7] text-white p-1.5 rounded-lg">
-                    <Hash className="w-5 h-5" />
+                <div className="relative shrink-0">
+                  <div className="h-7 w-7 md:h-8 md:w-8 rounded bg-[#6264a7] flex items-center justify-center text-white">
+                    <span className="text-xs font-bold">{selectedChat.type === "Channel" ? "#" : selectedChat.name[0]}</span>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-sm sm:text-base truncate">{activeChannel.contact_name}</h3>
-                    <p className="text-[10px] sm:text-xs text-green-500 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                      Available
-                    </p>
+                </div>
+                <div className="min-w-0">
+                  <h2 className="font-bold text-xs md:text-sm truncate">{selectedChat.name}</h2>
+                  <div className="flex items-center gap-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    <span className="text-[10px] text-muted-foreground">Available</span>
                   </div>
                 </div>
               </div>
-
-              <div className="flex items-center gap-1 sm:gap-2">
-                <Tabs defaultValue="chat" className="hidden lg:block">
-                  <TabsList className="bg-transparent border-none">
-                    <TabsTrigger value="chat" className="data-[state=active]:bg-[#6264a7]/10 data-[state=active]:text-[#6264a7]">Chat</TabsTrigger>
-                    <TabsTrigger value="files">Files</TabsTrigger>
-                    <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                    <TabsTrigger value="ai">AI Insights</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                <div className="h-6 w-[1px] bg-zinc-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9"><Phone className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9"><Video className="h-4 w-4" /></Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9"><Info className="h-4 w-4" /></Button>
+              
+              <div className="flex items-center gap-1 md:gap-4 ml-2">
+                <div className="hidden sm:flex border-b">
+                  {(["Chat", "Files", "Tasks", "AI Insights"] as TabType[]).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={cn(
+                        "px-3 py-3 text-xs font-medium transition-colors relative h-12 flex items-center",
+                        activeTab === tab ? "text-[#6264a7]" : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <div className="flex items-center gap-1.5">
+                        {tab === "Chat" && <MessageSquare className="h-3 w-3" />}
+                        {tab === "Files" && <FileText className="h-3 w-3" />}
+                        {tab === "Tasks" && <CheckSquare className="h-3 w-3" />}
+                        {tab === "AI Insights" && <Smile className="h-3 w-3" />}
+                        <span>{tab}</span>
+                      </div>
+                      {activeTab === tab && (
+                        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6264a7]" />
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-0.5 md:gap-1">
+                  <Button variant="ghost" size="icon" className="h-8 w-8"><Video className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8"><Info className="h-4 w-4" /></Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 md:hidden"
+                    onClick={() => setSidebarOpen(!sidebarOpen)}
+                  >
+                    <Menu className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
 
-            {/* Messages View */}
-            <div className="flex-1 flex flex-col overflow-hidden relative">
-              <ScrollArea className="flex-1 px-4 py-4" viewportRef={scrollRef}>
-                <div className="space-y-6 max-w-5xl mx-auto">
+            {/* Messages Area */}
+            <div className="flex-1 flex flex-col min-h-0">
+              <ScrollArea className="flex-1 no-scrollbar p-3 md:p-6" ref={scrollRef}>
+                <div className="max-w-4xl mx-auto space-y-4">
                   {messages.map((msg, idx) => {
                     const isOwn = msg.is_from_me;
                     const showAvatar = idx === 0 || messages[idx - 1]?.is_from_me !== msg.is_from_me;
                     
                     return (
-                      <div key={msg.id} className={cn(
-                        "flex gap-3 group",
+                      <div key={idx} className={cn(
+                        "flex gap-2 group",
                         isOwn ? "flex-row-reverse" : "flex-row"
                       )}>
-                        <div className={cn("shrink-0", !showAvatar && "invisible")}>
-                          <Avatar className="h-8 w-8 sm:h-9 sm:w-9 border border-zinc-200 dark:border-zinc-800">
-                            <AvatarFallback className="bg-zinc-100 text-xs">{isOwn ? "Me" : "VN"}</AvatarFallback>
-                          </Avatar>
-                        </div>
+                        {!isOwn && (
+                          <div className="w-6 shrink-0">
+                            {showAvatar && (
+                              <Avatar className="h-6 w-6">
+                                <AvatarFallback className="text-[8px] bg-[#6264a7] text-white">
+                                  {msg.sender_name?.[0] || "?"}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                          </div>
+                        )}
                         <div className={cn(
-                          "flex flex-col max-w-[85%] sm:max-w-[70%]",
+                          "max-w-[85%] md:max-w-[70%]",
                           isOwn ? "items-end" : "items-start"
                         )}>
-                          {showAvatar && (
-                            <div className="flex items-center gap-2 mb-1 px-1">
-                              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">{isOwn ? "You" : activeChannel.contact_name}</span>
-                              <span className="text-[10px] text-zinc-500">{new Date(msg.timestamp || Date.now()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
+                          {showAvatar && !isOwn && (
+                            <p className="text-[10px] text-muted-foreground mb-1 ml-1 font-semibold">{msg.sender_name}</p>
                           )}
                           <div className={cn(
-                            "px-3 py-2 sm:px-4 sm:py-2.5 text-sm rounded-2xl shadow-sm",
-                            isOwn 
-                              ? "bg-[#6264a7] text-white rounded-tr-none" 
-                              : "bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-tl-none"
+                            "p-2 rounded-lg text-xs md:text-sm",
+                            isOwn ? "bg-[#e8ebfa] text-[#242424] rounded-tr-none" : "bg-white border shadow-sm rounded-tl-none"
                           )}>
-                            {msg.content}
+                            <p className="leading-relaxed">{msg.content}</p>
                           </div>
-                          <div className={cn(
-                            "opacity-0 group-hover:opacity-100 transition-opacity mt-1 flex gap-2",
-                            isOwn ? "flex-row-reverse" : "flex-row"
-                          )}>
-                            <button className="text-[10px] text-zinc-500 hover:text-[#6264a7] flex items-center gap-1"><Reply className="w-3 h-3" /> Reply</button>
-                            <button className="text-[10px] text-zinc-500 hover:text-[#6264a7] flex items-center gap-1"><Smile className="w-3 h-3" /> React</button>
-                          </div>
+                          <p className="text-[8px] text-muted-foreground mt-1 px-1">2:45 PM</p>
                         </div>
                       </div>
                     );
                   })}
+                  {messages.length === 0 && (
+                    <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4 opacity-40">
+                      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                        <MessageSquare className="h-8 w-8" />
+                      </div>
+                      <p className="text-sm font-medium">No messages yet. Start the conversation!</p>
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
 
-              {/* Message Input */}
-              <div className="p-2 sm:p-4 bg-white dark:bg-zinc-950 shrink-0">
-                <form 
-                  onSubmit={handleSendMessage}
-                  className="max-w-5xl mx-auto bg-zinc-50 dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden shadow-sm"
-                >
-                  <div className="flex items-center gap-1 px-2 py-1.5 border-b border-zinc-200 dark:border-zinc-800 overflow-x-auto no-scrollbar">
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"><Paperclip className="h-4 w-4" /></Button>
-                    <div className="h-4 w-[1px] bg-zinc-200 dark:bg-zinc-800 mx-1 shrink-0" />
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"><Bold className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"><Italic className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"><Smile className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"><AtSign className="h-4 w-4" /></Button>
-                    <div className="flex-1" />
-                    <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"><MoreVertical className="h-4 w-4" /></Button>
+              {/* Input Area */}
+              <div className="p-3 md:p-4 border-t shrink-0">
+                <div className="max-w-4xl mx-auto bg-white border rounded-lg shadow-sm">
+                  <div className="flex items-center gap-1 p-1 border-b">
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><Paperclip className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><Smile className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><AtSign className="h-3.5 w-3.5" /></Button>
+                    <div className="h-4 w-px bg-border mx-1" />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><Bold className="h-3.5 w-3.5" /></Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><Italic className="h-3.5 w-3.5" /></Button>
                   </div>
-                  <div className="relative flex items-end px-3 py-2 min-h-[50px]">
+                  <div className="flex items-end p-2 gap-2">
                     <textarea 
-                      value={messageInput}
-                      onChange={(e) => setMessageInput(e.target.value)}
+                      placeholder={`Message ${selectedChat.name}`}
+                      className="flex-1 bg-transparent border-none focus:ring-0 resize-none py-1 min-h-[40px] max-h-32 text-xs md:text-sm no-scrollbar outline-none"
+                      rows={1}
+                      value={newMessage}
+                      onChange={(e) => setNewMessage(e.target.value)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' && !e.shiftKey) {
+                        if (e.key === "Enter" && !e.shiftKey) {
                           e.preventDefault();
                           handleSendMessage();
                         }
                       }}
-                      placeholder={`Message ${activeChannel.contact_name}`}
-                      className="w-full bg-transparent border-none focus:ring-0 resize-none py-1 text-sm max-h-32 min-h-[24px]"
-                      rows={1}
                     />
                     <Button 
                       size="icon" 
-                      className={cn(
-                        "h-8 w-8 rounded-lg shrink-0 transition-all",
-                        messageInput.trim() ? "bg-[#6264a7] text-white" : "bg-zinc-200 text-zinc-400"
-                      )}
-                      disabled={!messageInput.trim()}
+                      className="h-8 w-8 bg-[#6264a7] hover:bg-[#4b4d8a] text-white shrink-0 rounded-full"
+                      onClick={handleSendMessage}
                     >
-                      <Send className="h-4 w-4" />
+                      <Send className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                </form>
+                </div>
               </div>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-zinc-50 dark:bg-zinc-900/50">
-            <div className="w-20 h-20 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center shadow-lg mb-6">
-              <MessageSquare className="w-10 h-10 text-[#6264a7]" />
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#f5f5f5]">
+            <div className="h-20 w-20 rounded-full bg-white shadow-sm flex items-center justify-center mb-4">
+              <MessageSquare className="h-10 w-10 text-[#6264a7]" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">Welcome to your Production Command Center</h2>
-            <p className="text-zinc-500 max-w-md">Select an event channel or direct message to start coordinating.</p>
+            <h3 className="text-lg font-bold">Select a chat to start</h3>
+            <p className="text-xs text-muted-foreground max-w-xs mt-2">
+              Choose a channel or direct message from the sidebar to start coordinating with your team.
+            </p>
+            <Button 
+              className="mt-6 md:hidden bg-[#6264a7]"
+              onClick={() => setViewMode("List")}
+            >
+              View Channels
+            </Button>
           </div>
         )}
       </div>

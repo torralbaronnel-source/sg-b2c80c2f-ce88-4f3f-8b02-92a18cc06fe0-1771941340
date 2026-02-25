@@ -37,13 +37,26 @@ import {
   PlayCircle,
   Shield,
   Cpu,
+  LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 
-const navigationItems = [
+interface NavItem {
+  title: string;
+  url: string;
+  icon?: LucideIcon;
+}
+
+interface NavGroup {
+  title: string;
+  icon?: LucideIcon;
+  items: NavItem[];
+}
+
+const navigationItems: NavGroup[] = [
   {
     title: "Main Platforms",
     items: [

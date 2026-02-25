@@ -79,19 +79,16 @@ export function CRMDashboardView() {
 
   // Form state
   const [formData, setFormData] = useState({
-    first_name: "",
-    last_name: "",
+    full_name: "",
     company_name: "",
     email: "",
     phone: "",
-    alternate_contact: "",
     address: "",
     city: "",
     country: "",
     notes: "",
-    source: "website" as const,
-    lead_status: "new" as const,
-    type: "individual" as const,
+    source: "Direct" as const,
+    status: "Lead" as const,
   });
 
   const { toast } = useToast();
@@ -184,6 +181,15 @@ export function CRMDashboardView() {
   }, [clients, searchTerm, statusFilter, sourceFilter, sortBy, sortDir]);
 
   async function handleCreateClient() {
+    if (!formData.full_name.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Full name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!formData.email.trim()) {
       toast({
         title: "Validation Error",
@@ -200,7 +206,7 @@ export function CRMDashboardView() {
       resetForm();
       toast({
         title: "Client Added",
-        description: `${formData.first_name} ${formData.last_name} has been added to your CRM.`,
+        description: `${formData.full_name} has been added to your CRM.`,
       });
     } catch (error) {
       console.error("Error creating client:", error);
@@ -232,19 +238,16 @@ export function CRMDashboardView() {
 
   function resetForm() {
     setFormData({
-      first_name: "",
-      last_name: "",
+      full_name: "",
       company_name: "",
       email: "",
       phone: "",
-      alternate_contact: "",
       address: "",
       city: "",
       country: "",
       notes: "",
-      source: "website",
-      lead_status: "new",
-      type: "individual",
+      source: "Direct",
+      status: "Lead",
     });
   }
 
@@ -300,34 +303,14 @@ export function CRMDashboardView() {
               </DialogDescription>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
-              <div className="space-y-2">
-                <Label>First Name</Label>
-                <Input
-                  value={formData.first_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, first_name: e.target.value })
-                  }
-                  placeholder="First name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Last Name</Label>
-                <Input
-                  value={formData.last_name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, last_name: e.target.value })
-                  }
-                  placeholder="Last name"
-                />
-              </div>
               <div className="space-y-2 col-span-2">
-                <Label>Company Name (Optional)</Label>
+                <Label>Full Name</Label>
                 <Input
-                  value={formData.company_name}
+                  value={formData.full_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, company_name: e.target.value })
+                    setFormData({ ...formData, full_name: e.target.value })
                   }
-                  placeholder="Company name"
+                  placeholder="Full name"
                 />
               </div>
               <div className="space-y-2">
@@ -351,14 +334,14 @@ export function CRMDashboardView() {
                   placeholder="+63..."
                 />
               </div>
-              <div className="space-y-2">
-                <Label>Alternate Contact</Label>
+              <div className="space-y-2 col-span-2">
+                <Label>Company Name (Optional)</Label>
                 <Input
-                  value={formData.alternate_contact}
+                  value={formData.company_name}
                   onChange={(e) =>
-                    setFormData({ ...formData, alternate_contact: e.target.value })
+                    setFormData({ ...formData, company_name: e.target.value })
                   }
-                  placeholder="Secondary contact"
+                  placeholder="Company name"
                 />
               </div>
               <div className="space-y-2">
@@ -381,6 +364,16 @@ export function CRMDashboardView() {
                   placeholder="Country"
                 />
               </div>
+              <div className="space-y-2 col-span-2">
+                <Label>Address (Optional)</Label>
+                <Input
+                  value={formData.address}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
+                  placeholder="Address"
+                />
+              </div>
               <div className="space-y-2">
                 <Label>Source</Label>
                 <Select
@@ -393,38 +386,37 @@ export function CRMDashboardView() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="facebook">Facebook</SelectItem>
-                    <SelectItem value="instagram">Instagram</SelectItem>
-                    <SelectItem value="referral">Referral</SelectItem>
-                    <SelectItem value="website">Website</SelectItem>
-                    <SelectItem value="event">Event</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="Facebook">Facebook</SelectItem>
+                    <SelectItem value="Instagram">Instagram</SelectItem>
+                    <SelectItem value="Referral">Referral</SelectItem>
+                    <SelectItem value="Website">Website</SelectItem>
+                    <SelectItem value="Event">Event</SelectItem>
+                    <SelectItem value="Direct">Direct</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Lead Status</Label>
+                <Label>Status</Label>
                 <Select
-                  value={formData.lead_status}
+                  value={formData.status}
                   onValueChange={(v) =>
-                    setFormData({ ...formData, lead_status: v as any })
+                    setFormData({ ...formData, status: v as any })
                   }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="new">New Lead</SelectItem>
-                    <SelectItem value="contacted">Contacted</SelectItem>
-                    <SelectItem value="interested">Interested</SelectItem>
-                    <SelectItem value="booked">Booked</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                    <SelectItem value="lost">Lost</SelectItem>
+                    <SelectItem value="Lead">Lead</SelectItem>
+                    <SelectItem value="Prospect">Prospect</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Completed">Completed</SelectItem>
+                    <SelectItem value="Archived">Archived</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2 col-span-2">
-                <Label>Notes</Label>
+                <Label>Notes (Optional)</Label>
                 <Textarea
                   value={formData.notes}
                   onChange={(e) =>
@@ -607,13 +599,13 @@ export function CRMDashboardView() {
               {filteredClients.map((client) => (
                 <TableRow key={client.id} className="hover:bg-gray-50">
                   <TableCell className="font-medium">
-                    {client.first_name} {client.last_name}
+                    {client.full_name}
                   </TableCell>
                   <TableCell className="text-sm text-gray-600">{client.email}</TableCell>
                   <TableCell className="text-sm text-gray-600">{client.phone || "-"}</TableCell>
                   <TableCell>
-                    <Badge className={getStatusBadgeVariant(client.lead_status)}>
-                      {client.lead_status}
+                    <Badge className={getStatusBadgeVariant(client.status)}>
+                      {client.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-sm capitalize">{client.source || "-"}</TableCell>
@@ -634,7 +626,7 @@ export function CRMDashboardView() {
                       <DialogContent className="max-w-2xl">
                         <DialogHeader>
                           <DialogTitle>
-                            {selectedClient?.first_name} {selectedClient?.last_name}
+                            {selectedClient?.full_name}
                           </DialogTitle>
                           <DialogDescription>
                             Client profile and interaction history
@@ -664,8 +656,8 @@ export function CRMDashboardView() {
                           </div>
                           <div className="space-y-1">
                             <p className="text-xs font-medium text-gray-500 uppercase">Status</p>
-                            <Badge className={getStatusBadgeVariant(selectedClient?.lead_status)}>
-                              {selectedClient?.lead_status}
+                            <Badge className={getStatusBadgeVariant(selectedClient?.status)}>
+                              {selectedClient?.status}
                             </Badge>
                           </div>
                           <div className="space-y-1 col-span-2">

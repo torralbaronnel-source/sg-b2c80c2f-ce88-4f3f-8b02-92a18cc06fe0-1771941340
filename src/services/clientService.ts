@@ -174,7 +174,7 @@ export const clientService = {
       const { data: events } = await supabase
         .from("events")
         .select("*")
-        .eq("id", client.id);
+        .eq("client_id", clientId);
 
       const { data: quotes } = await supabase
         .from("quotes")
@@ -189,7 +189,7 @@ export const clientService = {
       const { data: communications } = await supabase
         .from("communications")
         .select("*")
-        .where("id", "IN", `(SELECT id FROM communications WHERE EXISTS (SELECT 1 FROM events WHERE events.client_id = ${clientId}))`);
+        .eq("client_id", clientId);
 
       return {
         ...client,

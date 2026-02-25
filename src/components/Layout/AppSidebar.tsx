@@ -35,7 +35,8 @@ import {
   LayoutGrid,
   Zap,
   PlayCircle,
-  Shield
+  Shield,
+  Cpu,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -89,6 +90,21 @@ const navigationItems = [
       { title: "Staff & Teams", url: "/admin", icon: Users },
       { title: "Vendor Directory", url: "/crm", icon: Briefcase },
       { title: "Global Modules", url: "/modules", icon: LayoutGrid },
+    ],
+  },
+  {
+    title: "System",
+    url: "#",
+    icon: Cpu,
+    items: [
+      {
+        title: "NANO Core",
+        url: "/nano",
+      },
+      {
+        title: "Admin Portal",
+        url: "/admin",
+      },
     ],
   },
 ];

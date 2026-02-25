@@ -9,8 +9,13 @@ export const generateServerId = () => {
   return result;
 };
 
+export interface ServerResponse {
+  servers: any[];
+  totalCount: number;
+}
+
 export const serverService = {
-  async getMyServers(page = 1, pageSize = 6) {
+  async getMyServers(page = 1, pageSize = 6): Promise<ServerResponse> {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 

@@ -28,6 +28,7 @@ import {
   DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
 
 const PAGE_SIZE = 6;
 
@@ -147,6 +148,12 @@ export default function ServersPage() {
       <div className="max-w-7xl mx-auto space-y-12">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-neutral-200 pb-8">
           <div>
+            <div className="mb-4">
+              <Link href="/dashboard" className="text-sm text-neutral-500 hover:text-[#D4AF37] flex items-center gap-1 transition-colors group">
+                <ChevronLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+                Back to Dashboard
+              </Link>
+            </div>
             <h1 className="text-4xl font-bold tracking-tight text-neutral-900 mb-2">Mission Control</h1>
             <p className="text-neutral-500 text-lg">Select or deploy production infrastructure.</p>
           </div>

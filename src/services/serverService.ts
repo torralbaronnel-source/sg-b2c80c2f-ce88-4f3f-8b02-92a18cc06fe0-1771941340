@@ -83,7 +83,7 @@ export const serverService = {
         server_handle: serverId,
         owner_id: user.id,
         industry: payload.industry,
-        blueprint: payload.blueprint,
+        blueprint: payload.blueprint as any,
         invite_code: generateServerId()
       })
       .select()

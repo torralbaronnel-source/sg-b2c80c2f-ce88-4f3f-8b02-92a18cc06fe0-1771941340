@@ -1,213 +1,86 @@
 import React, { useState } from "react";
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle,
-  CardDescription
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Users, 
-  ShieldCheck, 
-  UserPlus, 
-  Mail, 
-  Settings,
-  MoreVertical,
-  CheckCircle2
-} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { useAuth } from "@/contexts/AuthContext";
+import { Textarea } from "@/components/ui/textarea";
 import { aiService } from "@/services/aiService";
-import { Label } from "@/components/ui/label";
-import { toast } from "@/hooks/use-toast";
+import { Loader2, Zap } from "lucide-react";
 
 export function PortalAdminView() {
-  const { user, profile, currentServer } = useAuth();
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [testPrompt, setTestPrompt] = React.useState("");
-  const [aiResponse, setAiResponse] = React.useState("");
-  const [isLoading, setIsLoading] = React.useState(false);
+  const [testPrompt, setTestPrompt] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [isTesting, setIsTesting] = useState(false);
 
   const handleTestAI = async () => {
-    if (!testPrompt) return;
-    setIsLoading(true);
+    if (!testPrompt.trim()) return;
+    
+    setIsTesting(true);
     try {
-      const result = await aiService.generateResponse(testPrompt);
-      setAiResponse(result || "No response");
-      toast({ title: "Success", description: "OpenAI response received." });
+      const response = await aiService.generateResponse(
+        testPrompt, 
+        "You are an AI assistant helping a portal administrator manage their event production platform."
+      );
+      setAiResponse(response || "No response received.");
     } catch (error: any) {
-      toast({ 
-        title: "AI Error", 
-        description: error.message || "Failed to fetch from OpenAI",
-        variant: "destructive" 
-      });
+      setAiResponse(`Error: ${error.message}`);
     } finally {
-      setIsLoading(false);
+      setIsTesting(false);
     }
   };
 
-  const MOCK_MEMBERS = [
-    { id: "1", name: "Admin User", email: "admin@orchestrix.com", role: "Owner", status: "Active" },
-    { id: "2", name: "Jane Coordinator", email: "jane@orchestrix.com", role: "Coordinator", status: "Active" },
-    { id: "3", name: "Mark Stylist", email: "mark@orchestrix.com", role: "Staff", status: "Pending" },
-  ];
-
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
-            Portal Admin
-            <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">
-              {currentServer?.name || "Server Management"}
-            </Badge>
-          </h1>
-          <p className="text-slate-500 mt-1">Manage your team members, roles, and organization settings.</p>
-        </div>
-        <Button className="bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 gap-2">
-          <UserPlus className="w-4 h-4" /> Invite Member
-        </Button>
+    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight text-white">Portal Administration</h1>
+        <p className="text-slate-400">Manage global settings and system integrations.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-none shadow-sm bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <Users className="w-4 h-4" /> Total Team
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-black text-slate-900">12</div>
-            <p className="text-xs text-emerald-500 font-bold mt-1">+2 this month</p>
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> Active Roles
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-black text-slate-900">4</div>
-            <p className="text-xs text-slate-400 font-bold mt-1">Standard preset</p>
-          </CardContent>
-        </Card>
-        <Card className="border-none shadow-sm bg-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-              <Mail className="w-4 h-4" /> Pending
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-4xl font-black text-rose-500">3</div>
-            <p className="text-xs text-slate-400 font-bold mt-1">Awaiting confirmation</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border-none shadow-sm bg-white">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="text-xl font-black">Team Members</CardTitle>
-            <CardDescription>Manage user access and assign responsibilities.</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Input placeholder="Search members..." className="h-9 w-[250px] bg-slate-50 border-none" />
-            </div>
-            <Button variant="outline" size="icon" className="h-9 w-9">
-              <Settings className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-slate-100">
-                <TableHead className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">Name</TableHead>
-                <TableHead className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">Email</TableHead>
-                <TableHead className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">Role</TableHead>
-                <TableHead className="font-bold text-slate-400 uppercase tracking-widest text-[10px]">Status</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {MOCK_MEMBERS.map((member) => (
-                <TableRow key={member.id} className="border-slate-50 group hover:bg-slate-50/50 transition-colors">
-                  <TableCell className="font-bold text-slate-900">{member.name}</TableCell>
-                  <TableCell className="text-slate-500 font-medium">{member.email}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={cn(
-                      "font-bold text-[10px] tracking-widest uppercase border-none px-0",
-                      member.role === 'Owner' ? "text-primary" : "text-slate-400"
-                    )}>
-                      {member.role}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <div className={cn(
-                        "w-2 h-2 rounded-full",
-                        member.status === 'Active' ? "bg-emerald-500" : "bg-amber-500"
-                      )} />
-                      <span className="text-xs font-bold text-slate-600">{member.status}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
+      <Card className="bg-slate-900 border-slate-800">
         <CardHeader>
-          <CardTitle>AI Integration (OpenAI)</CardTitle>
-          <CardDescription>
-            Test your OpenAI integration. Ensure <code>NEXT_PUBLIC_OPENAI_API_KEY</code> is set in Environment Settings.
+          <CardTitle className="flex items-center gap-2 text-white">
+            <Zap className="h-5 w-5 text-indigo-400" />
+            AI Integration Test
+          </CardTitle>
+          <CardDescription className="text-slate-400">
+            Test your OpenAI connectivity. Ensure NEXT_PUBLIC_OPENAI_API_KEY is set in your environment or Supabase secrets.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Test Prompt</Label>
-            <div className="flex gap-2">
-              <Input 
-                placeholder="Ask something to your AI..." 
-                value={testPrompt}
-                onChange={(e) => setTestPrompt(e.target.value)}
-              />
-              <Button onClick={handleTestAI} disabled={isLoading}>
-                {isLoading ? "Thinking..." : "Test AI"}
-              </Button>
-            </div>
+            <label className="text-sm font-medium text-slate-300">Prompt</label>
+            <Textarea
+              placeholder="Type a message to test the AI..."
+              value={testPrompt}
+              onChange={(e) => setTestPrompt(e.target.value)}
+              className="bg-slate-950 border-slate-800 text-white min-h-[100px]"
+            />
           </div>
+          
+          <Button 
+            onClick={handleTestAI} 
+            disabled={isTesting || !testPrompt}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white"
+          >
+            {isTesting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              "Send Test Prompt"
+            )}
+          </Button>
+
           {aiResponse && (
-            <div className="p-4 bg-muted rounded-md text-sm whitespace-pre-wrap">
-              <strong>Response:</strong><br />
-              {aiResponse}
+            <div className="mt-4 p-4 rounded-md bg-slate-950 border border-slate-800">
+              <p className="text-sm font-medium text-indigo-400 mb-2">AI Response:</p>
+              <div className="text-slate-300 whitespace-pre-wrap text-sm leading-relaxed">
+                {aiResponse}
+              </div>
             </div>
           )}
         </CardContent>
       </Card>
     </div>
   );
-}
-
-function cn(...classes: string[]) {
-  return classes.filter(Boolean).join(" ");
 }

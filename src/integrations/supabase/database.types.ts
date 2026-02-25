@@ -15,6 +15,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      clients: {
+        Row: {
+          address: string | null
+          city: string | null
+          company_name: string | null
+          coordinator_id: string
+          country: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string
+          id: string
+          last_contact_date: string | null
+          next_followup_date: string | null
+          notes: string | null
+          phone: string | null
+          server_id: string
+          source: string | null
+          status: string
+          total_events: number | null
+          total_spent: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          company_name?: string | null
+          coordinator_id: string
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          last_contact_date?: string | null
+          next_followup_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          server_id: string
+          source?: string | null
+          status?: string
+          total_events?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          company_name?: string | null
+          coordinator_id?: string
+          country?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          last_contact_date?: string | null
+          next_followup_date?: string | null
+          notes?: string | null
+          phone?: string | null
+          server_id?: string
+          source?: string | null
+          status?: string
+          total_events?: number | null
+          total_spent?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clients_coordinator_id_fkey"
+            columns: ["coordinator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clients_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       communications: {
         Row: {
           contact_name: string

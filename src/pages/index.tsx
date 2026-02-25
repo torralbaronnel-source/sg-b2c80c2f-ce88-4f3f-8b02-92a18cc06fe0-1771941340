@@ -34,9 +34,7 @@ import { cn } from "@/lib/utils";
 // Animation Variants
 const fadeIn: Variants = {
   initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: false, margin: "-100px" },
-  transition: { duration: 0.8, ease: "easeOut" }
+  whileInView: { opacity: 1, y: 0 }
 };
 
 const staggerContainer: Variants = {
@@ -46,24 +44,22 @@ const staggerContainer: Variants = {
 
 const slideInLeft: Variants = {
   initial: { opacity: 0, x: -50 },
-  whileInView: { opacity: 1, x: 0 },
-  viewport: { once: false },
-  transition: { duration: 0.8, ease: "easeOut" }
+  whileInView: { opacity: 1, x: 0 }
 };
 
 const slideInRight: Variants = {
   initial: { opacity: 0, x: 50 },
-  whileInView: { opacity: 1, x: 0 },
-  viewport: { once: false },
-  transition: { duration: 0.8, ease: "easeOut" }
+  whileInView: { opacity: 1, x: 0 }
 };
 
 const scaleIn: Variants = {
   initial: { opacity: 0, scale: 0.9 },
-  whileInView: { opacity: 1, scale: 1 },
-  viewport: { once: false },
-  transition: { duration: 0.8, ease: "easeOut" }
+  whileInView: { opacity: 1, scale: 1 }
 };
+
+// Common transition
+const commonTransition = { duration: 0.8, ease: "easeOut" };
+const commonViewport = { once: false, margin: "-100px" };
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -173,7 +169,7 @@ export default function LandingPage() {
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-5xl mx-auto text-center">
-            <motion.div {...fadeIn}>
+            <motion.div variants={fadeIn} initial="initial" whileInView="whileInView" transition={commonTransition} viewport={commonViewport}>
               <Badge className="bg-brand-primary/10 text-brand-primary border-brand-primary/20 mb-8 py-2 px-6 rounded-full text-sm font-bold tracking-widest uppercase">
                 Now Live: Next-Gen Event Production
               </Badge>
@@ -225,7 +221,11 @@ export default function LandingPage() {
         {/* Stats Section */}
         <motion.div 
           className="container mx-auto px-6 mt-32 border-t border-white/5 pt-20"
-          {...fadeIn}
+          variants={fadeIn}
+          initial="initial"
+          whileInView="whileInView"
+          transition={commonTransition}
+          viewport={commonViewport}
         >
           <div className="grid grid-cols-2 md:grid-cols-3 gap-12 max-w-4xl mx-auto">
             <div className="text-center space-y-2 group">
@@ -249,7 +249,11 @@ export default function LandingPage() {
         <div className="container mx-auto px-6">
           <motion.p 
             className="text-center text-stone-500 text-sm font-bold uppercase tracking-[0.4em] mb-12"
-            {...fadeIn}
+            variants={fadeIn}
+            initial="initial"
+            whileInView="whileInView"
+            transition={commonTransition}
+            viewport={commonViewport}
           >
             Trusted by the World's Leading Production Teams
           </motion.p>
@@ -261,7 +265,7 @@ export default function LandingPage() {
             viewport={{ once: false }}
           >
             {["VOGUE", "HARPER'S", "BRIDES", "THE KNOT", "TATLER"].map((brand) => (
-              <motion.span key={brand} className="text-3xl font-black tracking-tighter italic" variants={fadeIn}>
+              <motion.span key={brand} className="text-3xl font-black tracking-tighter italic" variants={fadeIn} transition={commonTransition}>
                 {brand}
               </motion.span>
             ))}
@@ -273,7 +277,14 @@ export default function LandingPage() {
       <section id="modules" className="py-32 relative">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-20 items-center">
-            <motion.div className="space-y-8" variants={slideInLeft} initial="initial" whileInView="whileInView" viewport={{ once: false }}>
+            <motion.div 
+              className="space-y-8" 
+              variants={slideInLeft} 
+              initial="initial" 
+              whileInView="whileInView" 
+              transition={commonTransition} 
+              viewport={commonViewport}
+            >
               <div className="w-16 h-1 bg-brand-primary" />
               <h2 className="text-5xl md:text-7xl font-black tracking-tighter uppercase leading-tight">
                 One System. <br />
@@ -303,7 +314,14 @@ export default function LandingPage() {
               </div>
             </motion.div>
 
-            <motion.div className="relative" variants={slideInRight} initial="initial" whileInView="whileInView" viewport={{ once: false }}>
+            <motion.div 
+              className="relative" 
+              variants={slideInRight} 
+              initial="initial" 
+              whileInView="whileInView" 
+              transition={commonTransition} 
+              viewport={commonViewport}
+            >
               <AnimatePresence mode="wait">
                 {modules.map((module) => module.id === activeTab && (
                   <motion.div
@@ -346,7 +364,14 @@ export default function LandingPage() {
       {/* Feature Showcase */}
       <section id="features" className="py-32 bg-stone-900/20">
         <div className="container mx-auto px-6">
-          <motion.div className="text-center max-w-3xl mx-auto mb-24" {...fadeIn}>
+          <motion.div 
+            className="text-center max-w-3xl mx-auto mb-24" 
+            variants={fadeIn} 
+            initial="initial" 
+            whileInView="whileInView" 
+            transition={commonTransition} 
+            viewport={commonViewport}
+          >
             <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-8 leading-none">
               Built for <br />
               <span className="italic font-serif normal-case text-brand-primary">Uncompromising</span> Standards
@@ -395,7 +420,8 @@ export default function LandingPage() {
                 variants={scaleIn}
                 initial="initial"
                 whileInView="whileInView"
-                viewport={{ once: false }}
+                transition={commonTransition}
+                viewport={commonViewport}
               >
                 <div className="w-16 h-16 bg-brand-primary/5 rounded-2xl flex items-center justify-center mb-8 group-hover:scale-110 transition-transform duration-500 group-hover:bg-brand-primary/10">
                   <feature.icon className="w-8 h-8 text-brand-primary" />
@@ -412,7 +438,13 @@ export default function LandingPage() {
       <section className="py-32 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-brand-primary/5 blur-[150px] -z-10" />
         <div className="container mx-auto px-6 text-center">
-          <motion.div variants={scaleIn} initial="initial" whileInView="whileInView" viewport={{ once: false }}>
+          <motion.div 
+            variants={scaleIn} 
+            initial="initial" 
+            whileInView="whileInView" 
+            transition={commonTransition} 
+            viewport={commonViewport}
+          >
             <div className="flex justify-center gap-1 mb-10 text-brand-primary">
               {[...Array(5)].map((_, i) => <Star key={i} className="w-8 h-8 fill-current" />)}
             </div>
@@ -442,7 +474,13 @@ export default function LandingPage() {
         />
         
         <div className="container mx-auto px-6 relative text-center">
-          <motion.div variants={fadeIn} initial="initial" whileInView="whileInView" viewport={{ once: false }}>
+          <motion.div 
+            variants={fadeIn} 
+            initial="initial" 
+            whileInView="whileInView" 
+            transition={commonTransition} 
+            viewport={commonViewport}
+          >
             <h2 className="text-5xl md:text-7xl font-bold tracking-tight mb-8 text-stone-900 leading-tight">
               Ready to conduct your <br />
               <span className="italic font-serif text-brand-primary">masterpiece?</span>

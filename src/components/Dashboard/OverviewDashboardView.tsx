@@ -6,13 +6,9 @@ import {
   Users, 
   Activity, 
   TrendingUp, 
-  ArrowUpRight,
-  Clock,
-  Server,
-  Layers
+  Server
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import Image from "next/image";
 
 export function OverviewDashboardView() {
   const { user } = useAuth();
@@ -54,13 +50,13 @@ export function OverviewDashboardView() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6">
       <div className="relative overflow-hidden rounded-2xl border bg-slate-950/50 p-8 shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold tracking-tight text-white">Mission Control</h1>
             <p className="text-slate-400 max-w-md">
-              Welcome back to Orchestrix. Your production ecosystem is fully synchronized and ready for execution.
+              Welcome back, {userName.split(' ')[0]}. Your production ecosystem is fully synchronized and ready for execution.
             </p>
           </div>
           <div className="relative h-40 w-64 rounded-xl border border-white/10 bg-black/40 p-2 shadow-2xl backdrop-blur-sm overflow-hidden group">
@@ -96,64 +92,26 @@ export function OverviewDashboardView() {
         ))}
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 overflow-hidden border-none bg-slate-50/50 dark:bg-slate-900/50">
-          <div className="relative aspect-video w-full">
-            <img 
-              src="/uploads/image_c8b24bc1-dcef-49cd-80e7-448bd8426a35.png" 
-              alt="Dashboard Preview" 
-              className="h-full w-full object-cover opacity-90 hover:opacity-100 transition-opacity"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
-          </div>
-        </Card>
-
-        {/* Recent Events / Schedule */}
-        <Card className="md:col-span-4 border-none shadow-sm bg-white">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-lg">Recent & Upcoming Events</CardTitle>
-              <CardDescription>Scheduled production timeline for the next 7 days</CardDescription>
-            </div>
-            <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-700 font-semibold">
-              View Calendar
-            </Button>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4 overflow-hidden border-none shadow-sm bg-white">
+          <CardHeader>
+            <CardTitle className="text-lg">System Performance</CardTitle>
+            <CardDescription>Live telemetry from active production nodes</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: "Global Tech Summit 2026", date: "Feb 28", status: "In Progress", type: "Conference" },
-                { name: "Skyline Wedding Gala", date: "Mar 02", status: "Preparation", type: "Social" },
-                { name: "Digital Innovation Expo", date: "Mar 05", status: "Scheduled", type: "Exhibition" }
-              ].map((event, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl border border-slate-100 hover:border-blue-100 hover:bg-blue-50/30 transition-all group">
-                  <div className="flex items-center gap-4">
-                    <div className="h-12 w-12 rounded-xl bg-slate-50 flex flex-col items-center justify-center border border-slate-100 group-hover:bg-white">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase leading-none">{event.date.split(' ')[0]}</span>
-                      <span className="text-lg font-bold text-slate-900 leading-none">{event.date.split(' ')[1]}</span>
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 group-hover:text-blue-700 transition-colors">{event.name}</h4>
-                      <p className="text-xs font-medium text-slate-500">{event.type} • Management Node Alpha</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      event.status === 'In Progress' ? 'bg-emerald-100 text-emerald-700' : 
-                      event.status === 'Preparation' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'
-                    }`}>
-                      {event.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+          <CardContent className="p-0">
+            <div className="relative aspect-video w-full bg-slate-50">
+              <img 
+                src="/uploads/image_c8b24bc1-dcef-49cd-80e7-448bd8426a35.png" 
+                alt="Dashboard Preview" 
+                className="h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Server Infrastructure Summary */}
+        {/* Infrastructure Summary */}
         <Card className="md:col-span-3 border-none shadow-sm bg-white overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 blur-3xl" />
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Server className="h-5 w-5 text-blue-600" />
@@ -162,7 +120,7 @@ export function OverviewDashboardView() {
             <CardDescription>Active production server status</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="p-4 rounded-xl bg-slate-900 text-white relative overflow-hidden group">
+            <div className="p-4 rounded-xl bg-slate-900 text-white relative overflow-hidden">
               <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
                   <div>
@@ -203,10 +161,6 @@ export function OverviewDashboardView() {
                 <span className="text-xs font-bold text-slate-500">Optimal</span>
               </div>
             </div>
-
-            <Button className="w-full bg-slate-50 hover:bg-slate-100 text-slate-900 border border-slate-200 shadow-none font-bold text-xs uppercase tracking-wider h-11">
-              Infrastructure Details
-            </Button>
           </CardContent>
         </Card>
       </div>

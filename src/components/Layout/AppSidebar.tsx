@@ -41,6 +41,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navigationItems = [
   {
@@ -111,6 +112,18 @@ const navigationItems = [
 
 export function AppSidebar() {
   const router = useRouter();
+  const { user, profile, role } = useAuth();
+  
+  const hasAccess = (url: string) => {
+    if (!role) return true;
+    const r = role as any;
+    if (r.hierarchy_level === 0) return true;
+    
+    // Map URL to permission key
+    const pageKey = url === "/" ? "dashboard" : url.replace("/", "");
+    const perms = r.permissions || {};
+    return perms[pageKey]?.view !== false;
+  };
 
   return (
     <Sidebar className="border-r border-slate-200 bg-white">
@@ -133,6 +146,10 @@ export function AppSidebar() {
       <SidebarContent className="px-4 pb-4">
         <SidebarMenu>
           {navigationItems.map((group, idx) => {
+            // Filter group items based on access
+            const accessibleItems = group.items.filter(item => hasAccess(item.url));
+            if (accessibleItems.length === 0) return null;
+
             // Dashboard is top-level, not collapsible
             if (group.title === "Main Platforms") {
               return (
@@ -141,7 +158,7 @@ export function AppSidebar() {
                     {group.title}
                   </SidebarGroupLabel>
                   <SidebarGroupContent>
-                    {group.items.map((item) => (
+                    {accessibleItems.map((item) => (
                       <SidebarMenuItem key={item.title}>
                         <SidebarMenuButton
                           asChild
@@ -166,7 +183,7 @@ export function AppSidebar() {
             }
 
             // Other groups are collapsible
-            const isGroupActive = group.items.some(item => router.pathname === item.url);
+            const isGroupActive = accessibleItems.some(item => router.pathname === item.url);
 
             return (
               <Collapsible
@@ -191,7 +208,7 @@ export function AppSidebar() {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="animate-in slide-in-from-top-1 duration-200">
                     <SidebarMenu className="mt-1 space-y-1 pl-4 border-l border-slate-100 ml-5">
-                      {group.items.map((item) => (
+                      {accessibleItems.map((item) => (
                         <SidebarMenuItem key={item.title}>
                           <SidebarMenuButton
                             asChild

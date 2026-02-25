@@ -66,6 +66,7 @@ import { toast } from "@/hooks/use-toast";
 import { ConciergeManager } from "./ConciergeManager";
 import { RolesManagementView } from "./RolesManagementView";
 import { UserManagementView } from "./UserManagementView";
+import { OrgManagementView } from "./OrgManagementView";
 
 interface Organization {
   id: string;
@@ -424,6 +425,7 @@ export function SuperAdminView() {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">Users & Staff</TabsTrigger>
           <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
+          <TabsTrigger value="org">Org Hierarchy & SaaS</TabsTrigger>
           <TabsTrigger value="audit">Audit Log</TabsTrigger>
         </TabsList>
 
@@ -439,6 +441,10 @@ export function SuperAdminView() {
 
         <TabsContent value="users" className="space-y-4">
           <UserManagementView />
+        </TabsContent>
+
+        <TabsContent value="org" className="space-y-4">
+          <OrgManagementView />
         </TabsContent>
       </Tabs>
     </div>

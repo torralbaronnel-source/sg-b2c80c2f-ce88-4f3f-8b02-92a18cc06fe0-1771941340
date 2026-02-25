@@ -15,6 +15,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_pages: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          module: string
+          name: string
+          route: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          module: string
+          name: string
+          route: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          module?: string
+          name?: string
+          route?: string
+        }
+        Relationships: []
+      }
       call_sheets: {
         Row: {
           created_at: string | null
@@ -1165,33 +1192,42 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
+          cover_url: string | null
           created_at: string | null
           current_server_id: string | null
           email: string | null
           full_name: string | null
           id: string
+          reports_to: string | null
           role: string | null
           role_id: string | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
+          cover_url?: string | null
           created_at?: string | null
           current_server_id?: string | null
           email?: string | null
           full_name?: string | null
           id: string
+          reports_to?: string | null
           role?: string | null
           role_id?: string | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
+          cover_url?: string | null
           created_at?: string | null
           current_server_id?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          reports_to?: string | null
           role?: string | null
           role_id?: string | null
           updated_at?: string | null
@@ -1202,6 +1238,13 @@ export type Database = {
             columns: ["current_server_id"]
             isOneToOne: false
             referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -1385,6 +1428,51 @@ export type Database = {
           },
         ]
       }
+      role_page_permissions: {
+        Row: {
+          can_delete: boolean | null
+          can_edit: boolean | null
+          can_view: boolean | null
+          data_scope: string | null
+          id: string
+          page_id: string | null
+          role_id: string | null
+        }
+        Insert: {
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          data_scope?: string | null
+          id?: string
+          page_id?: string | null
+          role_id?: string | null
+        }
+        Update: {
+          can_delete?: boolean | null
+          can_edit?: boolean | null
+          can_view?: boolean | null
+          data_scope?: string | null
+          id?: string
+          page_id?: string | null
+          role_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_page_permissions_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "app_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "role_page_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           can_create: boolean | null
@@ -1427,25 +1515,37 @@ export type Database = {
         Row: {
           created_at: string | null
           description: string | null
+          hierarchy_level: number | null
           id: string
           is_system: boolean | null
+          is_system_role: boolean | null
           name: string
+          role_type: string | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
           description?: string | null
+          hierarchy_level?: number | null
           id?: string
           is_system?: boolean | null
+          is_system_role?: boolean | null
           name: string
+          role_type?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
           description?: string | null
+          hierarchy_level?: number | null
           id?: string
           is_system?: boolean | null
+          is_system_role?: boolean | null
           name?: string
+          role_type?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: []

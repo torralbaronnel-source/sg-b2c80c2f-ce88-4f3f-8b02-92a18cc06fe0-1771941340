@@ -10,16 +10,25 @@ interface ProtectedRouteProps {
   redirectTo?: string;
 }
 
-export function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isLoading } = useAuth();
+export function ProtectedRoute({ children, requiredPermission }: { children: React.ReactNode, requiredPermission?: string }) {
+  const { user, isLoading, role } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
     if (!isLoading && !user) {
-      console.log("ProtectedRoute: No user found, redirecting to login");
       router.push("/login");
     }
-  }, [user, isLoading, router]);
+    
+    if (!isLoading && user && role && requiredPermission) {
+      const r = role as any;
+      if (r.hierarchy_level !== 0) {
+        const perms = r.permissions || {};
+        if (perms[requiredPermission]?.view === false) {
+          router.push("/");
+        }
+      }
+    }
+  }, [user, isLoading, role, router, requiredPermission]);
 
   if (isLoading) {
     return (

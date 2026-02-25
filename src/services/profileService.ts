@@ -5,6 +5,26 @@ export type Profile = Database["public"]["Tables"]["profiles"]["Row"] & {
   role?: string;
 };
 
+export interface EnrichedProfile {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  email: string | null;
+  phone: string | null;
+  role_id: string | null;
+  reports_to: string | null;
+  bio: string | null;
+  cover_url: string | null;
+  role?: {
+    name: string;
+    description: string;
+  } | null;
+  manager?: {
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+}
+
 export const profileService = {
   getProfile: async (id: string): Promise<Profile | null> => {
     try {
@@ -82,5 +102,27 @@ export const profileService = {
     }
     
     return (data as any)?.organizations || null;
+  },
+
+  async getEnrichedProfile(userId: string): Promise<{ data: EnrichedProfile | null; error: any }> {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select(`
+        *,
+        role:roles(name, description),
+        manager:profiles!profiles_reports_to_fkey(full_name, avatar_url)
+      `)
+      .eq("id", userId)
+      .single();
+    
+    return { data: data as any, error };
+  },
+
+  async getOrgChart(): Promise<{ data: any[]; error: any }> {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url, reports_to, role:roles(name)");
+    
+    return { data: data || [], error };
   }
 };

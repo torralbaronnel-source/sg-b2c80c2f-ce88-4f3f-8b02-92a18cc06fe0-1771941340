@@ -1,53 +1,76 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, LogIn, Server, Shield, ArrowRight, Loader2, Search } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { serverService } from "@/services/serverService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { 
+  Plus, 
+  Users, 
+  Search, 
+  ShieldCheck, 
+  User, 
+  ArrowRight, 
+  Hash, 
+  Filter,
+  LayoutGrid,
+  List
+} from "lucide-react";
+import { serverService } from "@/services/serverService";
 import { useToast } from "@/hooks/use-toast";
 import { SEO } from "@/components/SEO";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
-export default function ServerSelectionPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const { toast } = useToast();
+// Utility for class names
+function cn(...classes: any[]) {
+  return classes.filter(Boolean).join(" ");
+}
+
+export default function ServersPage() {
   const [servers, setServers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [view, setView] = useState<"list" | "create" | "join">("list");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "portal_admin" | "member">("all");
+  const [sortBy, setSortBy] = useState<"name" | "newest">("newest");
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
-  // Form states
-  const [serverName, setServerName] = useState("");
+  const [newServerName, setNewServerName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  
+  const router = useRouter();
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
-      fetchServers();
-    }
-  }, [user]);
+    loadServers();
+  }, []);
 
-  const fetchServers = async () => {
+  const loadServers = async () => {
     try {
       const data = await serverService.getMyServers();
-      setServers(data);
-    } catch (error) {
-      console.error(error);
+      setServers(data || []);
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Connection Error", description: error.message });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCreate = async (e: React.FormEvent) => {
+  const handleCreateServer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!serverName || !user) return;
+    if (!newServerName.trim()) return;
     
     setActionLoading(true);
     try {
-      await serverService.createServer(serverName, user.id);
-      toast({ title: "Infrastructure Deployed", description: "Your private server is ready." });
+      const server = await serverService.createServer(newServerName);
+      toast({ title: "Infrastructure Deployed", description: `Server ${server.id} is now live.` });
       router.push("/dashboard");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Deployment Failed", description: error.message });
@@ -56,19 +79,17 @@ export default function ServerSelectionPage() {
     }
   };
 
-  const handleJoin = async (e: React.FormEvent) => {
+  const handleJoinServer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteCode || !user) return;
-
     if (inviteCode.length !== 18) {
-      toast({ variant: "destructive", title: "Invalid Protocol", description: "Server IDs must be exactly 18 characters." });
+      toast({ variant: "destructive", title: "Invalid Code", description: "Server IDs must be exactly 18 characters." });
       return;
     }
     
     setActionLoading(true);
     try {
-      await serverService.joinServer(inviteCode, user.id);
-      toast({ title: "Connection Established", description: "You have joined the secure server." });
+      await serverService.joinServer(inviteCode);
+      toast({ title: "Access Granted", description: "Connection established with remote server." });
       router.push("/dashboard");
     } catch (error: any) {
       toast({ variant: "destructive", title: "Access Denied", description: error.message });
@@ -78,220 +99,238 @@ export default function ServerSelectionPage() {
   };
 
   const selectServer = async (serverId: string) => {
-    // In a real app, we'd update the profile's current_server_id here
-    router.push("/dashboard");
+    try {
+      await serverService.selectServer(serverId);
+      router.push("/dashboard");
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Session Error", description: error.message });
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-[#D4AF37] animate-spin" />
-      </div>
-    );
-  }
+  // Filter and Sort logic
+  const filteredServers = servers
+    .filter(s => {
+      const matchesSearch = 
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        s.id.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      const matchesRole = roleFilter === "all" || s.userRole === roleFilter;
+      
+      return matchesSearch && matchesRole;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
 
   return (
-    <div className="min-h-screen bg-neutral-50 selection:bg-[#D4AF37]/30 py-20 px-6">
-      <SEO title="Server Selection | Orchestrix OS" />
+    <div className="min-h-screen bg-neutral-50 p-6 md:p-12">
+      <SEO title="Mission Control | Orchestrix" />
       
-      <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col items-center mb-16 text-center">
-          <div className="w-16 h-16 bg-[#D4AF37] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#D4AF37]/20 mb-8">
-            <Server className="text-white w-8 h-8" />
+      <div className="max-w-7xl mx-auto space-y-12">
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-neutral-200 pb-8">
+          <div>
+            <h1 className="text-4xl font-bold tracking-tight text-neutral-900 mb-2">Mission Control</h1>
+            <p className="text-neutral-500 text-lg">Select or deploy production infrastructure.</p>
           </div>
-          <h1 className="text-4xl font-light text-neutral-900 mb-4">
-            Mission <span className="font-semibold italic">Control</span>
-          </h1>
-          <p className="text-neutral-500 max-w-md font-medium">
-            Select an active infrastructure or deploy a new secure server for your event production house.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {/* Create New */}
-          <button 
-            onClick={() => setView("create")}
-            className="group relative h-48 bg-white border border-dashed border-neutral-200 rounded-[32px] flex flex-col items-center justify-center gap-4 transition-all duration-500 hover:border-[#D4AF37] hover:shadow-xl hover:shadow-black/5"
-          >
-            <div className="w-12 h-12 bg-neutral-50 rounded-full flex items-center justify-center group-hover:bg-[#D4AF37] transition-colors duration-500">
-              <Plus className="w-6 h-6 text-neutral-400 group-hover:text-white" />
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              <Input 
+                placeholder="Search name or 18-digit ID..." 
+                className="pl-10 w-full md:w-[300px] bg-white border-neutral-200 focus:ring-[#D4AF37]"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <span className="font-bold text-neutral-900">Deploy New Server</span>
-          </button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2 border-neutral-200">
+                  <Filter className="w-4 h-4" />
+                  Filter
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Role</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setRoleFilter("all")}>All Servers</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRoleFilter("portal_admin")}>Administered</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRoleFilter("member")}>Joined</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setSortBy("newest")}>Newest First</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("name")}>Alphabetical</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-          {/* Join Existing */}
-          <button 
-            onClick={() => setView("join")}
-            className="group relative h-48 bg-white border border-neutral-100 rounded-[32px] flex flex-col items-center justify-center gap-4 transition-all duration-500 hover:shadow-xl hover:shadow-black/5"
-          >
-            <div className="w-12 h-12 bg-[#D4AF37]/10 rounded-full flex items-center justify-center group-hover:bg-[#D4AF37] transition-colors duration-500">
-              <LogIn className="w-6 h-6 text-[#D4AF37] group-hover:text-white" />
-            </div>
-            <span className="font-bold text-neutral-900">Join Infrastructure</span>
-          </button>
-
-          {/* User Status */}
-          <div className="h-48 bg-neutral-900 rounded-[32px] p-8 text-white flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <Shield className="w-6 h-6 text-[#D4AF37]" />
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-            </div>
-            <div>
-              <p className="text-xs text-neutral-400 uppercase tracking-widest font-black mb-1">Active Personnel</p>
-              <p className="font-bold truncate">{user?.email}</p>
+            <div className="flex border border-neutral-200 rounded-lg overflow-hidden">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn("rounded-none", viewMode === "grid" && "bg-neutral-100")}
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={cn("rounded-none", viewMode === "list" && "bg-neutral-100")}
+                onClick={() => setViewMode("list")}
+              >
+                <List className="w-4 h-4" />
+              </Button>
             </div>
           </div>
-        </div>
+        </header>
 
-        <AnimatePresence mode="wait">
-          {view === "list" && (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="space-y-4"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-neutral-900">Available Servers</h2>
-                <div className="flex items-center text-sm font-medium text-neutral-400">
-                  <Search className="w-4 h-4 mr-2" />
-                  Filter Servers
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* Main List Section */}
+          <div className="lg:col-span-2 space-y-6">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                Your Fleet
+                <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 border-none font-medium">
+                  {filteredServers.length}
+                </Badge>
+              </h2>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="h-40 rounded-xl bg-neutral-100 animate-pulse border border-neutral-200" />
+                ))}
               </div>
-
-              {servers.length === 0 ? (
-                <div className="bg-white rounded-[32px] p-20 border border-neutral-100 text-center">
-                  <p className="text-neutral-400 font-medium">No active server connections found.</p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {servers.map((server) => (
-                    <button
-                      key={server.id}
-                      onClick={() => selectServer(server.id)}
-                      className="group bg-white p-6 rounded-[32px] border border-neutral-100 flex items-center justify-between transition-all duration-500 hover:shadow-xl hover:shadow-black/5 hover:-translate-y-1 text-left"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-neutral-50 rounded-2xl flex items-center justify-center text-[#D4AF37] font-bold text-xl group-hover:bg-[#D4AF37] group-hover:text-white transition-all duration-500">
-                          {server.name[0]}
+            ) : filteredServers.length > 0 ? (
+              <div className={cn(
+                "gap-4",
+                viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2" : "flex flex-col"
+              )}>
+                {filteredServers.map((server) => (
+                  <Card 
+                    key={server.id} 
+                    className="group hover:border-[#D4AF37] transition-all cursor-pointer bg-white overflow-hidden"
+                    onClick={() => selectServer(server.id)}
+                  >
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start mb-1">
+                        <div className="p-2 rounded-lg bg-neutral-50 border border-neutral-100 group-hover:bg-[#D4AF37]/5 transition-colors">
+                          <LayoutGrid className="w-5 h-5 text-[#D4AF37]" />
                         </div>
-                        <div>
-                          <h3 className="font-bold text-neutral-900">{server.name}</h3>
-                          <p className="text-xs font-mono text-neutral-400 uppercase tracking-tighter">ID: {server.server_handle}</p>
-                        </div>
+                        <Badge className={cn(
+                          "border-none px-2.5 py-0.5 text-[10px] uppercase tracking-wider",
+                          server.userRole === "portal_admin" 
+                            ? "bg-[#D4AF37]/10 text-[#D4AF37]" 
+                            : "bg-neutral-100 text-neutral-500"
+                        )}>
+                          {server.userRole === "portal_admin" ? "Portal Admin" : "Member"}
+                        </Badge>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                         <span className={cn(
-                           "text-[10px] px-3 py-1 rounded-full font-black uppercase tracking-widest",
-                           server.userRole === 'portal_admin' ? "bg-black text-[#D4AF37]" : "bg-neutral-100 text-neutral-500"
-                         )}>
-                           {server.userRole === 'portal_admin' ? 'Portal Admin' : 'Member'}
-                         </span>
-                         <ArrowRight className="w-5 h-5 text-neutral-200 group-hover:text-[#D4AF37] transition-colors" />
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </motion.div>
-          )}
+                      <CardTitle className="text-lg font-bold group-hover:text-[#D4AF37] transition-colors line-clamp-1">
+                        {server.name}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-1 text-xs font-mono text-neutral-400">
+                        <Hash className="w-3 h-3" /> {server.id}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="pt-4 border-t border-neutral-50 flex items-center justify-between">
+                      <span className="text-xs text-neutral-400">
+                        Joined {new Date(server.created_at).toLocaleDateString()}
+                      </span>
+                      <Button variant="ghost" size="sm" className="group-hover:bg-[#D4AF37] group-hover:text-white rounded-full w-8 h-8 p-0">
+                        <ArrowRight className="w-4 h-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-neutral-200">
+                <Search className="w-12 h-12 text-neutral-200 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-neutral-900">No servers found</h3>
+                <p className="text-neutral-500 max-w-xs mx-auto mt-2">
+                  Try adjusting your search or filter to find specific infrastructure.
+                </p>
+                {searchQuery && (
+                  <Button variant="link" onClick={() => setSearchQuery("")} className="text-[#D4AF37] mt-4">
+                    Clear Search
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
 
-          {view === "create" && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-[40px] p-12 border border-neutral-100 shadow-2xl shadow-black/5"
-            >
-              <h2 className="text-2xl font-bold mb-2">Initialize New Server</h2>
-              <p className="text-neutral-500 mb-8">Establish a new isolated environment for your production house.</p>
-              
-              <form onSubmit={handleCreate} className="space-y-6">
-                <div>
-                  <label className="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-3 block">Server Name</label>
+          {/* Action Sidebar */}
+          <div className="space-y-6">
+            <Card className="border-2 border-[#D4AF37]/10 overflow-hidden shadow-lg shadow-[#D4AF37]/5">
+              <div className="h-1 bg-[#D4AF37]" />
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-[#D4AF37]" />
+                  Deploy Server
+                </CardTitle>
+                <CardDescription>Establish a new event production agency.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleCreateServer} className="space-y-4">
                   <Input 
-                    value={serverName}
-                    onChange={(e) => setServerName(e.target.value)}
-                    placeholder="e.g. Elite Production House"
-                    className="h-16 rounded-2xl border-neutral-100 px-6 text-lg focus:ring-[#D4AF37]"
+                    placeholder="Agency Name (e.g. Royal Events)" 
+                    value={newServerName}
+                    onChange={(e) => setNewServerName(e.target.value)}
                     required
+                    className="bg-neutral-50 border-neutral-200 focus:ring-[#D4AF37]"
                   />
-                </div>
-                <div className="flex gap-4 pt-4">
                   <Button 
                     type="submit" 
+                    className="w-full bg-[#D4AF37] hover:bg-[#B8962E] text-white"
                     disabled={actionLoading}
-                    className="flex-1 h-16 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-[#D4AF37] transition-all duration-500 shadow-xl"
                   >
-                    {actionLoading ? <Loader2 className="animate-spin" /> : "Deploy Infrastructure"}
+                    {actionLoading ? "Initializing..." : "Deploy Infrastructure"}
                   </Button>
-                  <Button 
-                    type="button"
-                    variant="ghost" 
-                    onClick={() => setView("list")}
-                    className="h-16 rounded-2xl px-8"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          )}
+                </form>
+              </CardContent>
+            </Card>
 
-          {view === "join" && (
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-[40px] p-12 border border-neutral-100 shadow-2xl shadow-black/5"
-            >
-              <h2 className="text-2xl font-bold mb-2">Connect to Infrastructure</h2>
-              <p className="text-neutral-500 mb-8">Enter the 18-digit secure Server ID provided by your administrator.</p>
-              
-              <form onSubmit={handleJoin} className="space-y-6">
-                <div>
-                  <label className="text-sm font-bold text-neutral-400 uppercase tracking-widest mb-3 block">Secure Server ID</label>
-                  <div className="relative">
-                    <Input 
-                      value={inviteCode}
-                      onChange={(e) => setInviteCode(e.target.value)}
-                      placeholder="XXXX-XXXX-XXXX-XXXX-XX"
-                      maxLength={18}
-                      className="h-16 rounded-2xl border-neutral-100 px-6 text-lg font-mono focus:ring-[#D4AF37] tracking-widest"
-                      required
-                    />
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-neutral-300">
-                      {inviteCode.length}/18
-                    </div>
-                  </div>
-                </div>
-                <div className="flex gap-4 pt-4">
+            <Card className="bg-neutral-900 text-white border-none shadow-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <Users className="w-5 h-5 text-[#D4AF37]" />
+                  Join Infrastructure
+                </CardTitle>
+                <CardDescription className="text-neutral-400">Enter a secure 18-digit invite code.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleJoinServer} className="space-y-4">
+                  <Input 
+                    placeholder="18-digit Server ID" 
+                    value={inviteCode}
+                    onChange={(e) => setInviteCode(e.target.value)}
+                    required
+                    maxLength={18}
+                    className="bg-neutral-800 border-neutral-700 text-white placeholder:text-neutral-500 focus:ring-[#D4AF37] font-mono"
+                  />
                   <Button 
                     type="submit" 
+                    variant="secondary"
+                    className="w-full bg-white text-neutral-900 hover:bg-neutral-100"
                     disabled={actionLoading}
-                    className="flex-1 h-16 bg-neutral-900 text-white rounded-2xl font-bold hover:bg-[#D4AF37] transition-all duration-500 shadow-xl"
                   >
-                    {actionLoading ? <Loader2 className="animate-spin" /> : "Request Access"}
+                    {actionLoading ? "Connecting..." : "Establish Connection"}
                   </Button>
-                  <Button 
-                    type="button"
-                    variant="ghost" 
-                    onClick={() => setView("list")}
-                    className="h-16 rounded-2xl px-8"
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                </form>
+              </CardContent>
+            </Card>
+
+            <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 flex gap-3">
+              <ShieldCheck className="w-5 h-5 text-blue-600 shrink-0" />
+              <div className="text-xs text-blue-800 leading-relaxed">
+                <strong>Portal Admin Privileges:</strong> Deploying a server automatically grants you root access to all event production modules within that environment.
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
-}
-
-// Utility function for conditional class names
-function cn(...classes: any[]) {
-  return classes.filter(Boolean).join(" ");
 }

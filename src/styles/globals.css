@@ -4,87 +4,93 @@
 
 @layer base {
   :root {
-    /* Primary brand colors shifted to be default (White & Gold theme) */
-    --background: 0 0% 100%;
-    --foreground: 20 14.3% 4.1%;
+    /* THE ORCHESTRIX LUXURY PALETTE */
+    --background: 45 30% 99%; /* Ultra-luxe Bone White */
+    --foreground: 24 10% 12%; /* Deep Charcoal Stone */
+    
     --card: 0 0% 100%;
-    --card-foreground: 20 14.3% 4.1%;
+    --card-foreground: 24 10% 12%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 20 14.3% 4.1%;
+    --popover-foreground: 24 10% 12%;
     
-    /* Luxury Gold as Primary Action Color */
+    /* Orchestrix Metallic Gold (The 24K Standard) */
     --primary: 43 63% 53%; 
-    --primary-foreground: 0 0% 100%;
+    --primary-foreground: 45 30% 99%;
     
-    --secondary: 43 10% 95%;
-    --secondary-foreground: 43 63% 40%;
+    --secondary: 43 50% 96%;
+    --secondary-foreground: 43 63% 30%;
     
-    --muted: 43 10% 96.1%;
-    --muted-foreground: 43 10% 40%;
+    --muted: 45 20% 96%;
+    --muted-foreground: 24 10% 45%;
     
     --accent: 43 63% 53%;
-    --accent-foreground: 0 0% 100%;
+    --accent-foreground: 45 30% 99%;
     
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 60 9.1% 97.8%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 45 30% 99%;
     
-    --border: 43 20% 90%;
-    --input: 43 20% 90%;
+    --border: 43 25% 90%;
+    --input: 43 25% 90%;
     --ring: 43 63% 53%;
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Custom Brand Specs */
+    /* Brand Specifics */
     --brand-gold: 43 63% 53%;
-    --brand-gold-dark: 43 63% 40%;
-    --brand-charcoal: 24 10% 10%;
+    --brand-gold-dark: 43 63% 35%;
+    --brand-gold-light: 43 70% 75%;
+    --brand-bone: 45 30% 99%;
+    --brand-charcoal: 24 10% 12%;
   }
 
   .dark {
-    /* Sophisticated Charcoal & Gold theme */
-    --background: 24 10% 10%;
-    --foreground: 60 9.1% 97.8%;
-    --card: 24 10% 10%;
-    --card-foreground: 60 9.1% 97.8%;
-    --popover: 24 10% 10%;
-    --popover-foreground: 60 9.1% 97.8%;
-    
+    --background: 24 10% 6%;
+    --foreground: 45 30% 98%;
+    --card: 24 10% 8%;
+    --card-foreground: 45 30% 98%;
     --primary: 43 63% 53%;
-    --primary-foreground: 24 9.8% 10%;
-    
-    --secondary: 12 6.5% 15.1%;
-    --secondary-foreground: 43 63% 53%;
-    
-    --muted: 12 6.5% 15.1%;
-    --muted-foreground: 24 5.4% 63.9%;
-    
-    --accent: 43 63% 53%;
-    --accent-foreground: 24 9.8% 10%;
-    
-    --border: 12 6.5% 15.1%;
-    --input: 12 6.5% 15.1%;
+    --primary-foreground: 24 10% 10%;
+    --border: 24 10% 15%;
     --ring: 43 63% 53%;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
   }
 }
 
 @layer components {
-  .hero-gradient-text {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-gold via-brand-gold/90 to-brand-gold/70;
-  }
-  
-  .glass-panel {
-    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  /* THE GOLD STANDARD GRADIENT */
+  .text-gold-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-br from-[#D4AF37] via-[#C5A028] to-[#996515];
   }
 
-  .btn-gold {
-    @apply bg-brand-gold hover:bg-brand-gold-dark text-white font-semibold transition-all duration-300 shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transform hover:-translate-y-0.5;
+  .bg-gold-gradient {
+    @apply bg-gradient-to-br from-[#D4AF37] via-[#C5A028] to-[#996515];
+  }
+
+  /* LUXURY SECTION WRAPPERS */
+  .section-luxury-bone {
+    @apply bg-[#FBFBF9] relative overflow-hidden;
+  }
+
+  /* PREMIUM CARDS */
+  .card-luxury {
+    @apply bg-white border border-[#D4AF37]/10 hover:border-[#D4AF37]/40 transition-all duration-700 
+           shadow-[0_10px_30px_-15px_rgba(212,175,55,0.1)] hover:shadow-[0_20px_40px_-10px_rgba(212,175,55,0.2)] 
+           rounded-2xl relative overflow-hidden;
+  }
+
+  /* BUTTONS */
+  .btn-gold-master {
+    @apply bg-gradient-to-br from-[#D4AF37] to-[#B8860B] text-white font-bold tracking-widest 
+           shadow-[0_10px_20px_rgba(212,175,55,0.3)] hover:shadow-[0_15px_30px_rgba(212,175,55,0.5)] 
+           transition-all duration-500 hover:-translate-y-1 active:scale-95 uppercase;
+  }
+
+  .btn-white-gold {
+    @apply bg-white text-[#B8860B] border-2 border-[#D4AF37]/30 font-bold tracking-widest
+           hover:bg-[#D4AF37]/5 transition-all duration-500 uppercase;
+  }
+
+  /* DECORATIVE ELEMENTS */
+  .gold-divider {
+    @apply h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent my-8;
   }
 }

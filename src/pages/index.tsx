@@ -1,474 +1,263 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Head from "next/head";
-import Link from "next/link";
-import { motion, AnimatePresence, Variants, useScroll, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
   ArrowRight, 
-  ChevronRight, 
-  Play, 
-  CheckCircle2, 
-  Calendar, 
   Users, 
-  CreditCard, 
-  MessageSquare,
-  LayoutDashboard,
+  Calendar, 
+  DollarSign, 
+  Truck, 
+  MessageSquare, 
+  ShieldCheck, 
+  Smartphone, 
   Zap,
-  Shield,
   Star,
-  Menu,
-  X,
-  Globe,
-  Settings,
-  Sparkles,
-  Heart
+  CheckCircle2,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { ConciergeDialog } from "@/components/Communication/ConciergeDialog";
-
-// Animation Variants
-const fadeIn: Variants = {
-  initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 }
-};
-
-const staggerContainer: Variants = {
-  initial: {},
-  whileInView: { transition: { staggerChildren: 0.1 } }
-};
-
-const slideInLeft: Variants = {
-  initial: { opacity: 0, x: -50 },
-  whileInView: { opacity: 1, x: 0 }
-};
-
-const slideInRight: Variants = {
-  initial: { opacity: 0, x: 50 },
-  whileInView: { opacity: 1, x: 0 }
-};
-
-const scaleIn: Variants = {
-  initial: { opacity: 0, scale: 0.9 },
-  whileInView: { opacity: 1, scale: 1 }
-};
-
-// Common transition
-const commonTransition = { duration: 0.8, ease: "easeOut" as const };
-const commonViewport = { once: false, margin: "-100px" };
+import { useState } from "react";
+import Link from "next/link";
 
 export default function LandingPage() {
-  const [scrolled, setScrolled] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [conciergeOpen, setConciergeOpen] = useState(false);
-  const [conciergeType, setConciergeType] = useState<"Private Demo" | "Business Consultation" | "Portal Customization">("Private Demo");
+  const [isConciergeOpen, setIsConciergeOpen] = useState(false);
+  const [conciergeType, setConciergeType] = useState<"demo" | "consultation">("demo");
 
-  // Parallax scroll hooks
-  const { scrollY } = useScroll();
-  const y1 = useTransform(scrollY, [0, 500], [0, 150]);
-  const y2 = useTransform(scrollY, [0, 500], [0, -100]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0.4]);
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  const handleRequestDemo = (type: "demo" | "consultation") => {
-    const mappedType = type === "demo" ? "Private Demo" : "Business Consultation";
-    setConciergeType(mappedType);
-    setConciergeOpen(true);
+  const handleRequestAction = (type: "demo" | "consultation") => {
+    setConciergeType(type);
+    setIsConciergeOpen(true);
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F4] text-stone-900 selection:bg-brand-primary selection:text-white font-sans overflow-x-hidden">
+    <div className="min-h-screen bg-[#FBFBF9] font-sans selection:bg-[#D4AF37]/30">
       <Head>
-        <title>Orchestrix | The Operating System for Elite Event Production</title>
-        <meta name="description" content="Total orchestration for premium wedding planners and production houses in the Philippines." />
+        <title>Orchestrix | Luxury Event Coordination OS</title>
+        <meta name="description" content="The premier operating system for high-end wedding and event production professionals." />
       </Head>
 
-      {/* Navigation */}
-      <nav 
-        className={`fixed top-0 w-full z-50 transition-all duration-500 ${
-          scrolled ? "bg-white/80 backdrop-blur-xl border-b border-stone-200 py-4" : "bg-transparent py-6"
-        }`}
-      >
+      {/* LUXURY NAVIGATION */}
+      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-[#D4AF37]/10 py-4">
         <div className="container mx-auto px-6 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center shadow-lg shadow-brand-primary/20 group-hover:rotate-12 transition-transform duration-500">
-              <Zap className="text-white w-6 h-6 fill-current" />
-            </div>
-            <span className="text-2xl font-black tracking-tighter uppercase text-stone-950">
-              Orchestrix
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-black tracking-tighter text-[#1A1A1A]">
+              ORCHESTRIX
             </span>
-          </Link>
-
-          <div className="hidden lg:flex items-center gap-10">
-            {["Features", "Modules", "Pricing"].map((item) => (
-              <Link 
-                key={item} 
-                href={`#${item.toLowerCase()}`} 
-                className="text-sm font-bold uppercase tracking-widest text-stone-600 hover:text-brand-primary transition-colors"
-              >
-                {item}
-              </Link>
-            ))}
-            <Link href="/login">
-              <Button variant="ghost" className="text-sm font-bold uppercase tracking-widest hover:bg-stone-100">
-                Sign In
-              </Button>
-            </Link>
+            <div className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
+          </div>
+          <div className="hidden md:flex gap-8 text-sm font-bold uppercase tracking-widest text-[#1A1A1A]/70">
+            <a href="#features" className="hover:text-[#D4AF37] transition-colors">Features</a>
+            <a href="#modules" className="hover:text-[#D4AF37] transition-colors">Modules</a>
+            <a href="#pricing" className="hover:text-[#D4AF37] transition-colors">Pricing</a>
+          </div>
+          <div className="flex gap-4 items-center">
+            <button className="text-sm font-bold uppercase tracking-widest text-[#1A1A1A] hover:text-[#D4AF37] transition-colors">Sign In</button>
             <Button 
-              onClick={() => handleRequestDemo("demo")}
-              className="bg-brand-primary hover:bg-brand-primary/90 text-white px-8 py-6 rounded-full text-sm font-bold uppercase tracking-widest shadow-xl shadow-brand-primary/20"
+              className="btn-gold-master rounded-full px-6 py-2 text-xs"
+              onClick={() => handleRequestAction("demo")}
             >
               Get Access
             </Button>
           </div>
-
-          <button className="lg:hidden text-stone-950" onClick={() => setMobileMenuOpen(true)}>
-            <Menu className="w-8 h-8" />
-          </button>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center pt-24 overflow-hidden">
-        {/* Parallax Background Layers */}
-        <motion.div 
-          style={{ y: y1, opacity }}
-          className="absolute inset-0 z-0"
-        >
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center opacity-[0.03]" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#F5F5F4] via-transparent to-[#F5F5F4]" />
-        </motion.div>
+      {/* HERO SECTION - GOLD & BONE */}
+      <header className="relative pt-40 pb-32 overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#D4AF37]/5 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] bg-[#D4AF37]/10 rounded-full blur-[100px]" />
+        </div>
         
-        <motion.div 
-          style={{ y: y2 }}
-          className="absolute right-[-10%] top-[20%] w-[40%] h-[60%] rounded-full bg-[#D4AF37] blur-[120px] opacity-[0.08] z-0"
-        />
-
-        <div className="relative z-10 container mx-auto px-4 pt-32 pb-20">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-            >
-              <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6">
-                Redefining <span className="text-brand-gold">Luxury</span> Event Coordination
-              </h1>
-              <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
-                Orchestrix is the premier operating system for high-end wedding and event production professionals.
-              </p>
-            </motion.div>
-
-            <motion.div 
-              className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
+        <div className="container relative z-10 mx-auto px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="space-y-6"
+          >
+            <Badge className="bg-[#D4AF37]/10 text-[#B8860B] border-[#D4AF37]/20 px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-4">
+              The Gold Standard of Production
+            </Badge>
+            <h1 className="text-6xl md:text-8xl font-black tracking-tight text-[#1A1A1A] leading-[0.9]">
+              Redefining <span className="text-gold-gradient">Luxury</span><br />
+              Event Orchestration
+            </h1>
+            <p className="text-xl md:text-2xl text-[#1A1A1A]/60 max-w-2xl mx-auto font-medium leading-relaxed">
+              The elite operating system designed for world-class wedding planners and event architects.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center pt-10">
               <Button 
                 size="lg" 
-                className="btn-gold rounded-full px-10 h-14 text-lg"
-                onClick={() => handleRequestDemo("demo")}
+                className="btn-gold-master rounded-full h-16 px-12 text-lg"
+                onClick={() => handleRequestAction("demo")}
               >
-                Request Access
-                <ArrowRight className="ml-2 h-5 w-5" />
+                Request Access <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
-              
               <Button 
                 variant="outline" 
                 size="lg" 
-                className="rounded-full px-10 h-14 text-lg border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
-                onClick={() => handleRequestDemo("consultation")}
+                className="btn-white-gold rounded-full h-16 px-12 text-lg"
+                onClick={() => handleRequestAction("consultation")}
               >
                 Business Consultation
               </Button>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <motion.div 
-          className="container mx-auto px-6 mt-32 border-t border-stone-200 pt-20"
-          variants={fadeIn}
-          initial="initial"
-          whileInView="whileInView"
-          transition={commonTransition}
-          viewport={commonViewport}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-8 max-w-4xl mx-auto">
-            <div className="text-center space-y-2 group">
-              <div className="text-5xl font-black text-stone-950 tracking-tighter group-hover:text-brand-primary transition-colors">100+</div>
-              <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-stone-400">Active Events</div>
             </div>
-            <div className="text-center space-y-2 group">
-              <div className="text-5xl font-black text-stone-950 tracking-tighter group-hover:text-brand-primary transition-colors">300</div>
-              <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-stone-400">Elite Planners</div>
-            </div>
-            <div className="text-center space-y-2 group">
-              <div className="text-5xl font-black text-stone-950 tracking-tighter group-hover:text-brand-primary transition-colors">₱50K+</div>
-              <div className="text-[10px] uppercase tracking-[0.3em] font-bold text-stone-400">Production Value</div>
-            </div>
-          </div>
-        </motion.div>
-      </section>
-
-      {/* Modules Section */}
-      <section id="modules" className="py-32 relative bg-white">
-        <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-20 items-center">
-            <motion.div 
-              className="space-y-8" 
-              variants={slideInLeft} 
-              initial="initial" 
-              whileInView="whileInView" 
-              transition={commonTransition} 
-              viewport={commonViewport}
-            >
-              <Badge className="bg-brand-primary/10 text-brand-primary border-brand-primary/20 py-2 px-4 rounded-full text-[10px] font-bold tracking-[0.2em] uppercase">
-                The Core Modules
-              </Badge>
-              <h2 className="text-5xl md:text-6xl font-black tracking-tighter text-stone-950 leading-[0.9]">
-                Everything you need <br />
-                <span className="text-stone-400">in one high-octane suite.</span>
-              </h2>
-              <p className="text-xl text-stone-600 leading-relaxed font-medium">
-                Ditch the messy spreadsheets. Orchestrix brings every vendor, contract, and floor plan into a single, beautiful dashboard.
-              </p>
-              
-              <div className="grid sm:grid-cols-2 gap-6 pt-6">
-                {[
-                  { icon: <Users />, label: "CRM & Guest List" },
-                  { icon: <Calendar />, label: "Master Timeline" },
-                  { icon: <CreditCard />, label: "Budget & Finance" },
-                  { icon: <Settings />, label: "Vendor Portal" }
-                ].map((item, idx) => (
-                  <div key={idx} className="flex items-center gap-4 p-4 rounded-2xl bg-stone-50 border border-stone-200 hover:border-brand-primary/30 transition-colors group">
-                    <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-stone-400 group-hover:text-brand-primary transition-colors shadow-sm">
-                      {item.icon}
-                    </div>
-                    <span className="font-bold text-stone-950 tracking-tight">{item.label}</span>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div 
-              className="relative" 
-              variants={slideInRight} 
-              initial="initial" 
-              whileInView="whileInView" 
-              transition={commonTransition} 
-              viewport={commonViewport}
-            >
-              <div className="aspect-square rounded-[40px] bg-gradient-to-tr from-brand-primary/20 to-stone-200 overflow-hidden relative shadow-3xl">
-                <div className="absolute inset-0 bg-white/40 backdrop-blur-3xl m-8 rounded-[32px] border border-white/50 shadow-inner flex items-center justify-center p-8">
-                  <div className="w-full space-y-6">
-                    <div className="h-12 w-3/4 bg-stone-200/50 rounded-full animate-pulse" />
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="h-32 bg-brand-primary/10 rounded-2xl animate-pulse" />
-                      <div className="h-32 bg-stone-100 rounded-2xl animate-pulse" />
-                    </div>
-                    <div className="h-24 bg-stone-100 rounded-2xl animate-pulse" />
-                  </div>
-                </div>
-              </div>
-              <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-3xl shadow-2xl border border-stone-100 max-w-[200px]">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-ping" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-stone-400">Live Status</span>
-                </div>
-                <p className="text-sm font-bold text-stone-950">Grand Ballroom Event starts in 15m</p>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Showcase */}
-      <section id="features" className="py-32 bg-stone-50">
-        <div className="container mx-auto px-6">
-          <motion.div 
-            className="text-center max-w-3xl mx-auto mb-24" 
-            variants={fadeIn} 
-            initial="initial" 
-            whileInView="whileInView" 
-            transition={commonTransition} 
-            viewport={commonViewport}
-          >
-            <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-stone-950 mb-8 leading-[0.9]">
-              Engineered for <br />
-              <span className="italic font-serif font-normal text-brand-primary tracking-normal">perfection.</span>
-            </h2>
-            <p className="text-xl text-stone-600 font-medium">
-              We've obsessed over every micro-interaction to ensure you can manage thousands of details without breaking a sweat.
-            </p>
           </motion.div>
+        </div>
+      </header>
 
-          <div className="grid md:grid-cols-3 gap-8">
+      {/* STATS SECTION */}
+      <section className="bg-white border-y border-[#D4AF37]/10 py-20">
+        <div className="container mx-auto px-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
             {[
-              { 
-                icon: <Zap className="w-10 h-10" />, 
-                title: "Real-time Sync", 
-                desc: "Every update is instantly pushed to your team and vendors. No more 'outdated version' errors."
-              },
-              { 
-                icon: <Shield className="w-10 h-10" />, 
-                title: "Bank-Grade Security", 
-                desc: "Your clients' sensitive data and payment information are protected by world-class encryption."
-              },
-              { 
-                icon: <Globe className="w-10 h-10" />, 
-                title: "Multi-Platform", 
-                desc: "Manage the event from your desktop, tablet, or mobile. Orchestrix goes where you go."
-              }
-            ].map((feature, idx) => (
-              <motion.div 
-                key={idx} 
-                className="group p-10 rounded-[32px] bg-white border border-stone-200 hover:border-brand-primary/20 transition-all duration-500 hover:-translate-y-2 hover:shadow-2xl shadow-sm"
-                variants={scaleIn}
-                initial="initial"
-                whileInView="whileInView"
-                transition={commonTransition}
-                viewport={commonViewport}
-              >
-                <div className="mb-8 w-16 h-16 rounded-2xl bg-stone-50 flex items-center justify-center text-stone-400 group-hover:text-brand-primary group-hover:bg-brand-primary/5 transition-all duration-500">
-                  {feature.icon}
+              { label: "Active Events", value: "100+", icon: Star },
+              { label: "Elite Planners", value: "300+", icon: Users },
+              { label: "Production Value", value: "₱50M+", icon: DollarSign }
+            ].map((stat, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex justify-center mb-4">
+                  <stat.icon className="h-8 w-8 text-[#D4AF37]" />
                 </div>
-                <h3 className="text-2xl font-black tracking-tight text-stone-950 mb-4">{feature.title}</h3>
-                <p className="text-stone-500 leading-relaxed font-medium">{feature.desc}</p>
-              </motion.div>
+                <div className="text-5xl font-black text-[#1A1A1A]">{stat.value}</div>
+                <div className="text-sm font-bold uppercase tracking-[0.2em] text-[#1A1A1A]/40">{stat.label}</div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section className="py-32 relative overflow-hidden bg-[#F5F5F4]">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-brand-primary/10 blur-[100px] -z-10" />
-        <div className="container mx-auto px-6 relative text-center">
-          <motion.div 
-            variants={fadeIn} 
-            initial="initial" 
-            whileInView="whileInView" 
-            transition={commonTransition} 
-            viewport={commonViewport}
-          >
-            <h2 className="text-6xl md:text-8xl font-black tracking-tighter text-stone-950 mb-10 leading-[0.85]">
-              Ready to conduct your <br />
-              <span className="text-brand-primary italic font-serif font-normal tracking-normal lowercase">masterpiece?</span>
-            </h2>
-            <p className="text-xl md:text-2xl text-stone-600 mb-14 font-medium">
-              Join the Philippines' most prestigious production teams. Experience the power of total orchestration.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
-              <Button 
-                onClick={() => handleRequestDemo("consultation")}
-                className="bg-brand-primary hover:bg-brand-primary/90 text-white w-full sm:w-auto px-12 py-8 rounded-full text-xl font-bold uppercase tracking-widest shadow-2xl shadow-brand-primary/30"
-              >
-                Business Consultation
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full sm:w-auto px-12 py-8 rounded-full text-xl font-bold uppercase tracking-widest border-2 border-stone-300 text-stone-600 hover:bg-stone-50"
-              >
-                Explore Modules
-              </Button>
-            </div>
-          </motion.div>
+      {/* MODULES SECTION - REIMAGINED IN GOLD */}
+      <section id="modules" className="py-32 section-luxury-bone">
+        <div className="container mx-auto px-6">
+          <div className="text-center mb-20 space-y-4">
+            <h2 className="text-sm font-black uppercase tracking-[0.3em] text-[#D4AF37]">The Core Modules</h2>
+            <h3 className="text-5xl font-black text-[#1A1A1A]">Everything you need in <br /><span className="text-gold-gradient">one elite suite.</span></h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { title: "CRM & Guest List", icon: Users, desc: "End-to-end client lifecycle and meticulous guest tracking." },
+              { title: "Master Timeline", icon: Clock, desc: "Minute-by-minute execution plans with real-time sync." },
+              { title: "Budget & Finance", icon: DollarSign, desc: "Sophisticated expense tracking and automated invoicing." },
+              { title: "Vendor Portal", icon: Truck, desc: "Direct collaboration with your entire vendor network." }
+            ].map((module, i) => (
+              <div key={i} className="card-luxury p-8 group">
+                <div className="h-14 w-14 rounded-2xl bg-[#D4AF37]/10 flex items-center justify-center mb-6 group-hover:bg-[#D4AF37] transition-all duration-500">
+                  <module.icon className="h-6 w-6 text-[#D4AF37] group-hover:text-white transition-colors" />
+                </div>
+                <h4 className="text-xl font-bold text-[#1A1A1A] mb-3">{module.title}</h4>
+                <p className="text-[#1A1A1A]/60 leading-relaxed text-sm">{module.desc}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-20 bg-white border-t border-stone-200">
+      {/* FEATURES SECTION */}
+      <section id="features" className="py-32 bg-white">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col lg:flex-row gap-20 items-center">
+            <div className="lg:w-1/2 space-y-8">
+              <h2 className="text-5xl font-black text-[#1A1A1A] leading-tight">
+                Engineered for <br /><span className="text-gold-gradient">Perfection.</span>
+              </h2>
+              <p className="text-lg text-[#1A1A1A]/60 leading-relaxed">
+                We've obsessed over every micro-interaction to ensure you can manage thousands of details without breaking a sweat.
+              </p>
+              
+              <div className="space-y-6">
+                {[
+                  { title: "Real-time Sync", icon: Zap, text: "Every update is instantly pushed to your team and vendors." },
+                  { title: "Bank-Grade Security", icon: ShieldCheck, text: "Your client's sensitive data is protected by world-class encryption." },
+                  { title: "Multi-Platform", icon: Smartphone, text: "Manage events from desktop, tablet, or mobile seamlessly." }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4">
+                    <div className="mt-1 h-6 w-6 rounded-full bg-[#D4AF37]/20 flex items-center justify-center flex-shrink-0">
+                      <CheckCircle2 className="h-4 w-4 text-[#D4AF37]" />
+                    </div>
+                    <div>
+                      <h5 className="font-bold text-[#1A1A1A]">{item.title}</h5>
+                      <p className="text-sm text-[#1A1A1A]/50">{item.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="lg:w-1/2 relative">
+              <div className="absolute -inset-4 bg-gradient-to-br from-[#D4AF37]/20 to-transparent rounded-3xl blur-2xl" />
+              <div className="relative card-luxury p-4 aspect-video flex items-center justify-center">
+                 <div className="text-[#D4AF37]/30 font-black text-2xl uppercase tracking-[0.5em]">Dashboard Preview</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section className="py-32 section-luxury-bone text-center border-t border-[#D4AF37]/10">
+        <div className="container mx-auto px-6 max-w-4xl">
+          <h2 className="text-6xl font-black text-[#1A1A1A] mb-8">
+            Ready to conduct your <br /><span className="text-gold-gradient">masterpiece?</span>
+          </h2>
+          <p className="text-xl text-[#1A1A1A]/60 mb-12 max-w-2xl mx-auto">
+            Join the Philippines' most prestigious production teams. Experience the power of total orchestration.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
+            <Button 
+              size="lg" 
+              className="btn-gold-master rounded-full h-16 px-16 text-lg"
+              onClick={() => handleRequestAction("demo")}
+            >
+              Request Access
+            </Button>
+            <Link href="/modules">
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="btn-white-gold rounded-full h-16 px-12 text-lg"
+              >
+                Explore Modules
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* LUXURY FOOTER */}
+      <footer className="bg-white py-20 border-t border-[#D4AF37]/10">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-10">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center">
-                <Zap className="text-white w-5 h-5 fill-current" />
-              </div>
-              <span className="text-xl font-black tracking-tighter uppercase text-stone-950">
-                Orchestrix
+            <div>
+               <span className="text-xl font-black tracking-tighter text-[#1A1A1A]">
+                ORCHESTRIX
               </span>
+              <p className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/40 mt-2">
+                Built for Excellence.
+              </p>
             </div>
-            
-            <div className="flex gap-8">
-              {["Features", "Modules", "Terms", "Privacy"].map((link) => (
-                <Link key={link} href={`/${link.toLowerCase()}`} className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 hover:text-brand-primary transition-colors">
-                  {link}
-                </Link>
-              ))}
+            <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/60">
+              <a href="#" className="hover:text-[#D4AF37]">Features</a>
+              <a href="#" className="hover:text-[#D4AF37]">Modules</a>
+              <a href="#" className="hover:text-[#D4AF37]">Terms</a>
+              <a href="#" className="hover:text-[#D4AF37]">Privacy</a>
             </div>
-
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">
-              © {new Date().getFullYear()} Orchestrix PH. Built for excellence.
-            </p>
+            <div className="text-xs font-bold uppercase tracking-widest text-[#1A1A1A]/30">
+              © 2026 ORCHESTRIX PH.
+            </div>
           </div>
         </div>
       </footer>
 
-      {/* Concierge System Integration */}
       <ConciergeDialog 
-        isOpen={conciergeOpen} 
-        onClose={() => setConciergeOpen(false)} 
-        initialType={conciergeType}
+        isOpen={isConciergeOpen}
+        onClose={() => setIsConciergeOpen(false)}
+        type={conciergeType}
       />
-
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, x: "100%" }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: "100%" }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[100] bg-white p-8 flex flex-col"
-          >
-            <div className="flex justify-between items-center mb-16">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center">
-                  <Zap className="text-white w-5 h-5 fill-current" />
-                </div>
-                <span className="text-xl font-black tracking-tighter uppercase text-stone-950">
-                  Orchestrix
-                </span>
-              </div>
-              <button onClick={() => setMobileMenuOpen(false)}>
-                <X className="w-8 h-8 text-stone-950" />
-              </button>
-            </div>
-
-            <div className="flex flex-col gap-10">
-              {["Features", "Modules", "Pricing", "Login"].map((item) => (
-                <Link 
-                  key={item} 
-                  href={item === "Login" ? "/login" : `#${item.toLowerCase()}`} 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="text-4xl font-black tracking-tighter text-stone-950 hover:text-brand-primary transition-colors uppercase"
-                >
-                  {item}
-                </Link>
-              ))}
-            </div>
-
-            <div className="mt-auto">
-              <Button 
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  handleRequestDemo("consultation");
-                }}
-                className="w-full bg-brand-primary hover:bg-brand-primary/90 text-white py-8 rounded-full text-xl font-bold uppercase tracking-widest shadow-xl shadow-brand-primary/20"
-              >
-                Request Access
-              </Button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

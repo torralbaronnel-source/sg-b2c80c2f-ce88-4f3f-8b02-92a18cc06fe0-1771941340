@@ -19,14 +19,14 @@ const config = {
 		},
 		extend: {
 			colors: {
-				border: 'hsl(var(--border))',
-				input: 'hsl(var(--input))',
-				ring: 'hsl(var(--ring))',
-				background: 'hsl(var(--background))',
-				foreground: 'hsl(var(--foreground))',
+				border: "hsl(var(--border))",
+				input: "hsl(var(--input))",
+				ring: "hsl(var(--ring))",
+				background: "hsl(var(--background))",
+				foreground: "hsl(var(--foreground))",
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
-					foreground: 'hsl(var(--primary-foreground))'
+					DEFAULT: "hsl(var(--primary))",
+					foreground: "hsl(var(--primary-foreground))"
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -55,8 +55,8 @@ const config = {
 				brand: {
 					gold: "hsl(var(--brand-gold))",
 					"gold-dark": "hsl(var(--brand-gold-dark))",
+					"gold-light": "hsl(var(--brand-gold-light))",
 					charcoal: "hsl(var(--brand-charcoal))",
-					accent: "#D4AF37",
 				},
 			},
 			borderRadius: {

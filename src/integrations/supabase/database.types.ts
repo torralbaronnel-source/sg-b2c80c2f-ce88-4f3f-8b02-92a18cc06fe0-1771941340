@@ -1428,6 +1428,36 @@ export type Database = {
           },
         ]
       }
+      role_analytics_presets: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          selected_modules: string[]
+          selected_roles: string[]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          selected_modules?: string[]
+          selected_roles?: string[]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          selected_modules?: string[]
+          selected_roles?: string[]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       role_page_permissions: {
         Row: {
           can_delete: boolean | null

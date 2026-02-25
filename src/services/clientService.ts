@@ -211,13 +211,27 @@ export const clientService = {
         .select("*")
         .eq("client_id", clientId);
 
-      return {
-        ...(client as Record<string, any>),
+      const result: ClientWithRelations = {
+        id: client.id,
+        full_name: client.full_name,
+        email: client.email,
+        phone: client.phone,
+        company_name: client.company_name,
+        address: client.address,
+        city: client.city,
+        country: client.country,
+        notes: client.notes,
+        source: client.source,
+        status: client.status,
+        total_spent: client.total_spent,
+        total_events: client.total_events,
         events: events || [],
         quotes: quotes || [],
         invoices: invoices || [],
         communications: communications || [],
       };
+
+      return result;
     } catch (err) {
       console.error("Error fetching client relations:", err);
       return null;

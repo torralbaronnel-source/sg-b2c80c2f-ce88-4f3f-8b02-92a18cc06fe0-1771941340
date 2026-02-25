@@ -379,8 +379,12 @@ export default function LandingPage() {
                 <Button className="luxury-button h-16 px-10 rounded-2xl bg-brand-primary text-white shadow-xl hover:shadow-brand-primary/30 text-lg font-bold">
                   Start Your Production
                 </Button>
-                <Button variant="outline" className="h-16 px-10 rounded-2xl border-stone-200 text-brand-accent text-lg font-bold hover:bg-stone-50">
-                  Request Private Demo
+                <Button 
+                  variant="outline" 
+                  className="h-16 px-10 rounded-2xl border-stone-200 text-brand-accent text-lg font-bold hover:bg-stone-50"
+                  onClick={() => handleRequestDemo("Business Consultation")}
+                >
+                  Business Consultation
                 </Button>
               </div>
 
@@ -599,19 +603,24 @@ export default function LandingPage() {
             <p className="text-xl text-stone-300 max-w-2xl mx-auto leading-relaxed font-medium">
               Join the world's most prestigious production teams. Experience the power of total orchestration.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button 
-                onClick={() => handleRequestDemo("Private Demo")}
-                className="bg-gold-dark hover:bg-gold-light text-white px-8 h-14 rounded-full text-lg font-medium transition-all transform hover:scale-105 shadow-xl shadow-gold-dark/20"
-              >
-                Request Private Demo
-              </Button>
-              <Button 
+                size="lg" 
+                className="bg-stone-900 hover:bg-stone-800 text-stone-100 px-8 py-6 text-lg rounded-none transition-all duration-300 border border-stone-800"
                 onClick={() => handleRequestDemo("Business Consultation")}
-                variant="outline" 
-                className="border-stone-200 hover:border-gold-dark text-stone-600 px-8 h-14 rounded-full text-lg font-medium transition-all"
               >
                 Business Consultation
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="border-stone-300 text-stone-700 px-8 py-6 text-lg rounded-none hover:bg-stone-50 transition-all duration-300"
+                onClick={() => {
+                  const el = document.getElementById("feature-grid");
+                  el?.scrollIntoView({ behavior: "smooth" });
+                }}
+              >
+                Explore Modules
               </Button>
             </div>
           </div>

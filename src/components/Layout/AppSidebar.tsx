@@ -46,6 +46,15 @@ const navItems = [
     icon: MessageSquare,
   },
   {
+    title: "Business Consultation",
+    url: "#",
+    icon: MessageSquare,
+    onClick: () => {
+      // This will be handled by the parent layout or context if needed
+      window.dispatchEvent(new CustomEvent("open-concierge", { detail: "Business Consultation" }));
+    }
+  },
+  {
     title: "CRM & Clients",
     url: "/crm",
     icon: Users,

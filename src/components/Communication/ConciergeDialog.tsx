@@ -40,10 +40,14 @@ type ConciergeFormData = z.infer<typeof conciergeSchema>;
 interface ConciergeDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  initialType?: ConciergeRequestType;
+  initialType?: "Business Consultation" | "Private Demo" | "Portal Customization";
 }
 
-export function ConciergeDialog({ isOpen, onClose, initialType = "Private Demo" }: ConciergeDialogProps) {
+export function ConciergeDialog({ 
+  isOpen, 
+  onClose, 
+  initialType = "Business Consultation" 
+}: ConciergeDialogProps) {
   const [step, setStep] = useState(1);
   const [requestType, setRequestType] = useState<ConciergeRequestType>(initialType);
   const [isSubmitting, setIsSubmitting] = useState(false);

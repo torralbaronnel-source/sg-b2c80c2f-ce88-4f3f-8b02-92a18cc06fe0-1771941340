@@ -19,58 +19,37 @@ export const serverService = {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    // We select from server_members and join the servers table with count
-    const { data, error, count } = await supabase
-      .from("server_members")
-      .select(`
-        role,
-        servers:server_id (*)
-      `, { count: "exact" })
-      .range(from, to);
+    try {
+      // We select from server_members and join the servers table with count
+      const { data, error, count } = await supabase
+        .from("server_members")
+        .select(`
+          role,
+          servers:server_id (*)
+        `, { count: "exact" })
+        .range(from, to);
 
-    if (error) {
-      console.error("Error fetching servers:", error);
-      // If we still get a recursion error (unlikely now), we fall back to a flat fetch
-      if (error.message?.includes("recursion")) {
-        const { data: flatMembers, error: memberError } = await supabase
-          .from("server_members")
-          .select("role, server_id");
-          
-        if (memberError) throw memberError;
-        
-        const serverIds = (flatMembers || []).map(m => m.server_id);
-        const { data: flatServers, error: serverError } = await supabase
-          .from("servers")
-          .select("*")
-          .in("id", serverIds);
-          
-        if (serverError) throw serverError;
-        
-        const servers = (flatMembers || []).map(m => ({
-          ...(flatServers?.find(s => s.id === m.server_id) || {}),
-          userRole: m.role
-        })).filter(s => s.id);
-
-        return {
-          servers,
-          totalCount: servers.length
-        };
+      if (error) {
+        console.error("Database query error:", error);
+        return { servers: [], totalCount: 0 };
       }
-      throw error;
+
+      // Map to a cleaner format, ensuring servers exists (in case of RLS filtering)
+      const servers = (data || [])
+        .filter(item => item.servers)
+        .map(item => ({
+          ...(item.servers as any),
+          userRole: item.role
+        }));
+
+      return {
+        servers,
+        totalCount: count || 0
+      };
+    } catch (err) {
+      console.error("Unexpected service error:", err);
+      return { servers: [], totalCount: 0 };
     }
-
-    // Map to a cleaner format, ensuring servers exists (in case of RLS filtering)
-    const servers = (data || [])
-      .filter(item => item.servers)
-      .map(item => ({
-        ...(item.servers as any),
-        userRole: item.role
-      }));
-
-    return {
-      servers,
-      totalCount: count || 0
-    };
   },
 
   async createServer(name: string) {

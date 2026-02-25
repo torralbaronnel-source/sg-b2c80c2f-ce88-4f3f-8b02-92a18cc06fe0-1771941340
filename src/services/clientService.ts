@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 
 export interface ClientData {
   full_name: string;
@@ -12,26 +11,7 @@ export interface ClientData {
   notes?: string;
   source?: string;
   status?: string;
-}
-
-export interface ClientWithRelations extends Record<string, any> {
-  id: string;
-  full_name: string;
-  email?: string;
-  phone?: string;
-  company_name?: string;
-  address?: string;
-  city?: string;
-  country?: string;
-  notes?: string;
-  source?: string;
-  status?: string;
-  total_spent?: number;
-  total_events?: number;
-  events: Record<string, any>[];
-  quotes: Record<string, any>[];
-  invoices: Record<string, any>[];
-  communications: Record<string, any>[];
+  assigned_user_id?: string;
 }
 
 export const clientService = {
@@ -93,9 +73,10 @@ export const clientService = {
         notes: clientData.notes,
         source: clientData.source || "Direct",
         status: clientData.status || "Lead",
+        assigned_user_id: clientData.assigned_user_id,
         total_spent: 0,
         total_events: 0,
-      })
+      } as any)
       .select()
       .single();
 
@@ -106,7 +87,7 @@ export const clientService = {
   async updateClient(clientId: string, clientData: Partial<ClientData>) {
     const { data, error } = await supabase
       .from("clients")
-      .update(clientData)
+      .update(clientData as any)
       .eq("id", clientId)
       .select()
       .single();
@@ -157,7 +138,7 @@ export const clientService = {
       let totalSpent = 0;
       let totalEvents = (events || []).length;
 
-      clients.forEach((client) => {
+      clients.forEach((client: any) => {
         const status = client.status || "Lead";
         byStatus[status] = (byStatus[status] || 0) + 1;
         totalSpent += client.total_spent || 0;
@@ -181,15 +162,15 @@ export const clientService = {
     }
   },
 
-  async getClientWithRelations(clientId: string): Promise<ClientWithRelations | null> {
+  async getClientDetails(clientId: string) {
     try {
-      const { data: client, error: clientError } = await supabase
+      const { data: client } = await supabase
         .from("clients")
         .select("*")
         .eq("id", clientId)
         .single();
 
-      if (clientError || !client) return null;
+      if (!client) return null;
 
       const { data: events } = await supabase
         .from("events")
@@ -211,29 +192,21 @@ export const clientService = {
         .select("*")
         .eq("client_id", clientId);
 
-      const result: ClientWithRelations = {
-        id: client.id,
-        full_name: client.full_name,
-        email: client.email,
-        phone: client.phone,
-        company_name: client.company_name,
-        address: client.address,
-        city: client.city,
-        country: client.country,
-        notes: client.notes,
-        source: client.source,
-        status: client.status,
-        total_spent: client.total_spent,
-        total_events: client.total_events,
+      const eventIds = (events || []).map((e: any) => e.id);
+      const { data: tasks } = eventIds.length > 0 
+        ? await supabase.from("tasks").select("*").in("event_id", eventIds)
+        : { data: [] };
+
+      return {
+        client,
         events: events || [],
         quotes: quotes || [],
         invoices: invoices || [],
         communications: communications || [],
+        tasks: tasks || [],
       };
-
-      return result;
     } catch (err) {
-      console.error("Error fetching client relations:", err);
+      console.error("Error fetching client details:", err);
       return null;
     }
   },

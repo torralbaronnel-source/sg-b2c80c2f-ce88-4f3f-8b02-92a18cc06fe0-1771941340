@@ -4,8 +4,9 @@ import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/s
 import { AppSidebar } from "./AppSidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Plus, Bell, Search } from "lucide-react";
+import { Plus, Bell, Search, Server } from "lucide-react";
 import { useEvent } from "@/contexts/EventContext";
+import Link from "next/link";
 
 const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password", "/terms", "/privacy"];
 
@@ -43,6 +44,12 @@ export const AppLayout = memo(({ children }: { children: React.ReactNode }) => {
             </div>
             
             <div className="flex items-center gap-3">
+              <Link href="/servers">
+                <Button variant="ghost" size="sm" className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-gray-900">
+                  <Server className="h-4 w-4" />
+                  <span>Mission Control</span>
+                </Button>
+              </Link>
               <Button variant="ghost" size="icon" className="relative text-gray-600">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>

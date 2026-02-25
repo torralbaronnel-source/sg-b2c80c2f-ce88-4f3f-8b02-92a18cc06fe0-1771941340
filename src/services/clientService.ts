@@ -192,10 +192,10 @@ export const clientService = {
         .select("*")
         .eq("client_id", clientId);
 
-      const eventIds = (events || []).map((e: any) => e.id);
-      const { data: tasks } = eventIds.length > 0 
-        ? await supabase.from("tasks").select("*").in("event_id", eventIds)
-        : { data: [] };
+      const { data: tasks } = await supabase
+        .from("tasks")
+        .select("*")
+        .limit(100);
 
       return {
         client,
@@ -203,7 +203,10 @@ export const clientService = {
         quotes: quotes || [],
         invoices: invoices || [],
         communications: communications || [],
-        tasks: tasks || [],
+        tasks: (tasks || []).filter((t: any) => {
+          const eventIds = (events || []).map((e: any) => e.id);
+          return eventIds.includes(t.event_id);
+        }),
       };
     } catch (err) {
       console.error("Error fetching client details:", err);

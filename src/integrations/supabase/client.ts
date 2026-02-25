@@ -20,9 +20,9 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     detectSessionInUrl: true
   },
   global: {
-    fetch: (...args) => {
-      return fetch(...args).catch(err => {
-        console.error("Supabase Fetch Error:", err);
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+      return fetch(input, init).catch(err => {
+        console.error("Supabase Network/Fetch Error:", err);
         throw err;
       });
     }

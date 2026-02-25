@@ -13,7 +13,18 @@ import {
   CreditCard,
   PlusCircle,
   LayoutDashboard,
-  Star
+  Star,
+  Shield,
+  Server,
+  Activity,
+  Filter,
+  Download,
+  Settings,
+  Plus,
+  Wand2,
+  FileCode,
+  AlertCircle,
+  Clock
 } from "lucide-react";
 import { 
   Card, 
@@ -47,6 +58,9 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ConciergeManager } from "./ConciergeManager";
@@ -70,6 +84,17 @@ export function SuperAdminView() {
     organizations: 0,
     activeEvents: 0
   });
+  const [isWizardOpen, setIsWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(1);
+  const [blueprintData, setBlueprintData] = useState({
+    business_name: "",
+    primary_services: "",
+    target_market: "",
+    operational_needs: "",
+    special_requirements: ""
+  });
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedBlueprint, setGeneratedBlueprint] = useState<any>(null);
 
   const tabs = [
     { id: "overview", label: "System Overview", icon: LayoutDashboard },
@@ -78,6 +103,22 @@ export function SuperAdminView() {
     { id: "events", label: "Global Events", icon: Calendar },
     { id: "settings", label: "Infrastructure", icon: ShieldCheck },
   ];
+
+  const handleGenerateBlueprint = async () => {
+    setIsGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-server-blueprint', {
+        body: blueprintData
+      });
+      if (error) throw error;
+      setGeneratedBlueprint(data.blueprint);
+      setWizardStep(3);
+    } catch (err) {
+      console.error("Error generating blueprint:", err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     fetchStats();
@@ -306,6 +347,75 @@ export function SuperAdminView() {
           </Table>
         </CardContent>
       </Card>
+
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold tracking-tight">System & Development</h2>
+          <Button onClick={() => setIsWizardOpen(true)} className="bg-purple-600 hover:bg-purple-700">
+            <Wand2 className="mr-2 h-4 w-4" />
+            Business Consultation
+          </Button>
+        </div>
+
+        {/* Blueprint Wizard Dialog */}
+        <Dialog open={isWizardOpen} onOpenChange={setIsWizardOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>
+                {wizardStep === 1 && "Business Intake"}
+                {wizardStep === 2 && "Analyzing Requirements"}
+                {wizardStep === 3 && "Blueprint Generated"}
+              </DialogTitle>
+              <DialogDescription>
+                {wizardStep === 1 && "Gathering the architectural requirements for a new production node."}
+                {wizardStep === 2 && "Our AI is architecting the server blueprint..."}
+                {wizardStep === 3 && "Review the generated configuration for the new node."}
+              </DialogDescription>
+            </DialogHeader>
+
+            {wizardStep === 1 && (
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label>Business Name</Label>
+                  <Input 
+                    value={blueprintData.business_name}
+                    onChange={(e) => setBlueprintData({...blueprintData, business_name: e.target.value})}
+                    placeholder="e.g., Elegance Events Manila"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Operational Needs</Label>
+                  <Textarea 
+                    value={blueprintData.operational_needs}
+                    onChange={(e) => setBlueprintData({...blueprintData, operational_needs: e.target.value})}
+                    placeholder="Describe the main workflows..."
+                  />
+                </div>
+                <Button onClick={() => setWizardStep(2)} className="w-full">Next Step</Button>
+              </div>
+            )}
+
+            {wizardStep === 2 && (
+              <div className="py-12 flex flex-col items-center justify-center space-y-4">
+                <div className="h-12 w-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-muted-foreground">Synthesizing server architecture...</p>
+                <Button onClick={handleGenerateBlueprint}>Simulate Generation</Button>
+              </div>
+            )}
+
+            {wizardStep === 3 && generatedBlueprint && (
+              <div className="space-y-4 py-4">
+                <div className="bg-slate-950 p-4 rounded-lg overflow-auto max-h-[300px]">
+                  <pre className="text-xs text-purple-400">
+                    {JSON.stringify(generatedBlueprint, null, 2)}
+                  </pre>
+                </div>
+                <Button onClick={() => setIsWizardOpen(false)} className="w-full">Finalize & Close</Button>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
 
       <TabsContent value="concierge" className="mt-6">
         <ConciergeManager />

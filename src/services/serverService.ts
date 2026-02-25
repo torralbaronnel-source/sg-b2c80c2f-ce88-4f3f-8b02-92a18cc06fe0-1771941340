@@ -163,31 +163,33 @@ export const serverService = {
     return true;
   },
 
+  async getServers() {
+    const { data, error } = await supabase
+      .from("servers")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching servers:", error);
+      return [];
+    }
+    return data || [];
+  },
+
   async getSelectedServer() {
     const serverId = typeof window !== "undefined" ? localStorage.getItem("selectedServerId") : null;
-    if (!serverId) {
-      console.log("serverService: No serverId found in localStorage");
-      return null;
-    }
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    if (!serverId) return null;
 
     const { data, error } = await supabase
       .from("servers")
       .select("*")
       .eq("id", serverId)
-      .single();
+      .maybeSingle();
 
     if (error) {
-      console.error("serverService: Error fetching server:", error.message);
-      // If server doesn't exist or user doesn't have access, clear it
-      if (error.code === "PGRST116") {
-        localStorage.removeItem("selectedServerId");
-      }
+      console.error("Error fetching selected server:", error);
       return null;
     }
-    
     return data;
   }
 };

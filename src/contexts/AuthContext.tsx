@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { profileService, type Profile } from "@/services/profileService";
@@ -12,7 +12,7 @@ interface AuthContextType {
   currentOrganization: any | null; // Alias for backward compatibility
   isLoading: boolean;
   refreshProfile: () => Promise<void>;
-  selectServer: (serverId: string) => void;
+  selectServer: (serverId: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,8 +24,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentServer, setCurrentServer] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Helper to fetch server metadata
-  const refreshServerContext = async () => {
+  const refreshServerContext = useCallback(async () => {
     try {
       const activeServer = await serverService.getSelectedServer();
       console.log("AuthContext: Active server fetched:", activeServer?.name);
@@ -35,25 +34,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("AuthContext: Failed to refresh server context", err);
       return null;
     }
-  };
+  }, []);
 
-  const fetchProfileData = async (userId: string) => {
+  const fetchProfileData = useCallback(async (userId: string) => {
     try {
       const profileData = await profileService.getProfile(userId);
       setProfile(profileData);
+      
+      // If profile has a current_server_id, prioritize it
+      if (profileData?.current_server_id) {
+        localStorage.setItem("selectedServerId", profileData.current_server_id);
+      }
+      
       await refreshServerContext();
     } catch (error) {
       console.error("Error fetching profile data:", error);
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [refreshServerContext]);
 
   const selectServer = async (serverId: string) => {
     console.log("AuthContext: Selecting server:", serverId);
     localStorage.setItem("selectedServerId", serverId);
     
-    // Sync with database for RLS consistency
     if (user) {
       await supabase
         .from("profiles")
@@ -63,24 +65,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const server = await refreshServerContext();
     if (server) {
-      // Force a slight delay or state update to ensure components re-render
       setCurrentServer({ ...server });
     }
   };
 
   useEffect(() => {
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+      
       if (session?.user) {
-        fetchProfileData(session.user.id).finally(() => setIsLoading(false));
+        await fetchProfileData(session.user.id);
       } else {
-        setIsLoading(false);
+        // Even if not logged in, try to load server from localstorage for public views if needed
+        await refreshServerContext();
       }
-    });
+      setIsLoading(false);
+    };
 
-    // Listen for auth changes
+    initAuth();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         setUser(session.user);
@@ -96,7 +101,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchProfileData, refreshServerContext]);
 
   const value: AuthContextType = {
     user,

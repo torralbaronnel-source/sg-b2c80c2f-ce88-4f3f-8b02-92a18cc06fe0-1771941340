@@ -22,7 +22,6 @@ import {
   Users,
   Calendar,
   Settings,
-  Shield,
   MessageSquare,
   DollarSign,
   Package,
@@ -100,8 +99,12 @@ export function AppSidebar() {
     <Sidebar className="border-r border-slate-200 bg-white">
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-lg shadow-blue-500/20">
-            <Shield className="h-6 w-6" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 overflow-hidden p-1 shadow-sm border border-slate-100">
+            <img 
+              src="/LOGO_BRAND_ORCHESTRIX.PNG" 
+              alt="Orchestrix Logo" 
+              className="h-full w-full object-contain"
+            />
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-black tracking-tight text-slate-900 leading-none">ORCHESTRIX</span>

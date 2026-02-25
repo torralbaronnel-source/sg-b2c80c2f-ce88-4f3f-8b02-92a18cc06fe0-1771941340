@@ -46,13 +46,12 @@ export const clientService = {
 
       if (!profile?.current_server_id) return [];
 
-      const query = supabase
+      const { data } = await (supabase
         .from("clients")
         .select("*")
         .eq("server_id", profile.current_server_id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false }) as any);
 
-      const { data } = await query;
       return data || [];
     } catch (err) {
       console.error("Error fetching clients:", err);
@@ -72,7 +71,7 @@ export const clientService = {
 
     if (!profile?.current_server_id) throw new Error("No active server");
 
-    const insertQuery = supabase
+    const { data } = await (supabase
       .from("clients")
       .insert({
         server_id: profile.current_server_id,
@@ -90,33 +89,30 @@ export const clientService = {
         assigned_user_id: clientData.assigned_user_id,
         total_spent: 0,
         total_events: 0,
-      } as any)
+      })
       .select()
-      .single();
+      .single() as any);
 
-    const { data } = await insertQuery;
     return data;
   },
 
   async updateClient(clientId: string, clientData: Partial<ClientData>): Promise<any> {
-    const updateQuery = supabase
+    const { data } = await (supabase
       .from("clients")
-      .update(clientData as any)
+      .update(clientData)
       .eq("id", clientId)
       .select()
-      .single();
+      .single() as any);
 
-    const { data } = await updateQuery;
     return data;
   },
 
   async deleteClient(clientId: string): Promise<boolean> {
-    const deleteQuery = supabase
+    await (supabase
       .from("clients")
       .delete()
-      .eq("id", clientId);
+      .eq("id", clientId) as any);
 
-    await deleteQuery;
     return true;
   },
 
@@ -137,18 +133,15 @@ export const clientService = {
         return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
       }
 
-      const clientsQuery = supabase
+      const { data: clients } = await (supabase
         .from("clients")
         .select("*")
-        .eq("server_id", profile.current_server_id);
+        .eq("server_id", profile.current_server_id) as any);
 
-      const eventsQuery = supabase
+      const { data: events } = await (supabase
         .from("events")
         .select("*")
-        .eq("server_id", profile.current_server_id);
-
-      const { data: clients } = await clientsQuery;
-      const { data: events } = await eventsQuery;
+        .eq("server_id", profile.current_server_id) as any);
 
       const total = (clients || []).length;
       const byStatus: Record<string, number> = {};
@@ -181,19 +174,19 @@ export const clientService = {
 
   async getClientDetails(clientId: string): Promise<ClientDetailsResponse | null> {
     try {
-      const { data: client } = await supabase
+      const { data: client } = await (supabase
         .from("clients")
         .select("*")
         .eq("id", clientId)
-        .maybeSingle();
+        .maybeSingle() as any);
 
       if (!client) return null;
 
-      const { data: events } = await supabase.from("events").select("*").eq("client_id", clientId);
-      const { data: quotes } = await supabase.from("quotes").select("*").eq("client_id", clientId);
-      const { data: invoices } = await supabase.from("invoices").select("*").eq("client_id", clientId);
-      const { data: communications } = await supabase.from("communications").select("*").eq("client_id", clientId);
-      const { data: tasks } = await supabase.from("tasks").select("*").limit(100);
+      const { data: events } = await (supabase.from("events").select("*").eq("client_id", clientId) as any);
+      const { data: quotes } = await (supabase.from("quotes").select("*").eq("client_id", clientId) as any);
+      const { data: invoices } = await (supabase.from("invoices").select("*").eq("client_id", clientId) as any);
+      const { data: communications } = await (supabase.from("communications").select("*").eq("client_id", clientId) as any);
+      const { data: tasks } = await (supabase.from("tasks").select("*").limit(100) as any);
 
       const eventIds = (events || []).map((e: any) => e.id);
       const filteredTasks = (tasks || []).filter((t: any) => eventIds.includes(t.event_id));

@@ -176,12 +176,12 @@ export function EventsDashboardView() {
                     <div className="flex items-center gap-4 border-t sm:border-t-0 pt-4 sm:pt-0">
                       <div className="hidden lg:block text-right">
                         <p className="text-xs text-slate-400 uppercase font-semibold">Venue</p>
-                        <p className="text-sm font-medium text-slate-700">
+                        <div className="text-sm font-medium text-slate-700">
                           <div className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
                             <span>{(event as any).venue || (event as any).details?.venue || "TBD"}</span>
                           </div>
-                        </p>
+                        </div>
                       </div>
                       <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 transition-colors ml-auto" />
                     </div>

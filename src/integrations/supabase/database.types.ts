@@ -15,6 +15,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      call_sheets: {
+        Row: {
+          created_at: string | null
+          event_id: string | null
+          general_call_time: string | null
+          id: string
+          nearest_hospital: string | null
+          parking_info: string | null
+          status: string | null
+          version: number | null
+          weather_forecast: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_id?: string | null
+          general_call_time?: string | null
+          id?: string
+          nearest_hospital?: string | null
+          parking_info?: string | null
+          status?: string | null
+          version?: number | null
+          weather_forecast?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          event_id?: string | null
+          general_call_time?: string | null
+          id?: string
+          nearest_hospital?: string | null
+          parking_info?: string | null
+          status?: string | null
+          version?: number | null
+          weather_forecast?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "call_sheets_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clients: {
         Row: {
           address: string | null
@@ -1247,6 +1291,103 @@ export type Database = {
             columns: ["server_id"]
             isOneToOne: false
             referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resource_allocations: {
+        Row: {
+          created_at: string | null
+          end_time: string | null
+          event_id: string | null
+          id: string
+          notes: string | null
+          resource_name: string
+          resource_type: string
+          role_or_purpose: string | null
+          start_time: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          resource_name: string
+          resource_type: string
+          role_or_purpose?: string | null
+          start_time?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          resource_name?: string
+          resource_type?: string
+          role_or_purpose?: string | null
+          start_time?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resource_allocations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      run_of_show: {
+        Row: {
+          created_at: string | null
+          dependencies: Json | null
+          description: string | null
+          end_time: string | null
+          event_id: string | null
+          id: string
+          location: string | null
+          responsible_team: string | null
+          start_time: string
+          status: string | null
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          location?: string | null
+          responsible_team?: string | null
+          start_time: string
+          status?: string | null
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          dependencies?: Json | null
+          description?: string | null
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          location?: string | null
+          responsible_team?: string | null
+          start_time?: string
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "run_of_show_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]

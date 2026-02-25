@@ -64,24 +64,26 @@ export function RolesManagementView() {
   }, [selectedRoleId]);
 
   async function loadRoles() {
-    const { data, error } = await supabase.from("roles").select("*").order("name");
+    // Using any cast to bypass temporary type generation lag
+    const { data, error } = await (supabase.from("roles") as any).select("*").order("name");
     if (data) {
-      setRoles(data);
+      setRoles(data as Role[]);
       if (data.length > 0 && !selectedRoleId) setSelectedRoleId(data[0].id);
     }
     setLoading(false);
   }
 
   async function loadPermissions(roleId: string) {
-    const { data, error } = await supabase
-      .from("role_permissions")
+    const { data, error } = await (supabase
+      .from("role_permissions") as any)
       .select("*")
       .eq("role_id", roleId);
 
     if (data) {
+      const dbPerms = data as any[];
       // Map existing or create defaults for all modules
       const fullPerms = MODULES.map(m => {
-        const existing = data.find(p => p.module === m);
+        const existing = dbPerms.find(p => p.module === m);
         return existing || {
           module: m,
           can_view: false,
@@ -105,7 +107,6 @@ export function RolesManagementView() {
     setSaving(true);
     
     try {
-      // Upsert permissions
       const permsToSave = permissions.map(p => ({
         role_id: selectedRoleId,
         module: p.module,
@@ -115,8 +116,8 @@ export function RolesManagementView() {
         can_delete: p.can_delete
       }));
 
-      const { error } = await supabase
-        .from("role_permissions")
+      const { error } = await (supabase
+        .from("role_permissions") as any)
         .upsert(permsToSave, { onConflict: "role_id,module" });
 
       if (error) throw error;

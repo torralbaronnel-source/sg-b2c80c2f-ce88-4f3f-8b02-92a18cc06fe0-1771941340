@@ -1171,6 +1171,7 @@ export type Database = {
           full_name: string | null
           id: string
           role: string | null
+          role_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1181,6 +1182,7 @@ export type Database = {
           full_name?: string | null
           id: string
           role?: string | null
+          role_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1191,6 +1193,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: string | null
+          role_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
@@ -1199,6 +1202,13 @@ export type Database = {
             columns: ["current_server_id"]
             isOneToOne: false
             referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
             referencedColumns: ["id"]
           },
         ]
@@ -1374,6 +1384,71 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      role_permissions: {
+        Row: {
+          can_create: boolean | null
+          can_delete: boolean | null
+          can_update: boolean | null
+          can_view: boolean | null
+          id: string
+          module: string
+          role_id: string | null
+        }
+        Insert: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_update?: boolean | null
+          can_view?: boolean | null
+          id?: string
+          module: string
+          role_id?: string | null
+        }
+        Update: {
+          can_create?: boolean | null
+          can_delete?: boolean | null
+          can_update?: boolean | null
+          can_view?: boolean | null
+          id?: string
+          module?: string
+          role_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      roles: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          is_system: boolean | null
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_system?: boolean | null
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       run_of_show: {
         Row: {

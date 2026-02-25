@@ -25,10 +25,10 @@ import { useEvent } from "@/contexts/EventContext";
 import { cn } from "@/lib/utils";
 
 export function ProductionHubView() {
-  const { selectedEvent } = useEvent();
+  const { activeEvent } = useEvent();
   const [productionMode, setProductionMode] = useState<"idle" | "active" | "paused" | "emergency">("idle");
 
-  if (!selectedEvent) {
+  if (!activeEvent) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center space-y-4">
         <div className="p-6 bg-muted rounded-full">
@@ -44,7 +44,7 @@ export function ProductionHubView() {
     );
   }
 
-  const eventType = selectedEvent.type?.toLowerCase() || "wedding";
+  const eventType = activeEvent.type?.toLowerCase() || "wedding";
 
   return (
     <div className="space-y-6 pb-20">
@@ -62,7 +62,7 @@ export function ProductionHubView() {
               <Radio className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="text-xl font-bold tracking-tight">{selectedEvent.title}</h2>
+              <h2 className="text-xl font-bold tracking-tight">{activeEvent.title}</h2>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Badge variant="outline" className="capitalize">{eventType}</Badge>
                 <span>•</span>

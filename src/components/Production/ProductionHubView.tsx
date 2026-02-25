@@ -533,7 +533,7 @@ function TeamProgress({ label, value, color }: { label: string, value: number, c
         <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wider">{label}</span>
         <span className="text-[10px] font-bold text-slate-400">{value}%</span>
       </div>
-      <Progress value={value} className="h-1" classNameIndicator={color} />
+      <Progress value={value} className="h-1" />
     </div>
   );
 }

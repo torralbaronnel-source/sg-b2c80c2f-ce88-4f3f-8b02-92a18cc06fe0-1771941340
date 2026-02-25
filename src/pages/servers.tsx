@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,12 +8,13 @@ import {
   Users, 
   Search, 
   ShieldCheck, 
-  User, 
   ArrowRight, 
   Hash, 
   Filter,
   LayoutGrid,
-  List
+  List,
+  ChevronLeft,
+  ChevronRight
 } from "lucide-react";
 import { serverService } from "@/services/serverService";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +29,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 
+const PAGE_SIZE = 6;
+
 // Utility for class names
 function cn(...classes: any[]) {
   return classes.filter(Boolean).join(" ");
@@ -35,7 +38,9 @@ function cn(...classes: any[]) {
 
 export default function ServersPage() {
   const [servers, setServers] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "portal_admin" | "member">("all");
   const [sortBy, setSortBy] = useState<"name" | "newest">("newest");
@@ -48,20 +53,22 @@ export default function ServersPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  useEffect(() => {
-    loadServers();
-  }, []);
-
-  const loadServers = async () => {
+  const loadServers = useCallback(async (page: number) => {
+    setLoading(true);
     try {
-      const data = await serverService.getMyServers();
+      const { servers: data, totalCount: count } = await serverService.getMyServers(page, PAGE_SIZE);
       setServers(data || []);
+      setTotalCount(count);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Connection Error", description: error.message });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    loadServers(currentPage);
+  }, [currentPage, loadServers]);
 
   const handleCreateServer = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -107,7 +114,7 @@ export default function ServersPage() {
     }
   };
 
-  // Filter and Sort logic
+  // Filter and Sort logic (Client-side for current page)
   const filteredServers = servers
     .filter(s => {
       const matchesSearch = 
@@ -123,6 +130,8 @@ export default function ServersPage() {
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
 
+  const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+
   return (
     <div className="min-h-screen bg-neutral-50 p-6 md:p-12">
       <SEO title="Mission Control | Orchestrix" />
@@ -137,8 +146,8 @@ export default function ServersPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <Input 
-                placeholder="Search name or 18-digit ID..." 
-                className="pl-10 w-full md:w-[300px] bg-white border-neutral-200 focus:ring-[#D4AF37]"
+                placeholder="Search name or ID..." 
+                className="pl-10 w-full md:w-[250px] bg-white border-neutral-200 focus:ring-[#D4AF37]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -191,60 +200,109 @@ export default function ServersPage() {
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 Your Fleet
                 <Badge variant="secondary" className="bg-neutral-100 text-neutral-600 border-none font-medium">
-                  {filteredServers.length}
+                  {totalCount} Total
                 </Badge>
               </h2>
             </div>
 
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[1, 2, 3, 4].map(i => (
+                {[1, 2, 3, 4, 5, 6].map(i => (
                   <div key={i} className="h-40 rounded-xl bg-neutral-100 animate-pulse border border-neutral-200" />
                 ))}
               </div>
             ) : filteredServers.length > 0 ? (
-              <div className={cn(
-                "gap-4",
-                viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2" : "flex flex-col"
-              )}>
-                {filteredServers.map((server) => (
-                  <Card 
-                    key={server.id} 
-                    className="group hover:border-[#D4AF37] transition-all cursor-pointer bg-white overflow-hidden"
-                    onClick={() => selectServer(server.id)}
-                  >
-                    <CardHeader className="pb-2">
-                      <div className="flex justify-between items-start mb-1">
-                        <div className="p-2 rounded-lg bg-neutral-50 border border-neutral-100 group-hover:bg-[#D4AF37]/5 transition-colors">
-                          <LayoutGrid className="w-5 h-5 text-[#D4AF37]" />
+              <>
+                <div className={cn(
+                  "gap-4",
+                  viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2" : "flex flex-col"
+                )}>
+                  {filteredServers.map((server) => (
+                    <Card 
+                      key={server.id} 
+                      className="group hover:border-[#D4AF37] transition-all cursor-pointer bg-white overflow-hidden shadow-sm hover:shadow-md"
+                      onClick={() => selectServer(server.id)}
+                    >
+                      <CardHeader className="pb-2">
+                        <div className="flex justify-between items-start mb-1">
+                          <div className="p-2 rounded-lg bg-neutral-50 border border-neutral-100 group-hover:bg-[#D4AF37]/5 transition-colors">
+                            <LayoutGrid className="w-5 h-5 text-[#D4AF37]" />
+                          </div>
+                          <Badge className={cn(
+                            "border-none px-2.5 py-0.5 text-[10px] uppercase tracking-wider",
+                            server.userRole === "portal_admin" 
+                              ? "bg-[#D4AF37]/10 text-[#D4AF37]" 
+                              : "bg-neutral-100 text-neutral-500"
+                          )}>
+                            {server.userRole === "portal_admin" ? "Portal Admin" : "Member"}
+                          </Badge>
                         </div>
-                        <Badge className={cn(
-                          "border-none px-2.5 py-0.5 text-[10px] uppercase tracking-wider",
-                          server.userRole === "portal_admin" 
-                            ? "bg-[#D4AF37]/10 text-[#D4AF37]" 
-                            : "bg-neutral-100 text-neutral-500"
-                        )}>
-                          {server.userRole === "portal_admin" ? "Portal Admin" : "Member"}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-lg font-bold group-hover:text-[#D4AF37] transition-colors line-clamp-1">
-                        {server.name}
-                      </CardTitle>
-                      <CardDescription className="flex items-center gap-1 text-xs font-mono text-neutral-400">
-                        <Hash className="w-3 h-3" /> {server.id}
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-4 border-t border-neutral-50 flex items-center justify-between">
-                      <span className="text-xs text-neutral-400">
-                        Joined {new Date(server.created_at).toLocaleDateString()}
-                      </span>
-                      <Button variant="ghost" size="sm" className="group-hover:bg-[#D4AF37] group-hover:text-white rounded-full w-8 h-8 p-0">
-                        <ArrowRight className="w-4 h-4" />
+                        <CardTitle className="text-lg font-bold group-hover:text-[#D4AF37] transition-colors line-clamp-1">
+                          {server.name}
+                        </CardTitle>
+                        <CardDescription className="flex items-center gap-1 text-xs font-mono text-neutral-400">
+                          <Hash className="w-3 h-3" /> {server.id}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="pt-4 border-t border-neutral-50 flex items-center justify-between">
+                        <span className="text-xs text-neutral-400">
+                          Joined {new Date(server.created_at).toLocaleDateString()}
+                        </span>
+                        <Button variant="ghost" size="sm" className="group-hover:bg-[#D4AF37] group-hover:text-white rounded-full w-8 h-8 p-0">
+                          <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-8">
+                    <p className="text-sm text-neutral-500">
+                      Showing <span className="font-medium text-neutral-900">{(currentPage - 1) * PAGE_SIZE + 1}</span> to <span className="font-medium text-neutral-900">{Math.min(currentPage * PAGE_SIZE, totalCount)}</span> of <span className="font-medium text-neutral-900">{totalCount}</span> servers
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => prev - 1)}
+                        className="gap-1"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                        Previous
                       </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                          <Button
+                            key={page}
+                            variant={currentPage === page ? "default" : "outline"}
+                            size="sm"
+                            className={cn(
+                              "w-8 h-8 p-0",
+                              currentPage === page ? "bg-[#D4AF37] hover:bg-[#B8962E] text-white" : ""
+                            )}
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </Button>
+                        ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={currentPage === totalPages}
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        className="gap-1"
+                      >
+                        Next
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-neutral-200">
                 <Search className="w-12 h-12 text-neutral-200 mx-auto mb-4" />

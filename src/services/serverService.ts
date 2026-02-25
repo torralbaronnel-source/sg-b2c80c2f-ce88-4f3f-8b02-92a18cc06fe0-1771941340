@@ -10,14 +10,18 @@ export const generateServerId = () => {
 };
 
 export const serverService = {
-  async getMyServers() {
-    // We select from server_members and join the servers table
-    const { data, error } = await supabase
+  async getMyServers(page = 1, pageSize = 6) {
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+
+    // We select from server_members and join the servers table with count
+    const { data, error, count } = await supabase
       .from("server_members")
       .select(`
         role,
         servers:server_id (*)
-      `);
+      `, { count: "exact" })
+      .range(from, to);
 
     if (error) {
       console.error("Error fetching servers:", error);
@@ -46,12 +50,17 @@ export const serverService = {
     }
 
     // Map to a cleaner format, ensuring servers exists (in case of RLS filtering)
-    return (data || [])
+    const servers = (data || [])
       .filter(item => item.servers)
       .map(item => ({
         ...(item.servers as any),
         userRole: item.role
       }));
+
+    return {
+      servers,
+      totalCount: count || 0
+    };
   },
 
   async createServer(name: string) {

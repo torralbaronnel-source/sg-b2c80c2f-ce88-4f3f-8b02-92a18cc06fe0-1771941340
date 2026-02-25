@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
+import { HierarchyStatusView } from "./HierarchyStatusView";
 
 export function ProfileView() {
   const { user } = useAuth();
@@ -153,21 +154,15 @@ export function ProfileView() {
         </div>
       </div>
 
-      <Tabs defaultValue="contact" className="mt-8 px-8">
-        <TabsList className="bg-transparent border-b rounded-none w-full justify-start h-auto p-0 gap-8">
-          <TabsTrigger value="contact" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 pb-4 pt-0 font-semibold shadow-none">
-            Contact & Info
-          </TabsTrigger>
-          <TabsTrigger value="organization" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 pb-4 pt-0 font-semibold shadow-none">
-            Organization
-          </TabsTrigger>
-          <TabsTrigger value="settings" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-2 pb-4 pt-0 font-semibold shadow-none">
-            Edit Profile
-          </TabsTrigger>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="hierarchy">Role & Hierarchy</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="contact" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="md:col-span-2 space-y-6">
               <Card className="border-none shadow-sm bg-slate-50/50">
                 <CardHeader>
@@ -240,70 +235,11 @@ export function ProfileView() {
           </div>
         </TabsContent>
 
-        <TabsContent value="organization" className="mt-6">
-          <Card className="border-none shadow-sm bg-slate-50/50">
-            <CardHeader>
-              <CardTitle>Organizational Chart</CardTitle>
-              <CardDescription>Visual hierarchy of your team and reporting lines</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-col items-center py-10 space-y-12">
-                {/* Manager Level */}
-                {profile?.manager && (
-                  <div className="flex flex-col items-center">
-                    <div className="bg-white p-4 rounded-xl border-2 border-slate-100 shadow-sm w-64 text-center">
-                      <Avatar className="h-12 w-12 mx-auto mb-2 border-2 border-indigo-100">
-                        <AvatarImage src={profile.manager.avatar_url || ""} />
-                        <AvatarFallback>{profile.manager.full_name?.[0]}</AvatarFallback>
-                      </Avatar>
-                      <p className="font-bold text-sm">{profile.manager.full_name}</p>
-                      <p className="text-xs text-indigo-600 font-medium">Direct Manager</p>
-                    </div>
-                    <div className="h-12 w-0.5 bg-slate-200 mt-2" />
-                  </div>
-                )}
-
-                {/* Current User */}
-                <div className="flex flex-col items-center">
-                  <div className="bg-indigo-50 p-4 rounded-xl border-2 border-indigo-200 shadow-md w-72 text-center relative">
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-indigo-600">YOU</Badge>
-                    <Avatar className="h-16 w-16 mx-auto mb-3 border-4 border-white">
-                      <AvatarImage src={profile?.avatar_url || ""} />
-                      <AvatarFallback>{initials}</AvatarFallback>
-                    </Avatar>
-                    <p className="font-bold text-lg">{profile?.full_name}</p>
-                    <p className="text-sm text-slate-600 font-medium">{profile?.role?.name}</p>
-                  </div>
-                </div>
-
-                {/* Direct Reports (Mock/Placeholder for logic) */}
-                <div className="flex gap-8">
-                  {orgData.filter(p => p.reports_to === profile?.id).length > 0 ? (
-                    orgData.filter(p => p.reports_to === profile?.id).map((report, idx) => (
-                      <div key={idx} className="flex flex-col items-center">
-                        <div className="h-12 w-0.5 bg-slate-200 mb-2" />
-                        <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm w-48 text-center">
-                          <Avatar className="h-10 w-10 mx-auto mb-2">
-                            <AvatarImage src={report.avatar_url || ""} />
-                            <AvatarFallback>{report.full_name?.[0]}</AvatarFallback>
-                          </Avatar>
-                          <p className="font-semibold text-xs">{report.full_name}</p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-tight">{report.role?.name}</p>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-center p-8 bg-white/50 rounded-xl border border-dashed border-slate-300">
-                      <p className="text-sm text-slate-400 italic">No direct reports found</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+        <TabsContent value="hierarchy">
+          <HierarchyStatusView />
         </TabsContent>
 
-        <TabsContent value="settings" className="mt-6">
+        <TabsContent value="security" className="mt-6">
           <Card className="border-none shadow-sm bg-slate-50/50">
             <CardHeader>
               <CardTitle>Edit Your Profile</CardTitle>

@@ -62,6 +62,10 @@ export function NanoCommandCenter() {
   const [filterType, setFilterType] = useState<string>("all");
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [activeModel, setActiveModel] = useState("gpt-4o");
+  const [isKernelThinking, setIsKernelThinking] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [pipelineStage, setPipelineStage] = useState<string | null>(null);
+  const MAX_RETRIES = 3;
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -77,7 +81,7 @@ export function NanoCommandCenter() {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [messages]);
+  }, [messages, isLoading, pipelineStage]);
 
   const fetchHistory = async () => {
     if (!user) return;
@@ -145,20 +149,27 @@ export function NanoCommandCenter() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const handleCommand = async (cmd: string, isAutoRetry = false) => {
+    if (!cmd.trim() || (isLoading && !isAutoRetry)) return;
 
-    const userCommand = input.trim();
+    const userCommand = cmd.trim();
     const timestamp = new Date().toLocaleTimeString();
     
-    setMessages((prev) => [...prev, { role: "user", content: userCommand, timestamp }]);
-    setInput("");
+    if (!isAutoRetry) {
+      setMessages((prev) => [...prev, { role: "user", content: userCommand, timestamp }]);
+      setInput("");
+      setHistoryIndex(-1);
+    }
+    
     setIsLoading(true);
-    setHistoryIndex(-1);
+    setIsKernelThinking(true);
 
     try {
-      const response = await aiService.getNanoResponse(userCommand, [], activeModel);
+      setPipelineStage("PREPROCESSING");
+      setPipelineStage("PLANNING & PROCESSING");
+      
+      const response = await aiService.getNanoResponse(userCommand, messages.slice(-5), activeModel);
+      setPipelineStage("OUTPUT GENERATION");
       
       const assistantMsg: Message = {
         role: "assistant",
@@ -171,10 +182,16 @@ export function NanoCommandCenter() {
       let kernelMetadata: any = null;
 
       if (actionMatch) {
+        setPipelineStage("RESULT DELIVERY");
         try {
           const action: AIAction = JSON.parse(actionMatch[1]);
           const result = await aiService.executeKernelAction(action);
           
+          if (!result.success) {
+            throw new Error(result.error || "Action failed without specific error message");
+          }
+
+          setRetryCount(0);
           kernelMetadata = {
             type: action.type === "execute_sql" ? "sql_result" : 
                   action.type === "read_file" ? "file_content" : 
@@ -188,22 +205,40 @@ export function NanoCommandCenter() {
           if (action.type === "execute_sql" && result.success) {
             assistantMsg.content = `Executed SQL query successfully. Found ${Array.isArray(result.data) ? result.data.length : 0} results.`;
           } else if (action.type === "run_command") {
-            assistantMsg.content = `Terminal execution complete. Exit code: 0. Output logged to kernel stream.`;
+            assistantMsg.content = `Terminal execution complete. Output logged to kernel stream.`;
           } else if (action.type === "write_file") {
             assistantMsg.content = `File operation successful. ${result.message}`;
           }
         } catch (e: any) {
-          assistantMsg.metadata = {
+          setPipelineStage("FEEDBACK LOOP (SELF-HEALING)");
+          console.error("Action Execution Error:", e);
+          
+          kernelMetadata = {
             type: "kernel_status",
             data: e.message,
             status: "error"
           };
+          assistantMsg.metadata = kernelMetadata;
+
+          if (retryCount < MAX_RETRIES) {
+            setRetryCount(prev => prev + 1);
+            const errorPrompt = `ERROR DETECTED IN PREVIOUS ACTION: "${e.message}". Please analyze the error, fix the parameters, and try again with a corrected [ACTION] block.`;
+            setTimeout(() => {
+              handleCommand(errorPrompt, true);
+            }, 1500);
+          } else {
+            assistantMsg.content = `Kernel: Self-healing failed after ${MAX_RETRIES} attempts. Manual intervention required. Error: ${e.message}`;
+            setRetryCount(0);
+          }
         }
+      } else {
+        setPipelineStage("COMPLETE");
       }
 
       setMessages((prev) => [...prev, assistantMsg]);
       await saveToHistory(userCommand, kernelMetadata);
     } catch (error: any) {
+      setPipelineStage("PIPELINE FAILURE");
       setMessages((prev) => [
         ...prev,
         {
@@ -214,7 +249,14 @@ export function NanoCommandCenter() {
       ]);
     } finally {
       setIsLoading(false);
+      setIsKernelThinking(false);
+      setTimeout(() => setPipelineStage(null), 3000);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleCommand(input);
   };
 
   const downloadCSV = (data: any[]) => {
@@ -339,11 +381,16 @@ export function NanoCommandCenter() {
               <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/40" />
             </div>
             <Terminal className="w-4 h-4 text-zinc-500" />
-            <span className="text-xs font-bold text-zinc-400 tracking-tighter uppercase">Orchestrix Kernel / Nano V5.1</span>
+            <span className="text-xs font-bold text-zinc-400 tracking-tighter uppercase">Orchestrix Kernel / Nano V5.2</span>
+            
+            {pipelineStage && (
+              <Badge variant="outline" className="ml-4 h-5 text-[9px] bg-blue-500/10 border-blue-500/50 text-blue-400 animate-pulse">
+                PIPELINE: {pipelineStage}
+              </Badge>
+            )}
           </div>
           
           <div className="flex items-center gap-4">
-            {/* Model Picker */}
             <div className="flex items-center gap-2 bg-zinc-950 px-2 py-1 rounded border border-zinc-800">
               <Cpu className="w-3 h-3 text-purple-500" />
               <Select value={activeModel} onValueChange={handleModelChange}>
@@ -367,9 +414,9 @@ export function NanoCommandCenter() {
           </div>
         </div>
 
-        {/* Messages Area */}
-        <ScrollArea className="flex-1 p-6 bg-[#050505]">
-          <div className="space-y-6 max-w-5xl mx-auto" ref={scrollRef}>
+        {/* Messages Area - SCROLLABLE */}
+        <ScrollArea className="flex-1 p-6 bg-[#050505]" viewportRef={scrollRef}>
+          <div className="space-y-6 max-w-5xl mx-auto">
             {messages.map((msg, i) => (
               <div key={i} className={`flex flex-col ${msg.role === "system" ? "opacity-60" : ""}`}>
                 <div className="flex items-center gap-2 mb-1.5">

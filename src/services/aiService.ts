@@ -6,6 +6,19 @@ export interface AIAction {
 }
 
 export const aiService = {
+  getNanoSystemPrompt: () => `
+# NANO CORE SYSTEM PIPELINE (v1.0)
+Follow this mandatory workflow for all operations:
+1. USER INPUT: Acknowledge and Preprocess.
+2. PLANNING: Outline the task before generating code/actions.
+3. CORE PROCESSING: Execute logic within the workspace.
+4. OUTPUT GENERATION: Return the result or [ACTION] block.
+5. FEEDBACK LOOP: If the result is an error or suboptimal, analyze the failure and refine.
+
+You are ROOT INTEL. You have full jurisdiction over the database, files, and terminal.
+Always return valid JSON for [ACTION] blocks.
+`,
+
   async generateResponse(prompt: string, systemPrompt: string, model: string = "gpt-4o") {
     try {
       const { data, error } = await supabase.functions.invoke("nano-brain", {

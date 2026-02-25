@@ -189,19 +189,11 @@ export const clientService = {
 
       if (!client) return null;
 
-      const [
-        { data: events },
-        { data: quotes },
-        { data: invoices },
-        { data: communications },
-        { data: tasks }
-      ] = await Promise.all([
-        supabase.from("events").select("*").eq("client_id", clientId),
-        supabase.from("quotes").select("*").eq("client_id", clientId),
-        supabase.from("invoices").select("*").eq("client_id", clientId),
-        supabase.from("communications").select("*").eq("client_id", clientId),
-        supabase.from("tasks").select("*").limit(100)
-      ]);
+      const { data: events } = await supabase.from("events").select("*").eq("client_id", clientId);
+      const { data: quotes } = await supabase.from("quotes").select("*").eq("client_id", clientId);
+      const { data: invoices } = await supabase.from("invoices").select("*").eq("client_id", clientId);
+      const { data: communications } = await supabase.from("communications").select("*").eq("client_id", clientId);
+      const { data: tasks } = await supabase.from("tasks").select("*").limit(100);
 
       const eventIds = (events || []).map((e: any) => e.id);
       const filteredTasks = (tasks || []).filter((t: any) => eventIds.includes(t.event_id));

@@ -111,7 +111,7 @@ export const clientService = {
   async getClientStats() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
+      if (!user) return { total: 0, byStatus: {} as Record<string, number>, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
 
       const { data: profile } = await supabase
         .from("profiles")
@@ -119,16 +119,16 @@ export const clientService = {
         .eq("id", user.id)
         .single();
 
-      if (!profile?.current_server_id) return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
+      if (!profile?.current_server_id) return { total: 0, byStatus: {} as Record<string, number>, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
 
       const { data: clients, error: clientError } = await supabase
         .from("clients")
         .select("*")
         .eq("server_id", profile.current_server_id);
 
-      if (clientError || !clients) return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
+      if (clientError || !clients) return { total: 0, byStatus: {} as Record<string, number>, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
 
-      const { data: events, error: eventError } = await supabase
+      let { data: events, error: eventError } = await supabase
         .from("events")
         .select("*")
         .eq("server_id", profile.current_server_id);
@@ -139,11 +139,12 @@ export const clientService = {
       const total = clients.length;
       const byStatus: Record<string, number> = {};
       let totalSpent = 0;
-      let totalEvents = events?.length || 0;
+      let totalEvents = (events || []).length;
 
       clients.forEach((client) => {
-        byStatus[client.lead_status || "new"] = (byStatus[client.lead_status || "new"] || 0) + 1;
-        totalSpent += client.total_spent || 0;
+        const status = (client as any)?.lead_status || "new";
+        byStatus[status] = (byStatus[status] || 0) + 1;
+        totalSpent += (client as any)?.total_spent || 0;
       });
 
       const bookedCount = byStatus["booked"] || 0;
@@ -160,7 +161,7 @@ export const clientService = {
       };
     } catch (err) {
       console.error("Error calculating stats:", err);
-      return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
+      return { total: 0, byStatus: {} as Record<string, number>, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
     }
   },
 };

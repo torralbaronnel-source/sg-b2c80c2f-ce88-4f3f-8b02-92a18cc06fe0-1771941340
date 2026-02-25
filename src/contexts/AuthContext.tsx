@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import { profileService, type Profile } from "@/services/profileService";
+import { serverService } from "@/services/serverService";
 import { useRouter } from "next/navigation";
 
 export interface AuthContextType {
@@ -9,6 +10,7 @@ export interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   currentOrganization: any | null;
+  currentServer: any | null;
   isLoading: boolean;
   refreshProfile: () => Promise<void>;
 }
@@ -20,14 +22,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [currentOrganization, setCurrentOrganization] = useState<any | null>(null);
+  const [currentServer, setCurrentServer] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchProfileData = async (userId: string) => {
     const profileData = await profileService.getProfile(userId);
     setProfile(profileData);
     if (profileData) {
-      const org = await profileService.getUserOrganization(userId);
+      const [org, server] = await Promise.all([
+        profileService.getUserOrganization(userId),
+        serverService.getSelectedServer()
+      ]);
       setCurrentOrganization(org);
+      setCurrentServer(server);
     }
   };
 
@@ -66,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     session,
     profile,
     currentOrganization,
+    currentServer,
     isLoading,
     refreshProfile: async () => {
       if (user) await fetchProfileData(user.id);

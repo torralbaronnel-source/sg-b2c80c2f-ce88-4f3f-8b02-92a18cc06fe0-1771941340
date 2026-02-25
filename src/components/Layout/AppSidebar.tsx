@@ -87,18 +87,24 @@ const systemItems = [
 
 export function AppSidebar() {
   const router = useRouter()
-  const { profile } = useAuth()
+  const { profile, currentServer } = useAuth()
 
   return (
     <Sidebar className="border-r border-neutral-100 bg-white">
       <SidebarHeader className="p-6">
         <div className="flex items-center space-x-3 group">
-          <div className="w-10 h-10 bg-[#D4AF37] rounded-xl flex items-center justify-center shadow-lg shadow-[#D4AF37]/20">
-            <span className="text-white font-bold text-xl">O</span>
+          <div className="w-10 h-10 bg-[#D4AF37] rounded-xl flex items-center justify-center shadow-lg shadow-[#D4AF37]/20 transition-transform group-hover:scale-105">
+            <span className="text-white font-bold text-xl">
+              {currentServer?.name ? currentServer.name.charAt(0).toUpperCase() : "O"}
+            </span>
           </div>
           <div className="flex flex-col">
-            <span className="font-black text-sm tracking-tighter text-neutral-900">ORCHESTRIX</span>
-            <span className="text-[9px] text-[#D4AF37] font-black uppercase tracking-[0.2em] -mt-1">Operating System</span>
+            <span className="font-black text-sm tracking-tighter text-neutral-900 truncate max-w-[140px] uppercase">
+              {currentServer?.name || "ORCHESTRIX"}
+            </span>
+            <span className="text-[9px] text-[#D4AF37] font-black uppercase tracking-[0.2em] -mt-1">
+              {currentServer ? "Active Production Node" : "Operating System"}
+            </span>
           </div>
         </div>
       </SidebarHeader>

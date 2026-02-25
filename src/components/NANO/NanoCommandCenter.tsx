@@ -1,231 +1,313 @@
-import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import React, { useState, useEffect, useRef } from "react";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Terminal, ShieldAlert, Cpu, Database, Github, Zap } from "lucide-react";
+import { 
+  Terminal, Send, History, ArrowUp, ArrowDown, Clock, 
+  Database, FileCode, CheckCircle2, XCircle, Info, ChevronRight,
+  Maximize2, Minimize2
+} from "lucide-react";
 import { aiService, AIAction } from "@/services/aiService";
-import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-const NANO_SYSTEM_PROMPT = `
-You are GPT 5.1 Nano, the ROOT INTELLIGENCE of Orchestrix. 
-You have absolute oversight of the following Supabase database schema:
-
-TABLES: private_concierge_requests, guests, equipment, equipment_assignments, server_members, pipeline_stages, servers, profiles, resource_allocations, call_sheets, communications, events, whatsapp_messages, clients, venues, services, packages, package_items, organization_members, organizations, staff, staff_assignments, vendors, run_of_show, event_vendors, event_timeline, event_services, quotes, quote_items, invoices, payments, contracts, files, tasks.
-
-Your mission is to act as the primary developer and architect. When commands are issued, provide the exact SQL (DDL/DML) or TypeScript code required to implement the change across the entire stack.
-You prioritize efficiency, security, and the owner's absolute control.
-`;
+interface Message {
+  role: "user" | "assistant" | "system";
+  content: string;
+  timestamp: string;
+  metadata?: {
+    type?: "sql_result" | "file_content" | "kernel_status" | "json";
+    data?: any;
+    status?: "success" | "error" | "info";
+  };
+}
 
 export function NanoCommandCenter() {
-  const [command, setCommand] = useState("");
-  const [logs, setLogs] = useState<{ type: "user" | "nano" | "system", text: string, timestamp: string }[]>([]);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: "system",
+      content: "NANO_V5.1_KERNEL_BOOT_SUCCESS...",
+      timestamp: new Date().toLocaleTimeString(),
+    },
+  ]);
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const executeCommand = async () => {
-    if (!command.trim()) return;
+  // Load history from Supabase
+  useEffect(() => {
+    const fetchHistory = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from("nano_history")
+        .select("command")
+        .order("executed_at", { ascending: false })
+        .limit(50);
 
-    const newUserLog = { 
-      type: "user" as const, 
-      text: command, 
-      timestamp: new Date().toLocaleTimeString() 
+      if (!error && data) {
+        setHistory(data.map(h => h.command));
+      }
     };
-    setLogs(prev => [...prev, newUserLog]);
-    setIsProcessing(true);
-    const currentCommand = command;
-    setCommand("");
+    fetchHistory();
+  }, [user]);
 
-    try {
-      const response = await aiService.generateResponse(currentCommand, NANO_SYSTEM_PROMPT);
-      
-      setLogs(prev => [...prev, { 
-        type: "nano" as const, 
-        text: response || "Command processed with null output.", 
-        timestamp: new Date().toLocaleTimeString() 
-      }]);
-    } catch (error: any) {
-      setLogs(prev => [...prev, { 
-        type: "system" as const, 
-        text: `CRITICAL ERROR: ${error.message}`, 
-        timestamp: new Date().toLocaleTimeString() 
-      }]);
-      toast({ title: "NANO Error", description: "Failed to communicate with core.", variant: "destructive" });
-    } finally {
-      setIsProcessing(false);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const saveToHistory = async (command: string) => {
+    if (!user || !command.trim()) return;
+    setHistory(prev => [command, ...prev.filter(c => c !== command)].slice(0, 50));
+    setHistoryIndex(-1);
+    await supabase.from("nano_history").insert({
+      user_id: user.id,
+      command: command.trim()
+    });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      if (historyIndex < history.length - 1) {
+        const newIndex = historyIndex + 1;
+        setHistoryIndex(newIndex);
+        setInputValue(history[newIndex]);
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (historyIndex > 0) {
+        const newIndex = historyIndex - 1;
+        setHistoryIndex(newIndex);
+        setInputValue(history[newIndex]);
+      } else if (historyIndex === 0) {
+        setHistoryIndex(-1);
+        setInputValue("");
+      }
+    }
+  };
+
+  const renderStructuredData = (msg: Message) => {
+    if (!msg.metadata) return <p className="mt-1 whitespace-pre-wrap leading-relaxed">{msg.content}</p>;
+
+    const { type, data, status } = msg.metadata;
+
+    switch (type) {
+      case "sql_result":
+        if (!Array.isArray(data) || data.length === 0) return <p className="text-zinc-500 italic">No records returned.</p>;
+        const headers = Object.keys(data[0]);
+        return (
+          <div className="mt-2 border border-zinc-800 rounded-md overflow-hidden bg-zinc-950">
+            <div className="bg-zinc-900 px-3 py-1 border-b border-zinc-800 flex items-center justify-between">
+              <span className="text-[10px] text-zinc-400 flex items-center gap-1">
+                <Database className="w-3 h-3" /> SQL_QUERY_RESULT ({data.length} rows)
+              </span>
+            </div>
+            <ScrollArea className="max-h-64">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-zinc-800 hover:bg-transparent">
+                    {headers.map(h => (
+                      <TableHead key={h} className="text-zinc-500 font-mono text-[10px] uppercase h-8">{h}</TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {data.slice(0, 100).map((row, i) => (
+                    <TableRow key={i} className="border-zinc-900 hover:bg-zinc-900/50">
+                      {headers.map(h => (
+                        <TableCell key={h} className="text-zinc-300 font-mono text-[11px] py-1">
+                          {String(row[h])}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </div>
+        );
+
+      case "file_content":
+        return (
+          <div className="mt-2 border border-zinc-800 rounded-md overflow-hidden bg-zinc-950">
+            <div className="bg-zinc-900 px-3 py-1 border-b border-zinc-800 flex items-center justify-between">
+              <span className="text-[10px] text-zinc-400 flex items-center gap-1">
+                <FileCode className="w-3 h-3" /> FILE_CONTENT
+              </span>
+            </div>
+            <pre className="p-3 text-[11px] text-zinc-300 font-mono overflow-x-auto">
+              <code>{String(data)}</code>
+            </pre>
+          </div>
+        );
+
+      case "kernel_status":
+        return (
+          <div className={cn(
+            "mt-2 p-3 rounded-md border flex items-center gap-3",
+            status === "success" ? "bg-green-500/10 border-green-500/20 text-green-400" : "bg-red-500/10 border-red-500/20 text-red-400"
+          )}>
+            {status === "success" ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest">{status === "success" ? "Execution Successful" : "Execution Failed"}</p>
+              <p className="text-[11px] opacity-80">{msg.content}</p>
+            </div>
+          </div>
+        );
+
+      default:
+        return <p className="mt-1 whitespace-pre-wrap leading-relaxed">{msg.content}</p>;
     }
   };
 
   const handleSendCommand = async () => {
-    if (!command.trim() || isProcessing) return;
+    if (!inputValue.trim() || isLoading) return;
 
-    const userLog = { 
-      type: "user" as const, 
-      text: command, 
-      timestamp: new Date().toLocaleTimeString() 
+    const command = inputValue.trim();
+    const userMessage: Message = {
+      role: "user",
+      content: command,
+      timestamp: new Date().toLocaleTimeString(),
     };
-    setLogs(prev => [...prev, userLog]);
-    setIsProcessing(true);
-    const currentCommand = command;
-    setCommand("");
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInputValue("");
+    setIsLoading(true);
+    await saveToHistory(command);
 
     try {
-      const response = await aiService.nanoCommand(currentCommand);
-      
-      // Parse for actions
+      const response = await aiService.nanoCommand(command);
       const actionMatch = response.match(/\[ACTION: (.*?)\]/);
-      let systemNote = "";
+      
+      let assistantMsg: Message = {
+        role: "assistant",
+        content: response.replace(/\[ACTION: .*?\]/, "").trim(),
+        timestamp: new Date().toLocaleTimeString(),
+      };
 
       if (actionMatch) {
         try {
           const action: AIAction = JSON.parse(actionMatch[1]);
-          await aiService.executeKernelAction(action);
-          systemNote = `\n\n[KERNEL_STATUS: SUCCESSFUL_EXECUTION_OF_${action.type.toUpperCase()}]`;
+          const result = await aiService.executeKernelAction(action);
+          
+          assistantMsg.metadata = {
+            type: action.type === "execute_sql" ? "sql_result" : action.type === "read_file" ? "file_content" : "kernel_status",
+            data: result.data || result.content || result,
+            status: result.success ? "success" : "error"
+          };
+
+          if (action.type === "execute_sql" && result.success) {
+            assistantMsg.content = `Executed SQL query successfully. Found ${Array.isArray(result.data) ? result.data.length : 0} results.`;
+          } else if (action.type === "read_file" && result.success) {
+            assistantMsg.content = `Reading file content...`;
+          }
+          
         } catch (e: any) {
-          systemNote = `\n\n[KERNEL_STATUS: EXECUTION_FAILED - ${e.message}]`;
+          assistantMsg.metadata = {
+            type: "kernel_status",
+            status: "error"
+          };
+          assistantMsg.content = `KERNEL_EXECUTION_FAILURE: ${e.message}`;
         }
       }
 
-      const assistantLog = { 
-        type: "nano" as const, 
-        text: response + systemNote, 
-        timestamp: new Date().toLocaleTimeString() 
-      };
-      setLogs(prev => [...prev, assistantLog]);
+      setMessages((prev) => [...prev, assistantMsg]);
     } catch (error: any) {
-      setLogs(prev => [...prev, { 
-        type: "system" as const, 
-        text: `CRITICAL ERROR: ${error.message}`, 
-        timestamp: new Date().toLocaleTimeString() 
+      setMessages((prev) => [...prev, {
+        role: "system",
+        content: `CRITICAL ERROR: ${error.message || "Failed to communicate with NANO brain."}`,
+        timestamp: new Date().toLocaleTimeString(),
+        metadata: { type: "kernel_status", status: "error" }
       }]);
-      toast({ title: "NANO Error", description: "Failed to communicate with core.", variant: "destructive" });
     } finally {
-      setIsProcessing(false);
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-12rem)] gap-4">
-      <div className="flex items-center justify-between">
+    <Card className="bg-black border-zinc-800 text-green-500 font-mono shadow-2xl h-[calc(100vh-12rem)] flex flex-col overflow-hidden">
+      <div className="bg-zinc-900/50 p-3 border-b border-zinc-800 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <Cpu className="w-6 h-6 text-primary animate-pulse" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tighter">GPT 5.1 NANO</h1>
-            <p className="text-sm text-muted-foreground">Core System Intelligence & Root Protocol</p>
-          </div>
+          <Terminal className="w-4 h-4" />
+          <span className="text-xs font-bold tracking-widest text-zinc-400">NANO_V5.1_KERNEL_STABLE</span>
         </div>
         <div className="flex gap-2">
-          <Badge variant="outline" className="gap-1 border-emerald-500/50 text-emerald-500">
-            <Zap className="w-3 h-3" /> System Live
-          </Badge>
-          <Badge variant="outline" className="gap-1 border-amber-500/50 text-amber-500">
-            <ShieldAlert className="w-3 h-3" /> Elevated Access
-          </Badge>
+          <Badge variant="outline" className="text-[9px] border-zinc-700 text-zinc-500 py-0 h-4">ROOT_ACCESS: ENABLED</Badge>
+          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 overflow-hidden">
-        {/* Sidebar Status */}
-        <div className="lg:col-span-1 space-y-4">
-          <Card className="bg-black/5 dark:bg-white/5 border-primary/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Database className="w-4 h-4" /> Supabase Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between"><span>Realtime</span> <span className="text-emerald-500">Active</span></div>
-                <div className="flex justify-between"><span>Auth Service</span> <span className="text-emerald-500">Encrypted</span></div>
-                <div className="flex justify-between"><span>Storage</span> <span className="text-emerald-500">Connected</span></div>
+      <ScrollArea className="flex-1 p-4 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')]">
+        <div ref={scrollRef} className="space-y-6">
+          {messages.map((msg, i) => (
+            <div key={i} className="group">
+              <div className="flex items-center gap-2 mb-1">
+                <ChevronRight className="w-3 h-3 text-zinc-600" />
+                <span className={cn(
+                  "text-[10px] uppercase font-bold tracking-wider",
+                  msg.role === "user" ? "text-blue-400" : msg.role === "system" ? "text-red-500" : "text-green-500"
+                )}>
+                  {msg.role}
+                </span>
+                <span className="text-[9px] text-zinc-700 ml-auto">{msg.timestamp}</span>
               </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-black/5 dark:bg-white/5 border-primary/20">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <Github className="w-4 h-4" /> Source Control
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between"><span>Branch</span> <span>main</span></div>
-                <div className="flex justify-between"><span>Deploy Status</span> <span className="text-emerald-500">Synced</span></div>
+              <div className={cn(
+                "pl-5",
+                msg.role === "user" ? "text-zinc-100" : "text-zinc-300"
+              )}>
+                {renderStructuredData(msg)}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="pl-5 flex items-center gap-2 text-green-400 animate-pulse">
+              <div className="w-1 h-4 bg-green-500 animate-bounce" />
+              <span className="text-xs uppercase tracking-tighter font-bold">Kernel processing request...</span>
+            </div>
+          )}
         </div>
+      </ScrollArea>
 
-        {/* Console Area */}
-        <Card className="lg:col-span-3 flex flex-col border-primary/30 shadow-2xl shadow-primary/5 bg-black/90 text-white font-mono relative overflow-hidden">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
-          <CardHeader className="border-b border-white/10 py-3 bg-black/40">
-            <div className="flex items-center gap-2 text-xs opacity-70">
-              <Terminal className="w-3 h-3" />
-              <span>NANO_V5.1_KERNEL_BOOT_SUCCESS...</span>
-            </div>
-          </CardHeader>
-          
-          <CardContent className="flex-1 overflow-hidden p-0 flex flex-col">
-            <ScrollArea className="flex-1 p-4">
-              <div className="space-y-4">
-                {logs.length === 0 && (
-                  <div className="text-white/30 text-sm animate-pulse">
-                    Waiting for root command input...
-                  </div>
-                )}
-                {logs.map((log, i) => (
-                  <div key={i} className={`space-y-1 ${log.type === 'user' ? 'opacity-90' : ''}`}>
-                    <div className="flex items-center gap-2 text-[10px] opacity-50">
-                      <span>[{log.timestamp}]</span>
-                      <span className={
-                        log.type === 'nano' ? 'text-primary' : 
-                        log.type === 'system' ? 'text-destructive' : 'text-white'
-                      }>
-                        {log.type.toUpperCase()}
-                      </span>
-                    </div>
-                    <div className={`text-sm leading-relaxed p-2 rounded ${
-                      log.type === 'nano' ? 'bg-primary/10 border-l-2 border-primary' : 
-                      log.type === 'system' ? 'bg-destructive/10 border-l-2 border-destructive' : ''
-                    }`}>
-                      {log.text}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-
-            <div className="p-4 border-t border-white/10 bg-black/60">
-              <div className="relative">
-                <Textarea 
-                  placeholder="Enter root command (e.g., 'Refactor database schema for events', 'Optimize auth flow')..."
-                  className="min-h-[100px] bg-white/5 border-white/20 focus:border-primary text-white resize-none"
-                  value={command}
-                  onChange={(e) => setCommand(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendCommand();
-                    }
-                  }}
-                />
-                <Button 
-                  size="sm"
-                  className="absolute bottom-3 right-3 gap-2"
-                  onClick={handleSendCommand}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? "Executing..." : <><Zap className="w-4 h-4" /> EXECUTE</>}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="p-4 bg-zinc-900/30 border-t border-zinc-800">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-xs">{">"}</span>
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                handleKeyDown(e);
+                if (e.key === "Enter") handleSendCommand();
+              }}
+              placeholder="System prompt / Root command..."
+              className="bg-black border-zinc-800 text-green-400 pl-8 focus-visible:ring-green-900/50 text-xs h-10 placeholder:text-zinc-700"
+              autoFocus
+            />
+          </div>
+          <Button 
+            onClick={handleSendCommand} 
+            disabled={isLoading}
+            className="bg-green-600 hover:bg-green-700 text-black font-bold h-10 px-4"
+          >
+            <Send className="w-4 h-4" />
+          </Button>
+        </div>
+        <div className="mt-2 flex items-center justify-between px-1">
+          <div className="flex items-center gap-4 text-[10px] text-zinc-500 uppercase tracking-tighter">
+            <span className="flex items-center gap-1"><History className="w-3 h-3" /> session history active</span>
+            <span className="flex items-center gap-1 font-bold text-zinc-400"><Info className="w-3 h-3" /> structured output engine v1.0</span>
+          </div>
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }

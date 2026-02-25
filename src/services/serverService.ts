@@ -15,39 +15,57 @@ export interface ServerResponse {
 }
 
 export const serverService = {
+  /**
+   * Fetches servers using a "Flat Fetch" strategy to avoid infinite recursion
+   * triggered by complex joins in RLS policies.
+   */
   async getMyServers(page = 1, pageSize = 6): Promise<ServerResponse> {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
     try {
-      // We select from server_members and join the servers table
-      const { data, error, count } = await supabase
+      // Step 1: Fetch the membership records only (identifies WHICH servers)
+      const { data: memberData, error: memberError, count } = await supabase
         .from("server_members")
-        .select(`
-          role,
-          servers:server_id (*)
-        `, { count: "exact" })
+        .select("server_id, role", { count: "exact" })
         .range(from, to);
 
-      if (error) {
-        console.error("Critical Policy/Query Error:", error.message);
-        // Fallback: return empty but don't crash
+      if (memberError) {
+        console.error("Member fetch error:", memberError.message);
         return { servers: [], totalCount: 0 };
       }
 
-      const servers = (data || [])
-        .filter(item => item.servers)
-        .map(item => ({
-          ...(item.servers as any),
-          userRole: item.role
-        }));
+      if (!memberData || memberData.length === 0) {
+        return { servers: [], totalCount: 0 };
+      }
+
+      // Step 2: Fetch the actual server details for those IDs
+      const serverIds = memberData.map(m => m.server_id);
+      const { data: serverData, error: serverError } = await supabase
+        .from("servers")
+        .select("*")
+        .in("id", serverIds);
+
+      if (serverError) {
+        console.error("Server data fetch error:", serverError.message);
+        return { servers: [], totalCount: 0 };
+      }
+
+      // Merge the data back together
+      const servers = memberData.map(member => {
+        const details = serverData.find(s => s.id === member.server_id);
+        return {
+          ...details,
+          userRole: member.role
+        };
+      }).filter(s => s.id); // Remove any that might not have been found
 
       return {
         servers,
         totalCount: count || 0
       };
     } catch (err) {
-      console.error("System-level server fetch error:", err);
+      console.error("Critical server fetch error:", err);
       return { servers: [], totalCount: 0 };
     }
   },
@@ -102,7 +120,6 @@ export const serverService = {
 
     if (profileError) {
       console.error("Step 3 Failed (Update Profile):", profileError);
-      // We don't throw here as the server is already created
     }
 
     return server;

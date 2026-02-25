@@ -254,6 +254,16 @@ export default function ServersPage() {
     }
   };
 
+  const handleSelectServer = (serverId: string) => {
+    selectServer(serverId);
+    toast({
+      title: "Environment Switched",
+      description: "Re-routing to production node...",
+    });
+    // Optional: redirect to dashboard to see changes
+    router.push("/dashboard");
+  };
+
   const filteredServers = servers
     .filter(s => {
       const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.id.toLowerCase().includes(searchQuery.toLowerCase());
@@ -381,6 +391,10 @@ export default function ServersPage() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem onClick={() => openBlueprintDialog(server)} className="gap-2">
                                     <Wrench className="w-4 h-4" /> Manage Blueprint
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleSelectServer(server.id)}>
+                                    <Terminal className="mr-2 h-4 w-4" />
+                                    <span>Switch to Node</span>
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>

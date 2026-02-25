@@ -163,9 +163,15 @@ export const serverService = {
     return true;
   },
 
-  async getSelectedServer(): Promise<any | null> {
-    const serverId = localStorage.getItem("selected_server_id");
-    if (!serverId) return null;
+  async getSelectedServer() {
+    const serverId = typeof window !== "undefined" ? localStorage.getItem("selectedServerId") : null;
+    if (!serverId) {
+      console.log("serverService: No serverId found in localStorage");
+      return null;
+    }
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
     const { data, error } = await supabase
       .from("servers")
@@ -174,9 +180,14 @@ export const serverService = {
       .single();
 
     if (error) {
-      console.error("Error fetching active server:", error);
+      console.error("serverService: Error fetching server:", error.message);
+      // If server doesn't exist or user doesn't have access, clear it
+      if (error.code === "PGRST116") {
+        localStorage.removeItem("selectedServerId");
+      }
       return null;
     }
+    
     return data;
   }
 };

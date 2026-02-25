@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export function OverviewDashboardView() {
-  const { user, currentOrganization: activeOrg } = useAuth();
+  const { profile, currentServer } = useAuth();
   const { events, loading: eventsLoading } = useEvent();
 
   const stats = {
@@ -30,16 +30,16 @@ export function OverviewDashboardView() {
       const now = new Date();
       return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
     }).length,
-    totalGuests: events.reduce((sum, e) => sum + (e.guest_count || 0), 0)
+    totalGuests: events.reduce((sum, e) => sum + ((e as any).guest_count || (e as any).details?.guest_count || 0), 0)
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Welcome back, {user?.email?.split('@')[0]}</h1>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {profile?.full_name || "Coordinator"}</h1>
           <p className="text-muted-foreground">
-            Here's what's happening with {activeOrg?.name || "your organization"} today.
+            {currentServer ? `Operational status for ${currentServer.name}` : "System status overview"}
           </p>
         </div>
         <Link href="/servers">
@@ -84,7 +84,9 @@ export function OverviewDashboardView() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalGuests}</div>
+            <div className="text-2xl font-bold">
+              {events.reduce((acc, event) => acc + ((event as any).guest_count || (event as any).details?.guest_count || 0), 0)}
+            </div>
           </CardContent>
         </Card>
       </div>

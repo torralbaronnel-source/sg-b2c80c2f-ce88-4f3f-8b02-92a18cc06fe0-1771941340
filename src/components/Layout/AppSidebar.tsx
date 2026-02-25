@@ -85,24 +85,24 @@ const systemItems = [
   }
 ]
 
-export function AppSidebar() {
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
   const { profile, currentServer } = useAuth()
 
   return (
     <Sidebar className="border-r border-neutral-100 bg-white">
-      <SidebarHeader className="p-6">
-        <div className="flex items-center space-x-3 group">
-          <div className="w-10 h-10 bg-[#D4AF37] rounded-xl flex items-center justify-center shadow-lg shadow-[#D4AF37]/20 transition-transform group-hover:scale-105">
-            <span className="text-white font-bold text-xl">
-              {currentServer?.name ? currentServer.name.charAt(0).toUpperCase() : "O"}
+      <SidebarHeader className="border-b border-sidebar-border/50 p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+            <span className="text-xl font-black italic">
+              {currentServer?.name?.[0] || "O"}
             </span>
           </div>
-          <div className="flex flex-col">
-            <span className="font-black text-sm tracking-tighter text-neutral-900 truncate max-w-[140px] uppercase">
+          <div className="flex flex-col gap-0.5 leading-none">
+            <span className="font-bold text-sm tracking-tight text-foreground uppercase">
               {currentServer?.name || "ORCHESTRIX"}
             </span>
-            <span className="text-[9px] text-[#D4AF37] font-black uppercase tracking-[0.2em] -mt-1">
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">
               {currentServer ? "Active Production Node" : "Operating System"}
             </span>
           </div>

@@ -5,14 +5,18 @@ export type Communication = Database["public"]["Tables"]["communications"]["Row"
 export type CommunicationMessage = Database["public"]["Tables"]["whatsapp_messages"]["Row"];
 
 export const communicationService = {
-  async getCommunications(coordinatorId: string) {
+  async getCommunications() {
+    const serverId = typeof window !== "undefined" ? localStorage.getItem("selectedServerId") : null;
+    if (!serverId) return [];
+
     const { data, error } = await supabase
       .from("communications")
       .select("*")
-      .eq("coordinator_id", coordinatorId)
+      .eq("server_id", serverId)
       .order("updated_at", { ascending: false });
-    
-    return { data, error };
+
+    if (error) throw error;
+    return data || [];
   },
 
   async getMessages(communicationId: string) {
@@ -47,13 +51,16 @@ export const communicationService = {
     return { data, error };
   },
 
-  async createCommunication(payload: any) {
+  async createCommunication(comm: any) {
+    const serverId = typeof window !== "undefined" ? localStorage.getItem("selectedServerId") : null;
+    
     const { data, error } = await supabase
       .from("communications")
-      .insert(payload)
+      .insert([{ ...comm, server_id: serverId }])
       .select()
       .single();
-    
-    return { data, error };
+
+    if (error) throw error;
+    return data;
   }
 };

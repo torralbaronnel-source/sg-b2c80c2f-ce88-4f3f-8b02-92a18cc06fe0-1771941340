@@ -1,29 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-export interface Event {
-  id: string;
-  title: string;
-  client_name: string;
-  event_date: string;
-  call_time: string;
-  venue: string;
-  status: "planning" | "active" | "completed" | "cancelled";
-  guest_count: number;
-  budget: number;
-  created_at: string;
-  organization_id: string;
-  created_by: string;
-  description: string;
-  hmu_artist?: string;
-  lights_sounds?: string;
-  catering?: string;
-  photo_video?: string;
-  coordination_team?: string;
-  backdrop_styling?: string;
-  souvenirs?: string;
-  host_mc?: string;
-  event_notes?: string;
-}
+type EventRow = Database["public"]["Tables"]["events"]["Row"];
+type EventInsert = Database["public"]["Tables"]["events"]["Insert"];
+
+export interface Event extends EventRow {}
 
 export type CreateEvent = Omit<Event, "id" | "created_at">;
 export type UpdateEvent = Partial<CreateEvent>;
@@ -34,33 +15,31 @@ export type UpdateEvent = Partial<CreateEvent>;
  * by isolating the supabase table access behind a type-erased proxy.
  */
 export const eventService = {
-  async getEvents(organizationId: string): Promise<{ data: Event[], error: any }> {
-    try {
-      // Use any to bypass infinite recursion in Supabase's generated types
-      const { data, error } = await (supabase as any)
-        .from("events")
-        .select("*")
-        .eq("organization_id", organizationId)
-        .order("event_date", { ascending: true });
-      
-      return { data: (data || []) as Event[], error };
-    } catch (err) {
-      return { data: [], error: err };
-    }
+  async getEvents() {
+    const serverId = typeof window !== "undefined" ? localStorage.getItem("selectedServerId") : null;
+    if (!serverId) return [];
+
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .eq("server_id", serverId)
+      .order("event_date", { ascending: true });
+
+    if (error) throw error;
+    return data || [];
   },
 
-  async createEvent(event: CreateEvent): Promise<{ data: Event | null, error: any }> {
-    try {
-      const { data, error } = await (supabase as any)
-        .from("events")
-        .insert(event)
-        .select()
-        .single();
-        
-      return { data: data as Event, error };
-    } catch (err) {
-      return { data: null, error: err };
-    }
+  async createEvent(event: Omit<EventInsert, "id" | "created_at" | "updated_at" | "server_id">) {
+    const serverId = typeof window !== "undefined" ? localStorage.getItem("selectedServerId") : null;
+    
+    const { data, error } = await supabase
+      .from("events")
+      .insert([{ ...event, server_id: serverId } as any])
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   },
 
   async updateEvent(id: string, updates: UpdateEvent): Promise<{ data: Event | null, error: any }> {

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
@@ -14,7 +14,14 @@ const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password"
 export const AppLayout = memo(({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
   const { user, isLoading, currentServer } = useAuth();
-  
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
+
   const isPublicPage = PUBLIC_PAGES.includes(router.pathname);
 
   // Do not render shell on public pages to avoid double-wrapping
@@ -31,16 +38,19 @@ export const AppLayout = memo(({ children }: { children: React.ReactNode }) => {
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
               <div className="flex items-center gap-4 px-2">
-                <span className="text-xl font-bold text-gray-900">
-                  {currentServer?.name || "Orchestrix"}
-                </span>
-                <div className="hidden md:flex items-center relative">
-                  <Search className="absolute left-3 h-4 w-4 text-gray-400" />
-                  <input 
-                    type="text" 
-                    placeholder="Ask Orchestrix..." 
-                    className="pl-9 pr-4 py-1.5 bg-gray-100 border-none rounded-md text-sm w-64 focus:ring-2 focus:ring-blue-500 transition-all outline-none"
-                  />
+                <div className="flex flex-col">
+                  <span className="text-lg font-bold text-gray-900 leading-tight">
+                    {currentServer?.name || "Orchestrix"}
+                  </span>
+                  {currentServer && (
+                    <span className="text-[10px] font-medium text-emerald-600 uppercase tracking-widest flex items-center gap-1">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                      </span>
+                      Live Production Node
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

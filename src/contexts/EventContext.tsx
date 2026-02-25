@@ -17,16 +17,16 @@ interface EventContextType {
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
-export function EventProvider({ children }: { children: React.ReactNode }) {
+export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { user, currentOrganization: activeOrg } = useAuth();
+  const { user, currentServer } = useAuth();
   const { toast } = useToast();
 
   const fetchEvents = useCallback(async () => {
-    if (!activeOrg?.id) {
+    if (!currentServer) {
       setEvents([]);
       setLoading(false);
       return;
@@ -34,22 +34,21 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true);
-      const { data, error } = await eventService.getEvents(activeOrg.id);
-      if (error) throw error;
-      setEvents(data || []);
+      const data = await eventService.getEvents();
+      setEvents(data);
     } catch (error) {
       console.error("Error fetching events:", error);
     } finally {
       setLoading(false);
     }
-  }, [activeOrg?.id]);
+  }, [currentServer?.id]);
 
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
 
   const createEvent = async (eventData: CreateEvent) => {
-    if (!activeOrg?.id || !user?.id) {
+    if (!currentServer?.id || !user?.id) {
       toast({
         title: "Error",
         description: "You must be logged in and have an active organization selected.",
@@ -59,18 +58,8 @@ export function EventProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      const payload: CreateEvent = {
-        ...eventData,
-        organization_id: activeOrg.id,
-        created_by: user.id,
-        status: 'planning',
-        description: eventData.description || ""
-      };
-
-      const { data: newEvent, error } = await eventService.createEvent(payload);
+      const newEvent = await eventService.createEvent(eventData);
       
-      if (error) throw error;
-
       if (newEvent) {
         await fetchEvents();
         toast({

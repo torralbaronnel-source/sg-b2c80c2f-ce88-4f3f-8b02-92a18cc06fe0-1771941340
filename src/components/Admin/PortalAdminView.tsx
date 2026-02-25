@@ -29,7 +29,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 export function PortalAdminView() {
-  const { currentOrganization: activeOrg } = useAuth();
+  const { user, profile, currentServer } = useAuth();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
   const MOCK_MEMBERS = [
@@ -45,7 +45,7 @@ export function PortalAdminView() {
           <h1 className="text-3xl font-black tracking-tight text-slate-900 flex items-center gap-3">
             Portal Admin
             <Badge variant="outline" className="text-primary border-primary/20 bg-primary/5">
-              {activeOrg?.name || "Company Management"}
+              {currentServer?.name || "Server Management"}
             </Badge>
           </h1>
           <p className="text-slate-500 mt-1">Manage your team members, roles, and organization settings.</p>

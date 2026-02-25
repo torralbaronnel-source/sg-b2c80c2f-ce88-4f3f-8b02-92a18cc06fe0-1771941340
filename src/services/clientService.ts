@@ -2,19 +2,16 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 export interface ClientData {
-  first_name?: string;
-  last_name?: string;
-  company_name?: string;
-  email: string;
+  full_name: string;
+  email?: string;
   phone?: string;
-  alternate_contact?: string;
+  company_name?: string;
   address?: string;
   city?: string;
   country?: string;
   notes?: string;
   source?: string;
-  lead_status?: string;
-  type?: string;
+  status?: string;
 }
 
 export const clientService = {
@@ -65,19 +62,19 @@ export const clientService = {
       .from("clients")
       .insert({
         server_id: profile.current_server_id,
-        type: clientData.type || "individual",
-        first_name: clientData.first_name,
-        last_name: clientData.last_name,
-        company_name: clientData.company_name,
+        coordinator_id: user.id,
+        full_name: clientData.full_name,
         email: clientData.email,
         phone: clientData.phone,
-        alternate_contact: clientData.alternate_contact,
+        company_name: clientData.company_name,
         address: clientData.address,
         city: clientData.city,
         country: clientData.country,
         notes: clientData.notes,
-        source: clientData.source || "website",
-        lead_status: clientData.lead_status || "new",
+        source: clientData.source || "Direct",
+        status: clientData.status || "Lead",
+        total_spent: 0,
+        total_events: 0,
       })
       .select()
       .single();
@@ -135,20 +132,19 @@ export const clientService = {
 
       if (eventError) events = [];
 
-      // Calculate stats
       const total = clients.length;
       const byStatus: Record<string, number> = {};
       let totalSpent = 0;
       let totalEvents = (events || []).length;
 
       clients.forEach((client) => {
-        const status = (client as any)?.lead_status || "new";
+        const status = client.status || "Lead";
         byStatus[status] = (byStatus[status] || 0) + 1;
-        totalSpent += (client as any)?.total_spent || 0;
+        totalSpent += client.total_spent || 0;
       });
 
-      const bookedCount = byStatus["booked"] || 0;
-      const conversionRate = total > 0 ? (bookedCount / total) * 100 : 0;
+      const activeCount = byStatus["Active"] || 0;
+      const conversionRate = total > 0 ? (activeCount / total) * 100 : 0;
       const avgEventValue = totalEvents > 0 ? totalSpent / totalEvents : 0;
 
       return { 
@@ -162,6 +158,49 @@ export const clientService = {
     } catch (err) {
       console.error("Error calculating stats:", err);
       return { total: 0, byStatus: {} as Record<string, number>, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
+    }
+  },
+
+  async getClientWithRelations(clientId: string) {
+    try {
+      const { data: client, error: clientError } = await supabase
+        .from("clients")
+        .select("*")
+        .eq("id", clientId)
+        .single();
+
+      if (clientError || !client) return null;
+
+      const { data: events } = await supabase
+        .from("events")
+        .select("*")
+        .eq("id", client.id);
+
+      const { data: quotes } = await supabase
+        .from("quotes")
+        .select("*")
+        .eq("client_id", clientId);
+
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("client_id", clientId);
+
+      const { data: communications } = await supabase
+        .from("communications")
+        .select("*")
+        .where("id", "IN", `(SELECT id FROM communications WHERE EXISTS (SELECT 1 FROM events WHERE events.client_id = ${clientId}))`);
+
+      return {
+        ...client,
+        events: events || [],
+        quotes: quotes || [],
+        invoices: invoices || [],
+        communications: communications || [],
+      };
+    } catch (err) {
+      console.error("Error fetching client relations:", err);
+      return null;
     }
   },
 };

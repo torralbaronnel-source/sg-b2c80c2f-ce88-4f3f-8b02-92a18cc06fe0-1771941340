@@ -33,28 +33,34 @@ interface ClientDetailsResponse {
 }
 
 export const clientService = {
-  async getClients() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
+  async getClients(): Promise<any[]> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("current_server_id")
-      .eq("id", user.id)
-      .single();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("current_server_id")
+        .eq("id", user.id)
+        .single();
 
-    if (!profile?.current_server_id) return [];
+      if (!profile?.current_server_id) return [];
 
-    const { data } = await supabase
-      .from("clients")
-      .select("*")
-      .eq("server_id", profile.current_server_id)
-      .order("created_at", { ascending: false });
+      const query = supabase
+        .from("clients")
+        .select("*")
+        .eq("server_id", profile.current_server_id)
+        .order("created_at", { ascending: false });
 
-    return data || [];
+      const { data } = await query;
+      return data || [];
+    } catch (err) {
+      console.error("Error fetching clients:", err);
+      return [];
+    }
   },
 
-  async createClient(clientData: ClientData) {
+  async createClient(clientData: ClientData): Promise<any> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");
 
@@ -66,7 +72,7 @@ export const clientService = {
 
     if (!profile?.current_server_id) throw new Error("No active server");
 
-    const { data } = await supabase
+    const insertQuery = supabase
       .from("clients")
       .insert({
         server_id: profile.current_server_id,
@@ -88,120 +94,148 @@ export const clientService = {
       .select()
       .single();
 
+    const { data } = await insertQuery;
     return data;
   },
 
-  async updateClient(clientId: string, clientData: Partial<ClientData>) {
-    const { data } = await supabase
+  async updateClient(clientId: string, clientData: Partial<ClientData>): Promise<any> {
+    const updateQuery = supabase
       .from("clients")
       .update(clientData as any)
       .eq("id", clientId)
       .select()
       .single();
 
+    const { data } = await updateQuery;
     return data;
   },
 
-  async deleteClient(clientId: string) {
-    await supabase.from("clients").delete().eq("id", clientId);
+  async deleteClient(clientId: string): Promise<boolean> {
+    const deleteQuery = supabase
+      .from("clients")
+      .delete()
+      .eq("id", clientId);
+
+    await deleteQuery;
     return true;
   },
 
   async getClientStats(): Promise<StatResponse> {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("current_server_id")
+        .eq("id", user.id)
+        .single();
+
+      if (!profile?.current_server_id) {
+        return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
+      }
+
+      const clientsQuery = supabase
+        .from("clients")
+        .select("*")
+        .eq("server_id", profile.current_server_id);
+
+      const eventsQuery = supabase
+        .from("events")
+        .select("*")
+        .eq("server_id", profile.current_server_id);
+
+      const { data: clients } = await clientsQuery;
+      const { data: events } = await eventsQuery;
+
+      const total = (clients || []).length;
+      const byStatus: Record<string, number> = {};
+      let totalSpent = 0;
+      let totalEvents = (events || []).length;
+
+      (clients || []).forEach((client: any) => {
+        const status = client.status || "Lead";
+        byStatus[status] = (byStatus[status] || 0) + 1;
+        totalSpent += client.total_spent || 0;
+      });
+
+      const activeCount = byStatus["Active"] || 0;
+      const conversionRate = total > 0 ? (activeCount / total) * 100 : 0;
+      const avgEventValue = totalEvents > 0 ? totalSpent / totalEvents : 0;
+
+      return { 
+        total, 
+        byStatus, 
+        totalSpent, 
+        totalEvents,
+        conversionRate,
+        avgEventValue
+      };
+    } catch (err) {
+      console.error("Error calculating stats:", err);
       return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
     }
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("current_server_id")
-      .eq("id", user.id)
-      .single();
-
-    if (!profile?.current_server_id) {
-      return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
-    }
-
-    const { data: clients } = await supabase
-      .from("clients")
-      .select("*")
-      .eq("server_id", profile.current_server_id);
-
-    const { data: events } = await supabase
-      .from("events")
-      .select("*")
-      .eq("server_id", profile.current_server_id);
-
-    const total = (clients || []).length;
-    const byStatus: Record<string, number> = {};
-    let totalSpent = 0;
-    let totalEvents = (events || []).length;
-
-    (clients || []).forEach((client: any) => {
-      const status = client.status || "Lead";
-      byStatus[status] = (byStatus[status] || 0) + 1;
-      totalSpent += client.total_spent || 0;
-    });
-
-    const activeCount = byStatus["Active"] || 0;
-    const conversionRate = total > 0 ? (activeCount / total) * 100 : 0;
-    const avgEventValue = totalEvents > 0 ? totalSpent / totalEvents : 0;
-
-    return { 
-      total, 
-      byStatus, 
-      totalSpent, 
-      totalEvents,
-      conversionRate,
-      avgEventValue
-    };
   },
 
   async getClientDetails(clientId: string): Promise<ClientDetailsResponse | null> {
-    const { data: client } = await supabase
-      .from("clients")
-      .select("*")
-      .eq("id", clientId)
-      .single();
+    try {
+      const clientQuery = supabase
+        .from("clients")
+        .select("*")
+        .eq("id", clientId)
+        .single();
 
-    if (!client) return null;
+      const { data: client } = await clientQuery;
 
-    const { data: events } = await supabase
-      .from("events")
-      .select("*")
-      .eq("client_id", clientId);
+      if (!client) return null;
 
-    const { data: quotes } = await supabase
-      .from("quotes")
-      .select("*")
-      .eq("client_id", clientId);
+      const eventsQuery = supabase
+        .from("events")
+        .select("*")
+        .eq("client_id", clientId);
 
-    const { data: invoices } = await supabase
-      .from("invoices")
-      .select("*")
-      .eq("client_id", clientId);
+      const quotesQuery = supabase
+        .from("quotes")
+        .select("*")
+        .eq("client_id", clientId);
 
-    const { data: communications } = await supabase
-      .from("communications")
-      .select("*")
-      .eq("client_id", clientId);
+      const invoicesQuery = supabase
+        .from("invoices")
+        .select("*")
+        .eq("client_id", clientId);
 
-    const { data: tasks } = await supabase
-      .from("tasks")
-      .select("*")
-      .limit(100);
+      const communicationsQuery = supabase
+        .from("communications")
+        .select("*")
+        .eq("client_id", clientId);
 
-    const eventIds = (events || []).map((e: any) => e.id);
-    const filteredTasks = (tasks || []).filter((t: any) => eventIds.includes(t.event_id));
+      const tasksQuery = supabase
+        .from("tasks")
+        .select("*")
+        .limit(100);
 
-    return {
-      client,
-      events: events || [],
-      quotes: quotes || [],
-      invoices: invoices || [],
-      communications: communications || [],
-      tasks: filteredTasks,
-    };
+      const { data: events } = await eventsQuery;
+      const { data: quotes } = await quotesQuery;
+      const { data: invoices } = await invoicesQuery;
+      const { data: communications } = await communicationsQuery;
+      const { data: tasks } = await tasksQuery;
+
+      const eventIds = (events || []).map((e: any) => e.id);
+      const filteredTasks = (tasks || []).filter((t: any) => eventIds.includes(t.event_id));
+
+      return {
+        client,
+        events: events || [],
+        quotes: quotes || [],
+        invoices: invoices || [],
+        communications: communications || [],
+        tasks: filteredTasks,
+      };
+    } catch (err) {
+      console.error("Error fetching client details:", err);
+      return null;
+    }
   },
 };

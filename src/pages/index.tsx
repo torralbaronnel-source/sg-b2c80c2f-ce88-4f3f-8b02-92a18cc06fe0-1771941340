@@ -58,7 +58,7 @@ const scaleIn: Variants = {
 };
 
 // Common transition
-const commonTransition = { duration: 0.8, ease: "easeOut" };
+const commonTransition = { duration: 0.8, ease: "easeOut" as const };
 const commonViewport = { once: false, margin: "-100px" };
 
 export default function LandingPage() {

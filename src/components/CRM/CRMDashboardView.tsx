@@ -53,9 +53,17 @@ import {
   AlertCircle,
   CheckCircle2,
   Circle,
+  Building2,
+  Globe,
+  MessageSquare,
+  Briefcase,
+  Heart,
+  Zap,
+  BarChart3,
+  Settings,
 } from "lucide-react";
 
-type SortBy = "name" | "created_at" | "total_spent";
+type SortBy = "full_name" | "created_at" | "total_spent";
 type SortDir = "asc" | "desc";
 type StatusFilter = "all" | "Lead" | "Prospect" | "Active" | "Completed" | "Archived";
 
@@ -78,9 +86,11 @@ export function CRMDashboardView() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createStep, setCreateStep] = useState(1);
   const [selectedClient, setSelectedClient] = useState<any>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [clientDetails, setClientDetails] = useState<any>(null);
+  const [detailsTab, setDetailsTab] = useState("profile");
 
   const [formData, setFormData] = useState({
     full_name: "",
@@ -171,7 +181,7 @@ export function CRMDashboardView() {
 
     list.sort((a, b) => {
       const dir = sortDir === "asc" ? 1 : -1;
-      if (sortBy === "name") {
+      if (sortBy === "full_name") {
         const aName = a?.full_name || "";
         const bName = b?.full_name || "";
         return aName.localeCompare(bName) * dir;
@@ -215,6 +225,7 @@ export function CRMDashboardView() {
       const newClient = await clientService.createClient(formData);
       setClients((prev) => [newClient, ...prev]);
       setIsCreateOpen(false);
+      setCreateStep(1);
       resetForm();
       toast({
         title: "Client Added",
@@ -274,15 +285,15 @@ export function CRMDashboardView() {
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
       case "Lead":
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 border-blue-300";
       case "Prospect":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 border-yellow-300";
       case "Active":
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 border-green-300";
       case "Completed":
-        return "bg-emerald-100 text-emerald-800";
+        return "bg-emerald-100 text-emerald-800 border-emerald-300";
       case "Archived":
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border-gray-300";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -297,19 +308,26 @@ export function CRMDashboardView() {
       case "Active":
         return <CheckCircle2 className="h-2 w-2" />;
       case "Completed":
-        return <CheckCircle2 className="h-2 w-2" />;
+        return <Heart className="h-2 w-2" />;
       default:
         return <Circle className="h-2 w-2" />;
     }
   };
+
+  const getPipelineStages = () => [
+    { label: "Leads", value: "Lead", count: stats.byStatus["Lead"] || 0, color: "bg-blue-500" },
+    { label: "Prospects", value: "Prospect", count: stats.byStatus["Prospect"] || 0, color: "bg-yellow-500" },
+    { label: "Active", value: "Active", count: stats.byStatus["Active"] || 0, color: "bg-green-500" },
+    { label: "Completed", value: "Completed", count: stats.byStatus["Completed"] || 0, color: "bg-emerald-500" },
+  ];
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">CRM & Clients</h1>
-          <p className="text-muted-foreground mt-2">Manage client relationships, track pipeline, and monitor event history.</p>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900">CRM & Client Management</h1>
+          <p className="text-muted-foreground mt-2">Manage client relationships, track pipeline, and monitor comprehensive event operations.</p>
         </div>
 
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
@@ -319,213 +337,252 @@ export function CRMDashboardView() {
               Add New Client
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl">
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-2xl">Create New Client Profile</DialogTitle>
               <DialogDescription>
-                Add a new client to your CRM system with complete contact and business information.
+                Step {createStep} of 3: Add complete client information for your CRM system
               </DialogDescription>
             </DialogHeader>
+
             <div className="space-y-6 py-4">
-              {/* Basic Information */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Basic Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2 col-span-2">
-                    <Label className="font-semibold">Full Name *</Label>
-                    <Input
-                      value={formData.full_name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, full_name: e.target.value })
-                      }
-                      placeholder="John Doe"
-                      className="border-gray-300"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-semibold">Email *</Label>
-                    <Input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) =>
-                        setFormData({ ...formData, email: e.target.value })
-                      }
-                      placeholder="john@example.com"
-                      className="border-gray-300"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-semibold">Phone</Label>
-                    <Input
-                      value={formData.phone}
-                      onChange={(e) =>
-                        setFormData({ ...formData, phone: e.target.value })
-                      }
-                      placeholder="+63 XXX XXX XXXX"
-                      className="border-gray-300"
-                    />
+              {/* Step 1: Basic Information */}
+              {createStep === 1 && (
+                <div className="space-y-4 animate-in fade-in-50 duration-300">
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Personal Information
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2 col-span-2 md:col-span-1">
+                      <Label className="font-semibold text-gray-700">Full Name *</Label>
+                      <Input
+                        value={formData.full_name}
+                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                        placeholder="John Doe"
+                        className="border-gray-300"
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2 md:col-span-1">
+                      <Label className="font-semibold text-gray-700">Email *</Label>
+                      <Input
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        placeholder="john@example.com"
+                        className="border-gray-300"
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2 md:col-span-1">
+                      <Label className="font-semibold text-gray-700">Phone</Label>
+                      <Input
+                        value={formData.phone}
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        placeholder="+63 XXX XXX XXXX"
+                        className="border-gray-300"
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2 md:col-span-1">
+                      <Label className="font-semibold text-gray-700">Company</Label>
+                      <Input
+                        value={formData.company_name}
+                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                        placeholder="Company Name (if applicable)"
+                        className="border-gray-300"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Business Information */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Business Information</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2 col-span-2">
-                    <Label className="font-semibold">Company Name</Label>
-                    <Input
-                      value={formData.company_name}
-                      onChange={(e) =>
-                        setFormData({ ...formData, company_name: e.target.value })
-                      }
-                      placeholder="Company Name (if applicable)"
-                      className="border-gray-300"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-semibold">Source</Label>
-                    <Select
-                      value={formData.source}
-                      onValueChange={(v) =>
-                        setFormData({ ...formData, source: v as any })
-                      }
-                    >
-                      <SelectTrigger className="border-gray-300">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Facebook">Facebook</SelectItem>
-                        <SelectItem value="Instagram">Instagram</SelectItem>
-                        <SelectItem value="Referral">Referral</SelectItem>
-                        <SelectItem value="Website">Website</SelectItem>
-                        <SelectItem value="Event">Event</SelectItem>
-                        <SelectItem value="Direct">Direct</SelectItem>
-                        <SelectItem value="Search">Search Engine</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="font-semibold">Lead Status</Label>
-                    <Select
-                      value={formData.status}
-                      onValueChange={(v) =>
-                        setFormData({ ...formData, status: v as any })
-                      }
-                    >
-                      <SelectTrigger className="border-gray-300">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Lead">Lead</SelectItem>
-                        <SelectItem value="Prospect">Prospect</SelectItem>
-                        <SelectItem value="Active">Active Client</SelectItem>
-                        <SelectItem value="Completed">Completed Project</SelectItem>
-                        <SelectItem value="Archived">Archived</SelectItem>
-                      </SelectContent>
-                    </Select>
+              {/* Step 2: Location & Source */}
+              {createStep === 2 && (
+                <div className="space-y-4 animate-in fade-in-50 duration-300">
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Location & Lead Source
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label className="font-semibold text-gray-700">City</Label>
+                      <Input
+                        value={formData.city}
+                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        placeholder="Manila"
+                        className="border-gray-300"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="font-semibold text-gray-700">Country</Label>
+                      <Input
+                        value={formData.country}
+                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                        placeholder="Philippines"
+                        className="border-gray-300"
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2">
+                      <Label className="font-semibold text-gray-700">Address</Label>
+                      <Input
+                        value={formData.address}
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        placeholder="Street address"
+                        className="border-gray-300"
+                      />
+                    </div>
+                    <div className="space-y-2 col-span-2 md:col-span-1">
+                      <Label className="font-semibold text-gray-700">Lead Source</Label>
+                      <Select value={formData.source} onValueChange={(v) => setFormData({ ...formData, source: v as any })}>
+                        <SelectTrigger className="border-gray-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Facebook">Facebook</SelectItem>
+                          <SelectItem value="Instagram">Instagram</SelectItem>
+                          <SelectItem value="Referral">Referral</SelectItem>
+                          <SelectItem value="Website">Website</SelectItem>
+                          <SelectItem value="Event">Event</SelectItem>
+                          <SelectItem value="Direct">Direct</SelectItem>
+                          <SelectItem value="Search">Search Engine</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2 col-span-2 md:col-span-1">
+                      <Label className="font-semibold text-gray-700">Initial Status</Label>
+                      <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v as any })}>
+                        <SelectTrigger className="border-gray-300">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Lead">Lead</SelectItem>
+                          <SelectItem value="Prospect">Prospect</SelectItem>
+                          <SelectItem value="Active">Active Client</SelectItem>
+                          <SelectItem value="Completed">Completed Project</SelectItem>
+                          <SelectItem value="Archived">Archived</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Location Information */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Location Information</h3>
-                <div className="grid grid-cols-2 gap-4">
+              {/* Step 3: Notes & Summary */}
+              {createStep === 3 && (
+                <div className="space-y-4 animate-in fade-in-50 duration-300">
+                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Notes & Summary
+                  </h3>
                   <div className="space-y-2">
-                    <Label className="font-semibold">City</Label>
-                    <Input
-                      value={formData.city}
-                      onChange={(e) =>
-                        setFormData({ ...formData, city: e.target.value })
-                      }
-                      placeholder="Manila"
+                    <Label className="font-semibold text-gray-700">Notes & Preferences</Label>
+                    <Textarea
+                      value={formData.notes}
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      placeholder="Add special preferences, event type preferences, budget range, event dates, or any important notes..."
+                      rows={5}
                       className="border-gray-300"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="font-semibold">Country</Label>
-                    <Input
-                      value={formData.country}
-                      onChange={(e) =>
-                        setFormData({ ...formData, country: e.target.value })
-                      }
-                      placeholder="Philippines"
-                      className="border-gray-300"
-                    />
-                  </div>
-                  <div className="space-y-2 col-span-2">
-                    <Label className="font-semibold">Address</Label>
-                    <Input
-                      value={formData.address}
-                      onChange={(e) =>
-                        setFormData({ ...formData, address: e.target.value })
-                      }
-                      placeholder="Street address"
-                      className="border-gray-300"
-                    />
-                  </div>
-                </div>
-              </div>
 
-              {/* Additional Notes */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">Additional Information</h3>
-                <div className="space-y-2">
-                  <Label className="font-semibold">Notes & Preferences</Label>
-                  <Textarea
-                    value={formData.notes}
-                    onChange={(e) =>
-                      setFormData({ ...formData, notes: e.target.value })
-                    }
-                    placeholder="Add any special notes, preferences, or important information about this client..."
-                    rows={4}
-                    className="border-gray-300"
-                  />
+                  {/* Summary */}
+                  <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
+                    <h4 className="font-semibold text-gray-900">Client Summary</h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <p className="text-gray-600">Name</p>
+                        <p className="font-semibold text-gray-900">{formData.full_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Email</p>
+                        <p className="font-semibold text-gray-900">{formData.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Company</p>
+                        <p className="font-semibold text-gray-900">{formData.company_name || "N/A"}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Location</p>
+                        <p className="font-semibold text-gray-900">{formData.city}, {formData.country}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Lead Source</p>
+                        <p className="font-semibold text-gray-900">{formData.source}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-600">Status</p>
+                        <Badge className={getStatusBadgeVariant(formData.status)}>{formData.status}</Badge>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsCreateOpen(false)}>
-                Cancel
+
+            <DialogFooter className="flex justify-between">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (createStep > 1) {
+                    setCreateStep(createStep - 1);
+                  } else {
+                    setIsCreateOpen(false);
+                    setCreateStep(1);
+                    resetForm();
+                  }
+                }}
+              >
+                {createStep > 1 ? "Back" : "Cancel"}
               </Button>
-              <Button onClick={handleCreateClient} className="bg-blue-600 hover:bg-blue-700">
-                Create Client
-              </Button>
+              <div className="flex gap-2">
+                {createStep < 3 ? (
+                  <Button onClick={() => setCreateStep(createStep + 1)} className="bg-blue-600 hover:bg-blue-700">
+                    Next
+                  </Button>
+                ) : (
+                  <Button onClick={handleCreateClient} className="bg-green-600 hover:bg-green-700">
+                    Create Client
+                  </Button>
+                )}
+              </div>
             </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
+      {/* Pipeline Overview */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-blue-50 to-blue-100">
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-slate-50 to-slate-100">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-blue-900">
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-slate-900">
               <Users className="h-4 w-4" />
               Total Clients
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-blue-900">{stats.total}</div>
-            <p className="text-xs text-blue-700 mt-1">All clients</p>
+            <div className="text-3xl font-bold text-slate-900">{stats.total}</div>
+            <p className="text-xs text-slate-700 mt-1">All clients in system</p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-purple-900">
-              <Target className="h-4 w-4" />
-              Active Pipeline
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-purple-900">{stats.byStatus["Active"] || 0}</div>
-            <p className="text-xs text-purple-700 mt-1">Active projects</p>
-          </CardContent>
-        </Card>
+        {getPipelineStages().map((stage) => (
+          <Card key={stage.value} className={`border-0 shadow-sm bg-gradient-to-br from-${stage.color === "bg-blue-500" ? "blue" : stage.color === "bg-yellow-500" ? "yellow" : stage.color === "bg-green-500" ? "green" : "emerald"}-50 to-${stage.color === "bg-blue-500" ? "blue" : stage.color === "bg-yellow-500" ? "yellow" : stage.color === "bg-green-500" ? "green" : "emerald"}-100`}>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                <div className={`h-3 w-3 rounded-full ${stage.color}`}></div>
+                {stage.label}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold">{stage.count}</div>
+              <p className="text-xs text-gray-600 mt-1">{((stage.count / stats.total) * 100).toFixed(0)}% of pipeline</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
+      {/* Financial & Performance Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium flex items-center gap-2 text-green-900">
@@ -535,20 +592,20 @@ export function CRMDashboardView() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-900">₱{(stats.totalSpent / 1000).toFixed(1)}k</div>
-            <p className="text-xs text-green-700 mt-1">All time</p>
+            <p className="text-xs text-green-700 mt-1">All time earnings</p>
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-amber-50 to-amber-100">
+        <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-amber-900">
+            <CardTitle className="text-sm font-medium flex items-center gap-2 text-purple-900">
               <TrendingUp className="h-4 w-4" />
               Conversion Rate
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-900">{stats.conversionRate.toFixed(1)}%</div>
-            <p className="text-xs text-amber-700 mt-1">Lead to booking</p>
+            <div className="text-3xl font-bold text-purple-900">{stats.conversionRate.toFixed(1)}%</div>
+            <p className="text-xs text-purple-700 mt-1">Lead to booking</p>
           </CardContent>
         </Card>
 
@@ -561,7 +618,7 @@ export function CRMDashboardView() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-rose-900">₱{(stats.avgEventValue / 1000).toFixed(1)}k</div>
-            <p className="text-xs text-rose-700 mt-1">Per event</p>
+            <p className="text-xs text-rose-700 mt-1">Per event average</p>
           </CardContent>
         </Card>
       </div>
@@ -618,7 +675,7 @@ export function CRMDashboardView() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="created_at">Date Added</SelectItem>
-                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="full_name">Name</SelectItem>
                   <SelectItem value="total_spent">Revenue</SelectItem>
                 </SelectContent>
               </Select>
@@ -654,7 +711,7 @@ export function CRMDashboardView() {
           <div className="p-12 text-center">
             <Users className="h-12 w-12 text-gray-300 mx-auto mb-4" />
             <p className="text-muted-foreground text-lg">No clients found</p>
-            <p className="text-sm text-gray-500 mt-1">Create your first client to get started managing your pipeline.</p>
+            <p className="text-sm text-gray-500 mt-1">Create your first client to start managing your pipeline.</p>
           </div>
         ) : (
           <Table>
@@ -679,7 +736,7 @@ export function CRMDashboardView() {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       {getStatusIcon(client.status)}
-                      <Badge className={getStatusBadgeVariant(client.status)}>
+                      <Badge className={`border ${getStatusBadgeVariant(client.status)}`}>
                         {client.status}
                       </Badge>
                     </div>
@@ -700,124 +757,169 @@ export function CRMDashboardView() {
                           onClick={() => {
                             setSelectedClient(client);
                             loadClientDetails(client.id);
+                            setDetailsTab("profile");
                           }}
                           className="gap-1"
                         >
                           <ChevronRight className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle className="text-2xl">{selectedClient?.full_name}</DialogTitle>
                           <DialogDescription>
-                            Complete client profile and relationship history
+                            Complete client profile with integrated event, financial, and communication data
                           </DialogDescription>
                         </DialogHeader>
 
-                        <Tabs defaultValue="profile" className="w-full">
-                          <TabsList className="grid w-full grid-cols-5">
-                            <TabsTrigger value="profile">Profile</TabsTrigger>
-                            <TabsTrigger value="events">
-                              Events
-                              {clientDetails?.events?.length > 0 && (
-                                <Badge variant="secondary" className="ml-2">
-                                  {clientDetails.events.length}
-                                </Badge>
-                              )}
+                        <Tabs value={detailsTab} onValueChange={setDetailsTab} className="w-full">
+                          <TabsList className="grid w-full grid-cols-6">
+                            <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
+                            <TabsTrigger value="events" className="text-xs">
+                              Events {clientDetails?.events?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.events.length}</Badge>}
                             </TabsTrigger>
-                            <TabsTrigger value="quotes">
-                              Quotes
-                              {clientDetails?.quotes?.length > 0 && (
-                                <Badge variant="secondary" className="ml-2">
-                                  {clientDetails.quotes.length}
-                                </Badge>
-                              )}
+                            <TabsTrigger value="quotes" className="text-xs">
+                              Quotes {clientDetails?.quotes?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.quotes.length}</Badge>}
                             </TabsTrigger>
-                            <TabsTrigger value="invoices">
-                              Invoices
-                              {clientDetails?.invoices?.length > 0 && (
-                                <Badge variant="secondary" className="ml-2">
-                                  {clientDetails.invoices.length}
-                                </Badge>
-                              )}
+                            <TabsTrigger value="invoices" className="text-xs">
+                              Invoices {clientDetails?.invoices?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.invoices.length}</Badge>}
                             </TabsTrigger>
-                            <TabsTrigger value="communications">
-                              Communications
-                              {clientDetails?.communications?.length > 0 && (
-                                <Badge variant="secondary" className="ml-2">
-                                  {clientDetails.communications.length}
-                                </Badge>
-                              )}
+                            <TabsTrigger value="communications" className="text-xs">
+                              Comms {clientDetails?.communications?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.communications.length}</Badge>}
+                            </TabsTrigger>
+                            <TabsTrigger value="tasks" className="text-xs">
+                              Tasks {clientDetails?.tasks?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.tasks.length}</Badge>}
                             </TabsTrigger>
                           </TabsList>
 
-                          <TabsContent value="profile" className="space-y-6">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-gray-500 uppercase">Full Name</Label>
-                                <p className="text-sm font-semibold text-gray-900">{selectedClient?.full_name}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-gray-500 uppercase">Email</Label>
-                                <p className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Mail className="h-4 w-4" />
-                                  {selectedClient?.email}
-                                </p>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-gray-500 uppercase">Phone</Label>
-                                <p className="flex items-center gap-2 text-sm text-gray-600">
-                                  <Phone className="h-4 w-4" />
-                                  {selectedClient?.phone || "-"}
-                                </p>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-gray-500 uppercase">Company</Label>
-                                <p className="text-sm font-semibold text-gray-900">{selectedClient?.company_name || "-"}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-gray-500 uppercase">City</Label>
-                                <p className="flex items-center gap-2 text-sm text-gray-600">
-                                  <MapPin className="h-4 w-4" />
-                                  {selectedClient?.city || "-"}
-                                </p>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-gray-500 uppercase">Status</Label>
-                                <Badge className={getStatusBadgeVariant(selectedClient?.status)}>
-                                  {selectedClient?.status}
-                                </Badge>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-gray-500 uppercase">Total Spent</Label>
-                                <p className="text-lg font-bold text-green-600">₱{(selectedClient?.total_spent || 0).toLocaleString()}</p>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-xs font-semibold text-gray-500 uppercase">Total Events</Label>
-                                <p className="text-lg font-bold text-blue-600">{selectedClient?.total_events || 0}</p>
-                              </div>
-                              <div className="space-y-2 col-span-2">
-                                <Label className="text-xs font-semibold text-gray-500 uppercase">Notes</Label>
-                                <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{selectedClient?.notes || "No notes"}</p>
-                              </div>
+                          <TabsContent value="profile" className="space-y-6 mt-6">
+                            <div className="grid grid-cols-2 gap-6">
+                              <Card className="col-span-2 md:col-span-1 border-gray-200">
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                    <User className="h-4 w-4" />
+                                    Personal Information
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Full Name</Label>
+                                    <p className="text-sm font-semibold text-gray-900">{selectedClient?.full_name}</p>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Email</Label>
+                                    <p className="flex items-center gap-2 text-sm text-gray-600">
+                                      <Mail className="h-4 w-4" />
+                                      {selectedClient?.email}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Phone</Label>
+                                    <p className="flex items-center gap-2 text-sm text-gray-600">
+                                      <Phone className="h-4 w-4" />
+                                      {selectedClient?.phone || "-"}
+                                    </p>
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card className="col-span-2 md:col-span-1 border-gray-200">
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                    <Building2 className="h-4 w-4" />
+                                    Business Information
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Company</Label>
+                                    <p className="text-sm font-semibold text-gray-900">{selectedClient?.company_name || "-"}</p>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Status</Label>
+                                    <Badge className={`border ${getStatusBadgeVariant(selectedClient?.status)} mt-1`}>
+                                      {selectedClient?.status}
+                                    </Badge>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Lead Source</Label>
+                                    <p className="text-sm text-gray-600">{selectedClient?.source || "-"}</p>
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card className="col-span-2 md:col-span-1 border-gray-200">
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                    <MapPin className="h-4 w-4" />
+                                    Location
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">City</Label>
+                                    <p className="text-sm text-gray-600">{selectedClient?.city || "-"}</p>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Country</Label>
+                                    <p className="text-sm text-gray-600">{selectedClient?.country || "-"}</p>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Address</Label>
+                                    <p className="text-xs text-gray-600">{selectedClient?.address || "-"}</p>
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card className="col-span-2 md:col-span-1 border-gray-200">
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                    <DollarSign className="h-4 w-4" />
+                                    Financial Overview
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Total Spent</Label>
+                                    <p className="text-lg font-bold text-green-600">₱{(selectedClient?.total_spent || 0).toLocaleString()}</p>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs font-semibold text-gray-500 uppercase">Total Events</Label>
+                                    <p className="text-lg font-bold text-blue-600">{selectedClient?.total_events || 0}</p>
+                                  </div>
+                                </CardContent>
+                              </Card>
+
+                              <Card className="col-span-2 border-gray-200">
+                                <CardHeader className="pb-3">
+                                  <CardTitle className="text-sm font-semibold">Notes</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                  <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded">{selectedClient?.notes || "No notes added"}</p>
+                                </CardContent>
+                              </Card>
                             </div>
                           </TabsContent>
 
-                          <TabsContent value="events" className="space-y-4">
+                          <TabsContent value="events" className="space-y-4 mt-6">
                             {clientDetails?.events?.length === 0 ? (
-                              <p className="text-center text-gray-500 py-8">No events yet</p>
+                              <div className="text-center py-8 text-gray-500">
+                                <Calendar className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                <p>No events yet</p>
+                              </div>
                             ) : (
                               <div className="space-y-2">
                                 {clientDetails?.events?.map((event: any) => (
-                                  <Card key={event.id} className="border-gray-200">
+                                  <Card key={event.id} className="border-gray-200 hover:shadow-md transition-shadow">
                                     <CardContent className="p-4">
                                       <div className="flex justify-between items-start">
                                         <div>
                                           <p className="font-semibold text-gray-900">{event.event_name}</p>
-                                          <p className="text-xs text-gray-500 mt-1">
-                                            <Calendar className="inline h-3 w-3 mr-1" />
+                                          <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                                            <Calendar className="h-3 w-3" />
                                             {new Date(event.start_datetime).toLocaleDateString()}
                                           </p>
+                                          <p className="text-xs text-gray-500 mt-1">{event.event_type}</p>
                                         </div>
                                         <Badge>{event.status}</Badge>
                                       </div>
@@ -828,9 +930,12 @@ export function CRMDashboardView() {
                             )}
                           </TabsContent>
 
-                          <TabsContent value="quotes" className="space-y-4">
+                          <TabsContent value="quotes" className="space-y-4 mt-6">
                             {clientDetails?.quotes?.length === 0 ? (
-                              <p className="text-center text-gray-500 py-8">No quotes yet</p>
+                              <div className="text-center py-8 text-gray-500">
+                                <FileText className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                <p>No quotes yet</p>
+                              </div>
                             ) : (
                               <div className="space-y-2">
                                 {clientDetails?.quotes?.map((quote: any) => (
@@ -850,9 +955,12 @@ export function CRMDashboardView() {
                             )}
                           </TabsContent>
 
-                          <TabsContent value="invoices" className="space-y-4">
+                          <TabsContent value="invoices" className="space-y-4 mt-6">
                             {clientDetails?.invoices?.length === 0 ? (
-                              <p className="text-center text-gray-500 py-8">No invoices yet</p>
+                              <div className="text-center py-8 text-gray-500">
+                                <DollarSign className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                <p>No invoices yet</p>
+                              </div>
                             ) : (
                               <div className="space-y-2">
                                 {clientDetails?.invoices?.map((invoice: any) => (
@@ -872,9 +980,12 @@ export function CRMDashboardView() {
                             )}
                           </TabsContent>
 
-                          <TabsContent value="communications" className="space-y-4">
+                          <TabsContent value="communications" className="space-y-4 mt-6">
                             {clientDetails?.communications?.length === 0 ? (
-                              <p className="text-center text-gray-500 py-8">No communications yet</p>
+                              <div className="text-center py-8 text-gray-500">
+                                <MessageSquare className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                <p>No communications yet</p>
+                              </div>
                             ) : (
                               <div className="space-y-2">
                                 {clientDetails?.communications?.map((comm: any) => (
@@ -888,6 +999,35 @@ export function CRMDashboardView() {
                                             {new Date(comm.created_at).toLocaleDateString()}
                                           </p>
                                         </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                ))}
+                              </div>
+                            )}
+                          </TabsContent>
+
+                          <TabsContent value="tasks" className="space-y-4 mt-6">
+                            {clientDetails?.tasks?.length === 0 ? (
+                              <div className="text-center py-8 text-gray-500">
+                                <Clock className="h-12 w-12 mx-auto mb-2 text-gray-300" />
+                                <p>No tasks yet</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {clientDetails?.tasks?.map((task: any) => (
+                                  <Card key={task.id} className="border-gray-200">
+                                    <CardContent className="p-4">
+                                      <div className="flex justify-between items-start">
+                                        <div>
+                                          <p className="font-semibold text-gray-900">{task.title}</p>
+                                          <p className="text-sm text-gray-600 mt-1">{task.description}</p>
+                                          <p className="text-xs text-gray-500 mt-2">
+                                            <Calendar className="inline h-3 w-3 mr-1" />
+                                            {new Date(task.due_date).toLocaleDateString()}
+                                          </p>
+                                        </div>
+                                        <Badge>{task.status}</Badge>
                                       </div>
                                     </CardContent>
                                   </Card>

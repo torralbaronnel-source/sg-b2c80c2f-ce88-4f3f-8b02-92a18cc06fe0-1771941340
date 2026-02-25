@@ -38,6 +38,8 @@ import {
   Shield,
   Cpu,
   LucideIcon,
+  PieChart,
+  MessageCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -86,6 +88,16 @@ const navigationItems: NavGroup[] = [
       { title: "Venues", url: "/venues", icon: MapPin },
       { title: "Guest Lists", url: "/guests", icon: Users },
     ],
+  },
+  {
+    title: "Production",
+    url: "/production",
+    icon: Briefcase,
+  },
+  {
+    title: "Inventory",
+    url: "/inventory",
+    icon: Package,
   },
   {
     title: "Finance",

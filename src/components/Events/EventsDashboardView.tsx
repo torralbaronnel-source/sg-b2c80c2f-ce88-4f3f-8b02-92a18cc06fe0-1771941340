@@ -179,7 +179,7 @@ export function EventsDashboardView() {
                         <div className="text-sm font-medium text-slate-700">
                           <div className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
-                            <span>{(event as any).venue || (event as any).details?.venue || "TBD"}</span>
+                            <span>{(event as any).venue || "TBD"}</span>
                           </div>
                         </div>
                       </div>

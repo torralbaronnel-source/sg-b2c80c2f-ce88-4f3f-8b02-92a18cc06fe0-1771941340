@@ -42,6 +42,48 @@ export type Database = {
         }
         Relationships: []
       }
+      assets: {
+        Row: {
+          category: string
+          created_at: string | null
+          id: string
+          last_maintenance_date: string | null
+          location: string | null
+          name: string
+          quantity: number | null
+          sku: string | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          id?: string
+          last_maintenance_date?: string | null
+          location?: string | null
+          name: string
+          quantity?: number | null
+          sku?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          id?: string
+          last_maintenance_date?: string | null
+          location?: string | null
+          name?: string
+          quantity?: number | null
+          sku?: string | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       call_sheets: {
         Row: {
           created_at: string | null

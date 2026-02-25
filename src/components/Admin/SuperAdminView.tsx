@@ -65,6 +65,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ConciergeManager } from "./ConciergeManager";
 import { RolesManagementView } from "./RolesManagementView";
+import { UserManagementView } from "./UserManagementView";
 
 interface Organization {
   id: string;
@@ -437,6 +438,7 @@ export function SuperAdminView() {
         </TabsContent>
 
         <TabsContent value="users" className="space-y-4">
+          <UserManagementView />
         </TabsContent>
       </Tabs>
     </div>

@@ -15,7 +15,9 @@ import {
   ArrowLeft,
   Calendar,
   Save,
-  X
+  X,
+  DollarSign,
+  TrendingUp
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

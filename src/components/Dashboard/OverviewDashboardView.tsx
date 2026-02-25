@@ -55,9 +55,24 @@ export function OverviewDashboardView() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Welcome back, {userName}</h1>
-        <p className="text-slate-500 font-medium">Operational status for Red Production • February 2026</p>
+      <div className="relative overflow-hidden rounded-2xl border bg-slate-950/50 p-8 shadow-2xl">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight text-white">Mission Control</h1>
+            <p className="text-slate-400 max-w-md">
+              Welcome back to Orchestrix. Your production ecosystem is fully synchronized and ready for execution.
+            </p>
+          </div>
+          <div className="relative h-40 w-64 rounded-xl border border-white/10 bg-black/40 p-2 shadow-2xl backdrop-blur-sm overflow-hidden group">
+            <img 
+              src="/Capture.PNG" 
+              alt="System Overview" 
+              className="h-full w-full object-cover rounded-lg opacity-80 group-hover:opacity-100 transition-opacity"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 -mr-20 -mt-20 h-64 w-64 bg-primary/20 blur-[100px]" />
       </div>
 
       {/* Stats Grid */}

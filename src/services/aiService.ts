@@ -13,7 +13,7 @@ export const aiService = {
       });
 
       if (error) throw error;
-      return data?.text || "Kernel: Response stream was empty.";
+      return data?.response || "Kernel: Response stream was empty.";
     } catch (error: any) {
       console.error("AI Service Error:", error);
       throw error;

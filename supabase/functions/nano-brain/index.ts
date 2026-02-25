@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { prompt, systemPrompt } = await req.json()
+    const { prompt, systemPrompt, model } = await req.json()
     const apiKey = Deno.env.get("OPENAI_API_KEY")
 
     if (!apiKey) {
@@ -25,7 +25,7 @@ serve(async (req) => {
     const openai = new OpenAI({ apiKey })
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4-turbo-preview",
+      model: model || "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt || "You are GPT 5.1 Nano." },
         { role: "user", content: prompt }

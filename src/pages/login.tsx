@@ -54,7 +54,7 @@ const LoginPage: NextPage = () => {
     setIsLoading(true);
 
     try {
-      const { error } = await authService.login(email, password);
+      const { error } = await authService.signIn(email, password);
       if (error) throw error;
       toast({ title: "Authorized", description: "Identity verified. Redirecting to Mission Control." });
       router.push("/servers");

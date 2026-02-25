@@ -85,6 +85,43 @@ export default function ServersPage() {
   const [actionLoading, setActionLoading] = useState(false);
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
   
+  const validateStep = (currentStep: number): boolean => {
+    switch (currentStep) {
+      case 1:
+        if (!newServerName.trim()) {
+          toast({ variant: "destructive", title: "Validation Error", description: "Node Designation is required." });
+          return false;
+        }
+        if (!industry.trim()) {
+          toast({ variant: "destructive", title: "Validation Error", description: "Industry Vertical is required." });
+          return false;
+        }
+        if (!aiNotes.trim()) {
+          toast({ variant: "destructive", title: "Validation Error", description: "Strategic Intent notes are required for AI optimization." });
+          return false;
+        }
+        return true;
+      case 2:
+        const hasModule = Object.values(blueprint.modules).some(v => v === true);
+        if (!hasModule) {
+          toast({ variant: "destructive", title: "Validation Error", description: "At least one operational module must be enabled." });
+          return false;
+        }
+        return true;
+      case 3:
+        // Governance rules are optional but we could enforce at least one security rule if needed
+        return true;
+      default:
+        return true;
+    }
+  };
+
+  const handleNextStep = () => {
+    if (validateStep(step)) {
+      setStep(s => s + 1);
+    }
+  };
+
   const router = useRouter();
   const { toast } = useToast();
 
@@ -591,14 +628,14 @@ export default function ServersPage() {
                 {step === 1 ? (
                   <Button 
                     onClick={handleAiAnalyze} 
-                    disabled={isAiAnalyzing || !aiNotes}
+                    disabled={isAiAnalyzing || !aiNotes || !industry || !newServerName}
                     className="bg-black text-white hover:bg-neutral-800 rounded-xl px-8 h-12 gap-2"
                   >
                     {isAiAnalyzing ? "Analyzing..." : "AI Blueprint"}
                     <Sparkles className="w-4 h-4 text-[#D4AF37]" />
                   </Button>
                 ) : step < 4 ? (
-                  <Button onClick={() => setStep(s => s + 1)} className="bg-black text-white hover:bg-neutral-800 rounded-xl px-8 h-12">
+                  <Button onClick={handleNextStep} className="bg-black text-white hover:bg-neutral-800 rounded-xl px-8 h-12">
                     Continue
                   </Button>
                 ) : (

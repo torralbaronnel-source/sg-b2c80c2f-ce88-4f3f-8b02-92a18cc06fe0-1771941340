@@ -32,6 +32,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { clientService } from "@/services/clientService";
+import { lifecycleService, type ProjectStage } from "@/services/lifecycleService";
 import {
   Search,
   Plus,
@@ -735,23 +736,24 @@ export function CRMDashboardView() {
                           <TabsList className="grid w-full grid-cols-6">
                             <TabsTrigger value="profile" className="text-xs">Profile</TabsTrigger>
                             <TabsTrigger value="events" className="text-xs">
-                              Events {clientDetails?.events?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.events.length}</Badge>}
+                              Events {selectedClient?.events?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{selectedClient.events.length}</Badge>}
                             </TabsTrigger>
                             <TabsTrigger value="quotes" className="text-xs">
-                              Quotes {clientDetails?.quotes?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.quotes.length}</Badge>}
+                              Quotes {selectedClient?.quotes?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{selectedClient.quotes.length}</Badge>}
                             </TabsTrigger>
                             <TabsTrigger value="invoices" className="text-xs">
-                              Invoices {clientDetails?.invoices?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.invoices.length}</Badge>}
+                              Invoices {selectedClient?.invoices?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{selectedClient.invoices.length}</Badge>}
                             </TabsTrigger>
                             <TabsTrigger value="communications" className="text-xs">
-                              Comms {clientDetails?.communications?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.communications.length}</Badge>}
+                              Comms {selectedClient?.communications?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{selectedClient.communications.length}</Badge>}
                             </TabsTrigger>
                             <TabsTrigger value="tasks" className="text-xs">
-                              Tasks {clientDetails?.tasks?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{clientDetails.tasks.length}</Badge>}
+                              Tasks {selectedClient?.tasks?.length > 0 && <Badge variant="secondary" className="ml-1 text-xs">{selectedClient.tasks.length}</Badge>}
                             </TabsTrigger>
                           </TabsList>
 
                           <TabsContent value="profile" className="space-y-6 mt-6">
+                            <LifecycleTracker currentStage={selectedClient?.current_stage || "Client"} />
                             <div className="grid grid-cols-2 gap-6">
                               <Card className="col-span-2 md:col-span-1 border-gray-200">
                                 <CardHeader className="pb-3">
@@ -861,14 +863,14 @@ export function CRMDashboardView() {
                           </TabsContent>
 
                           <TabsContent value="events" className="space-y-4 mt-6">
-                            {clientDetails?.events?.length === 0 ? (
+                            {selectedClient?.events?.length === 0 ? (
                               <div className="text-center py-8 text-gray-500">
                                 <Calendar className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                                 <p>No events yet</p>
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                {clientDetails?.events?.map((event: any) => (
+                                {selectedClient?.events?.map((event: any) => (
                                   <Card key={event.id} className="border-gray-200 hover:shadow-md transition-shadow">
                                     <CardContent className="p-4">
                                       <div className="flex justify-between items-start">
@@ -890,14 +892,14 @@ export function CRMDashboardView() {
                           </TabsContent>
 
                           <TabsContent value="quotes" className="space-y-4 mt-6">
-                            {clientDetails?.quotes?.length === 0 ? (
+                            {selectedClient?.quotes?.length === 0 ? (
                               <div className="text-center py-8 text-gray-500">
                                 <FileText className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                                 <p>No quotes yet</p>
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                {clientDetails?.quotes?.map((quote: any) => (
+                                {selectedClient?.quotes?.map((quote: any) => (
                                   <Card key={quote.id} className="border-gray-200">
                                     <CardContent className="p-4">
                                       <div className="flex justify-between items-start">
@@ -915,14 +917,14 @@ export function CRMDashboardView() {
                           </TabsContent>
 
                           <TabsContent value="invoices" className="space-y-4 mt-6">
-                            {clientDetails?.invoices?.length === 0 ? (
+                            {selectedClient?.invoices?.length === 0 ? (
                               <div className="text-center py-8 text-gray-500">
                                 <DollarSign className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                                 <p>No invoices yet</p>
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                {clientDetails?.invoices?.map((invoice: any) => (
+                                {selectedClient?.invoices?.map((invoice: any) => (
                                   <Card key={invoice.id} className="border-gray-200">
                                     <CardContent className="p-4">
                                       <div className="flex justify-between items-start">
@@ -940,14 +942,14 @@ export function CRMDashboardView() {
                           </TabsContent>
 
                           <TabsContent value="communications" className="space-y-4 mt-6">
-                            {clientDetails?.communications?.length === 0 ? (
+                            {selectedClient?.communications?.length === 0 ? (
                               <div className="text-center py-8 text-gray-500">
                                 <MessageSquare className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                                 <p>No communications yet</p>
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                {clientDetails?.communications?.map((comm: any) => (
+                                {selectedClient?.communications?.map((comm: any) => (
                                   <Card key={comm.id} className="border-gray-200">
                                     <CardContent className="p-4">
                                       <div className="flex justify-between items-start">
@@ -967,14 +969,14 @@ export function CRMDashboardView() {
                           </TabsContent>
 
                           <TabsContent value="tasks" className="space-y-4 mt-6">
-                            {clientDetails?.tasks?.length === 0 ? (
+                            {selectedClient?.tasks?.length === 0 ? (
                               <div className="text-center py-8 text-gray-500">
                                 <Clock className="h-12 w-12 mx-auto mb-2 text-gray-300" />
                                 <p>No tasks yet</p>
                               </div>
                             ) : (
                               <div className="space-y-2">
-                                {clientDetails?.tasks?.map((task: any) => (
+                                {selectedClient?.tasks?.map((task: any) => (
                                   <Card key={task.id} className="border-gray-200">
                                     <CardContent className="p-4">
                                       <div className="flex justify-between items-start">

@@ -415,7 +415,7 @@ export function NanoCommandCenter() {
         </div>
 
         {/* Messages Area - SCROLLABLE */}
-        <ScrollArea className="flex-1 p-6 bg-[#050505]" viewportRef={scrollRef}>
+        <ScrollArea className="flex-1 p-6 bg-[#050505]" ref={scrollRef}>
           <div className="space-y-6 max-w-5xl mx-auto">
             {messages.map((msg, i) => (
               <div key={i} className={`flex flex-col ${msg.role === "system" ? "opacity-60" : ""}`}>

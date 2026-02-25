@@ -174,19 +174,25 @@ export const clientService = {
 
   async getClientDetails(clientId: string): Promise<ClientDetailsResponse | null> {
     try {
-      const { data: client } = await (supabase
+      const clientQuery = supabase
         .from("clients")
-        .select("*")
-        .eq("id", clientId)
-        .maybeSingle() as any);
+        .select("*");
+      
+      const { data: client } = await (clientQuery.eq("id", clientId).maybeSingle() as any);
 
       if (!client) return null;
 
-      const { data: events } = await (supabase.from("events").select("*").eq("client_id", clientId) as any);
-      const { data: quotes } = await (supabase.from("quotes").select("*").eq("client_id", clientId) as any);
-      const { data: invoices } = await (supabase.from("invoices").select("*").eq("client_id", clientId) as any);
-      const { data: communications } = await (supabase.from("communications").select("*").eq("client_id", clientId) as any);
-      const { data: tasks } = await (supabase.from("tasks").select("*").limit(100) as any);
+      const eventsQuery = supabase.from("events").select("*");
+      const quotesQuery = supabase.from("quotes").select("*");
+      const invoicesQuery = supabase.from("invoices").select("*");
+      const communicationsQuery = supabase.from("communications").select("*");
+      const tasksQuery = supabase.from("tasks").select("*").limit(100);
+
+      const { data: events } = await (eventsQuery.eq("client_id", clientId) as any);
+      const { data: quotes } = await (quotesQuery.eq("client_id", clientId) as any);
+      const { data: invoices } = await (invoicesQuery.eq("client_id", clientId) as any);
+      const { data: communications } = await (communicationsQuery.eq("client_id", clientId) as any);
+      const { data: tasks } = await (tasksQuery as any);
 
       const eventIds = (events || []).map((e: any) => e.id);
       const filteredTasks = (tasks || []).filter((t: any) => eventIds.includes(t.event_id));

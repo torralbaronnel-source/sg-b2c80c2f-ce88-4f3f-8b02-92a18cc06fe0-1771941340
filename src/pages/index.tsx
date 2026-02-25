@@ -181,22 +181,22 @@ export default function LandingPage() {
             </motion.p>
 
             <motion.div 
-              className="flex flex-col sm:flex-row items-center justify-center gap-4"
+              className="flex flex-col sm:flex-row items-center justify-center gap-6"
               variants={fadeIn}
               initial="initial"
-              whileInView="animate"
+              whileInView="whileInView"
               viewport={commonViewport}
               transition={commonTransition}
             >
               <motion.div
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
                 animate={{
-                  boxShadow: ["0 0 0 rgba(212, 175, 55, 0.2)", "0 0 15px rgba(212, 175, 55, 0.4)", "0 0 0 rgba(212, 175, 55, 0.2)"],
+                  boxShadow: ["0 0 0 rgba(212, 175, 55, 0.2)", "0 0 20px rgba(212, 175, 55, 0.5)", "0 0 0 rgba(212, 175, 55, 0.2)"],
                 }}
                 transition={{
                   boxShadow: {
-                    duration: 2.5,
+                    duration: 3,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }
@@ -205,10 +205,25 @@ export default function LandingPage() {
               >
                 <Button 
                   size="lg" 
-                  className="bg-[#D4AF37] hover:bg-[#B8962E] text-white px-8 h-14 text-lg rounded-full w-full sm:w-auto font-medium shadow-lg transition-colors duration-300"
+                  className="bg-[#D4AF37] hover:bg-[#B8962E] text-white px-10 h-16 text-xl rounded-full w-full sm:w-auto font-bold shadow-2xl transition-all duration-500 uppercase tracking-widest"
                   onClick={() => handleRequestDemo("demo")}
                 >
-                  Request Access <ArrowRight className="ml-2 h-5 w-5" />
+                  Request Access <ArrowRight className="ml-3 h-6 w-6" />
+                </Button>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.98 }}
+                className="w-full sm:w-auto"
+              >
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-2 border-stone-300 text-stone-600 hover:bg-stone-50 px-10 h-16 text-xl rounded-full w-full sm:w-auto font-bold uppercase tracking-widest transition-all duration-500"
+                  onClick={() => handleRequestDemo("consultation")}
+                >
+                  Business Consultation
                 </Button>
               </motion.div>
             </motion.div>

@@ -362,8 +362,10 @@ export type Database = {
       }
       servers: {
         Row: {
+          blueprint: Json | null
           created_at: string | null
           id: string
+          industry: string | null
           invite_code: string | null
           invite_expires_at: string | null
           is_invite_active: boolean | null
@@ -374,8 +376,10 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          blueprint?: Json | null
           created_at?: string | null
           id?: string
+          industry?: string | null
           invite_code?: string | null
           invite_expires_at?: string | null
           is_invite_active?: boolean | null
@@ -386,8 +390,10 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          blueprint?: Json | null
           created_at?: string | null
           id?: string
+          industry?: string | null
           invite_code?: string | null
           invite_expires_at?: string | null
           is_invite_active?: boolean | null

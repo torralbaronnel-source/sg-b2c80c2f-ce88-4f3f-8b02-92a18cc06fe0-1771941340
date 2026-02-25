@@ -6,10 +6,10 @@ export interface AIAction {
 }
 
 export const aiService = {
-  async generateResponse(prompt: string, systemPrompt?: string) {
+  async generateResponse(prompt: string, systemPrompt: string, model: string = "gpt-4o") {
     try {
       const { data, error } = await supabase.functions.invoke("nano-brain", {
-        body: { prompt, systemPrompt },
+        body: { prompt, systemPrompt, model },
       });
 
       if (error) throw error;
@@ -51,5 +51,22 @@ When a user asks you to do something that requires action, explain what you are 
 Current Files: ${process.env.NEXT_PUBLIC_FILE_TREE || "Available in context"}
 `;
     return this.generateResponse(prompt, systemPrompt);
+  },
+
+  async getNanoResponse(prompt: string, history: { role: string; content: string }[], model: string = "gpt-4o") {
+    const fileTree = localStorage.getItem("NANO_FILE_TREE");
+    const systemPrompt = `
+You are GPT 5.1 NANO, the ROOT INTEL for Orchestrix. 
+You have JURISDICTION over the entire system:
+1. Files: You can read/write any file in the project.
+2. Database: You can execute raw SQL via Supabase.
+3. Commands: You can run terminal commands.
+
+When a user asks you to do something that requires action, explain what you are going to do, then provide the action in a structured JSON block at the end of your response like this:
+[ACTION: {"type": "write_file", "payload": {"path": "src/pages/test.tsx", "content": "..."}}]
+
+Current Files: ${process.env.NEXT_PUBLIC_FILE_TREE || "Available in context"}
+`;
+    return this.generateResponse(prompt, systemPrompt, model);
   }
 };

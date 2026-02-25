@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Terminal, ShieldAlert, Cpu, Database, Github, Zap } from "lucide-react";
-import { aiService } from "@/services/aiService";
+import { aiService, AIAction } from "@/services/aiService";
 import { toast } from "@/hooks/use-toast";
 
 const NANO_SYSTEM_PROMPT = `
@@ -44,6 +44,54 @@ export function NanoCommandCenter() {
         text: response || "Command processed with null output.", 
         timestamp: new Date().toLocaleTimeString() 
       }]);
+    } catch (error: any) {
+      setLogs(prev => [...prev, { 
+        type: "system" as const, 
+        text: `CRITICAL ERROR: ${error.message}`, 
+        timestamp: new Date().toLocaleTimeString() 
+      }]);
+      toast({ title: "NANO Error", description: "Failed to communicate with core.", variant: "destructive" });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSendCommand = async () => {
+    if (!command.trim() || isProcessing) return;
+
+    const userLog = { 
+      type: "user" as const, 
+      text: command, 
+      timestamp: new Date().toLocaleTimeString() 
+    };
+    setLogs(prev => [...prev, userLog]);
+    setIsProcessing(true);
+    const currentCommand = command;
+    setCommand("");
+
+    try {
+      const response = await aiService.nanoCommand(currentCommand);
+      
+      // Parse for actions
+      const actionMatch = response.match(/\[ACTION: (.*?)\]/);
+      let systemNote = "";
+
+      if (actionMatch) {
+        try {
+          const action: AIAction = JSON.parse(actionMatch[1]);
+          await aiService.executeKernelAction(action);
+          systemNote = `\n\n[KERNEL_STATUS: SUCCESSFUL_EXECUTION_OF_${action.type.toUpperCase()}]`;
+        } catch (e: any) {
+          systemNote = `\n\n[KERNEL_STATUS: EXECUTION_FAILED - ${e.message}]`;
+        }
+      }
+
+      const assistantLog = { 
+        type: "nano" as const, 
+        text: response + systemNote, 
+        timestamp: new Date().toLocaleTimeString() 
+      };
+      setLogs(prev => [...prev, assistantLog]);
     } catch (error: any) {
       setLogs(prev => [...prev, { 
         type: "system" as const, 
@@ -161,14 +209,14 @@ export function NanoCommandCenter() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      executeCommand();
+                      handleSendCommand();
                     }
                   }}
                 />
                 <Button 
                   size="sm"
                   className="absolute bottom-3 right-3 gap-2"
-                  onClick={executeCommand}
+                  onClick={handleSendCommand}
                   disabled={isProcessing}
                 >
                   {isProcessing ? "Executing..." : <><Zap className="w-4 h-4" /> EXECUTE</>}

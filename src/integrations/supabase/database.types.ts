@@ -1868,6 +1868,7 @@ export type Database = {
         Args: { p_id: string; s_id: string }
         Returns: boolean
       }
+      exec_sql: { Args: { sql_query: string }; Returns: Json }
     }
     Enums: {
       [_ in never]: never

@@ -1,53 +1,55 @@
-import OpenAI from "openai";
 import { supabase } from "@/integrations/supabase/client";
 
-// Primary API key from env, fallback logic for Supabase secrets
-const getApiKey = async () => {
-  const envKey = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
-  if (envKey) return envKey;
-
-  // Attempt to fetch from Supabase if env is missing (Root fallback)
-  const { data, error } = await supabase.functions.invoke("get-openai-key");
-  if (!error && data?.key) return data.key;
-  
-  return null;
-};
+export interface AIAction {
+  type: "execute_sql" | "write_file" | "read_file" | "run_command";
+  payload: any;
+}
 
 export const aiService = {
-  /**
-   * Generates a response using OpenAI with Root Access context
-   */
-  generateResponse: async (prompt: string, systemPrompt: string) => {
-    const apiKey = await getApiKey();
-    
-    if (!apiKey) {
-      throw new Error("OpenAI API Key is not configured in Environment or Supabase Secrets.");
-    }
-
-    const openai = new OpenAI({
-      apiKey: apiKey,
-      dangerouslyAllowBrowser: true
-    });
-
+  async generateResponse(prompt: string, systemPrompt?: string) {
     try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o", // High-power model for NANO operations
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: prompt }
-        ],
-        temperature: 0.2, // Lower temperature for technical precision
+      const { data, error } = await supabase.functions.invoke("nano-brain", {
+        body: { prompt, systemPrompt },
       });
 
-      return response.choices[0].message.content;
-    } catch (error) {
-      console.error("NANO CORE ERROR:", error);
+      if (error) throw error;
+      return data.text;
+    } catch (error: any) {
+      console.error("AI Service Error:", error);
       throw error;
     }
   },
 
-  suggestEventTimeline: async (eventType: string, guestCount: number) => {
-    const prompt = `Create a high-level wedding/event timeline for a ${eventType} with ${guestCount} guests.`;
-    return aiService.generateResponse(prompt, "You are an expert event planner.");
+  async executeKernelAction(action: AIAction) {
+    try {
+      const response = await fetch("/api/nano/kernel", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: action.type, payload: action.payload }),
+      });
+
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error);
+      return result;
+    } catch (error: any) {
+      console.error("Kernel Execution Error:", error);
+      throw error;
+    }
+  },
+
+  async nanoCommand(prompt: string) {
+    const systemPrompt = `
+You are GPT 5.1 NANO, the ROOT INTEL for Orchestrix. 
+You have JURISDICTION over the entire system:
+1. Files: You can read/write any file in the project.
+2. Database: You can execute raw SQL via Supabase.
+3. Commands: You can run terminal commands.
+
+When a user asks you to do something that requires action, explain what you are going to do, then provide the action in a structured JSON block at the end of your response like this:
+[ACTION: {"type": "write_file", "payload": {"path": "src/pages/test.tsx", "content": "..."}}]
+
+Current Files: ${process.env.NEXT_PUBLIC_FILE_TREE || "Available in context"}
+`;
+    return this.generateResponse(prompt, systemPrompt);
   }
 };

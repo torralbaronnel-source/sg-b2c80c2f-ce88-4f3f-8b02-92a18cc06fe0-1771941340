@@ -13,7 +13,7 @@ const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password"
 // Memoize the layout to prevent re-renders during navigation
 export const AppLayout = memo(({ children }: { children: React.ReactNode }) => {
   const router = useRouter();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, currentServer } = useAuth();
   
   const isPublicPage = PUBLIC_PAGES.includes(router.pathname);
 
@@ -31,7 +31,9 @@ export const AppLayout = memo(({ children }: { children: React.ReactNode }) => {
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
               <div className="flex items-center gap-4 px-2">
-                <span className="text-xl font-bold text-gray-900">Orchestrix</span>
+                <span className="text-xl font-bold text-gray-900">
+                  {currentServer?.name || "Orchestrix"}
+                </span>
                 <div className="hidden md:flex items-center relative">
                   <Search className="absolute left-3 h-4 w-4 text-gray-400" />
                   <input 

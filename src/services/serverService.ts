@@ -149,17 +149,34 @@ export const serverService = {
     return true;
   },
 
-  async updateServerBlueprint(serverId: string, blueprint: ServerBlueprint) {
+  async updateServerBlueprint(serverId: string, blueprint: any): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Unauthorized");
+    if (!user) throw new Error("Not authenticated");
 
     const { error } = await supabase
       .from("servers")
-      .update({ blueprint: blueprint as any })
+      .update({ blueprint })
       .eq("id", serverId)
       .eq("owner_id", user.id);
 
     if (error) throw error;
     return true;
+  },
+
+  async getSelectedServer(): Promise<any | null> {
+    const serverId = localStorage.getItem("selected_server_id");
+    if (!serverId) return null;
+
+    const { data, error } = await supabase
+      .from("servers")
+      .select("*")
+      .eq("id", serverId)
+      .single();
+
+    if (error) {
+      console.error("Error fetching active server:", error);
+      return null;
+    }
+    return data;
   }
 };

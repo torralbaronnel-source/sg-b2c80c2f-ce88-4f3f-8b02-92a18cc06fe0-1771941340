@@ -27,6 +27,7 @@ export type Database = {
           metadata: Json | null
           platform: string
           priority: string | null
+          server_id: string | null
           status: string | null
           unread_count: number | null
           updated_at: string | null
@@ -43,6 +44,7 @@ export type Database = {
           metadata?: Json | null
           platform: string
           priority?: string | null
+          server_id?: string | null
           status?: string | null
           unread_count?: number | null
           updated_at?: string | null
@@ -59,6 +61,7 @@ export type Database = {
           metadata?: Json | null
           platform?: string
           priority?: string | null
+          server_id?: string | null
           status?: string | null
           unread_count?: number | null
           updated_at?: string | null
@@ -79,6 +82,13 @@ export type Database = {
             referencedRelation: "events"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "communications_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
         ]
       }
       events: {
@@ -95,6 +105,7 @@ export type Database = {
           id: string
           location: string | null
           package_type: string | null
+          server_id: string | null
           status: string | null
           title: string
           updated_at: string | null
@@ -112,6 +123,7 @@ export type Database = {
           id?: string
           location?: string | null
           package_type?: string | null
+          server_id?: string | null
           status?: string | null
           title: string
           updated_at?: string | null
@@ -129,6 +141,7 @@ export type Database = {
           id?: string
           location?: string | null
           package_type?: string | null
+          server_id?: string | null
           status?: string | null
           title?: string
           updated_at?: string | null
@@ -139,6 +152,13 @@ export type Database = {
             columns: ["coordinator_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
             referencedColumns: ["id"]
           },
         ]
@@ -264,6 +284,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string | null
+          current_server_id: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -273,6 +294,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
+          current_server_id?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -282,13 +304,108 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string | null
+          current_server_id?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           role?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_current_server_id_fkey"
+            columns: ["current_server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      server_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          profile_id: string | null
+          role: string
+          server_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          profile_id?: string | null
+          role?: string
+          server_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          profile_id?: string | null
+          role?: string
+          server_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "server_members_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "server_members_server_id_fkey"
+            columns: ["server_id"]
+            isOneToOne: false
+            referencedRelation: "servers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      servers: {
+        Row: {
+          created_at: string | null
+          id: string
+          invite_code: string | null
+          invite_expires_at: string | null
+          is_invite_active: boolean | null
+          logo_url: string | null
+          name: string
+          owner_id: string | null
+          server_handle: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invite_code?: string | null
+          invite_expires_at?: string | null
+          is_invite_active?: boolean | null
+          logo_url?: string | null
+          name: string
+          owner_id?: string | null
+          server_handle: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invite_code?: string | null
+          invite_expires_at?: string | null
+          is_invite_active?: boolean | null
+          logo_url?: string | null
+          name?: string
+          owner_id?: string | null
+          server_handle?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "servers_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       whatsapp_messages: {
         Row: {

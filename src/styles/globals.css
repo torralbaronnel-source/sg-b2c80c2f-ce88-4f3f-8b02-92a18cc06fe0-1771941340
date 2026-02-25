@@ -4,93 +4,70 @@
 
 @layer base {
   :root {
-    /* THE ORCHESTRIX LUXURY PALETTE */
-    --background: 45 30% 99%; /* Ultra-luxe Bone White */
-    --foreground: 24 10% 12%; /* Deep Charcoal Stone */
-    
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
     --card: 0 0% 100%;
-    --card-foreground: 24 10% 12%;
-    
+    --card-foreground: 0 0% 9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 24 10% 12%;
-    
-    /* Orchestrix Metallic Gold (The 24K Standard) */
-    --primary: 43 63% 53%; 
-    --primary-foreground: 45 30% 99%;
-    
-    --secondary: 43 50% 96%;
-    --secondary-foreground: 43 63% 30%;
-    
-    --muted: 45 20% 96%;
-    --muted-foreground: 24 10% 45%;
-    
-    --accent: 43 63% 53%;
-    --accent-foreground: 45 30% 99%;
-    
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 45 30% 99%;
-    
-    --border: 43 25% 90%;
-    --input: 43 25% 90%;
-    --ring: 43 63% 53%;
-    --radius: 0.5rem;
-
-    /* Brand Specifics */
-    --brand-gold: 43 63% 53%;
-    --brand-gold-dark: 43 63% 35%;
-    --brand-gold-light: 43 70% 75%;
-    --brand-bone: 45 30% 99%;
-    --brand-charcoal: 24 10% 12%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 45 66% 53%; /* #D4AF37 Gold */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 45 66% 53%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 45 66% 53%;
+    --radius: 1rem;
   }
 
   .dark {
-    --background: 24 10% 6%;
-    --foreground: 45 30% 98%;
-    --card: 24 10% 8%;
-    --card-foreground: 45 30% 98%;
-    --primary: 43 63% 53%;
-    --primary-foreground: 24 10% 10%;
-    --border: 24 10% 15%;
-    --ring: 43 63% 53%;
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 45 66% 53%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 45 66% 53%;
   }
 }
 
-@layer components {
-  /* THE GOLD STANDARD GRADIENT */
-  .text-gold-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-br from-[#D4AF37] via-[#C5A028] to-[#996515];
+@layer base {
+  * {
+    @apply border-border;
   }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
 
-  .bg-gold-gradient {
-    @apply bg-gradient-to-br from-[#D4AF37] via-[#C5A028] to-[#996515];
-  }
+/* Luxury Glassmorphism Utilities */
+.glass-panel {
+  @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-xl shadow-black/5;
+}
 
-  /* LUXURY SECTION WRAPPERS */
-  .section-luxury-bone {
-    @apply bg-[#FBFBF9] relative overflow-hidden;
-  }
+.gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #F1D592 50%, #D4AF37 100%);
+}
 
-  /* PREMIUM CARDS */
-  .card-luxury {
-    @apply bg-white border border-[#D4AF37]/10 hover:border-[#D4AF37]/40 transition-all duration-700 
-           shadow-[0_10px_30px_-15px_rgba(212,175,55,0.1)] hover:shadow-[0_20px_40px_-10px_rgba(212,175,55,0.2)] 
-           rounded-2xl relative overflow-hidden;
-  }
-
-  /* BUTTONS */
-  .btn-gold-master {
-    @apply bg-gradient-to-br from-[#D4AF37] to-[#B8860B] text-white font-bold tracking-widest 
-           shadow-[0_10px_20px_rgba(212,175,55,0.3)] hover:shadow-[0_15px_30px_rgba(212,175,55,0.5)] 
-           transition-all duration-500 hover:-translate-y-1 active:scale-95 uppercase;
-  }
-
-  .btn-white-gold {
-    @apply bg-white text-[#B8860B] border-2 border-[#D4AF37]/30 font-bold tracking-widest
-           hover:bg-[#D4AF37]/5 transition-all duration-500 uppercase;
-  }
-
-  /* DECORATIVE ELEMENTS */
-  .gold-divider {
-    @apply h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent my-8;
-  }
+.text-gold {
+  @apply text-[#D4AF37];
 }

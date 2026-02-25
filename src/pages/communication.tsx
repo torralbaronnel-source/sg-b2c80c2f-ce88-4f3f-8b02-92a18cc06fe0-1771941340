@@ -13,7 +13,7 @@ export default function CommunicationPage() {
         AppLayout is already applied globally in _app.tsx.
         Removing the duplicate AppLayout here to fix the double layout issue.
       */}
-      <main className="h-[calc(100vh-64px)] w-full overflow-hidden">
+      <main className="h-screen sm:h-[calc(100vh-64px)] w-full overflow-hidden">
         <CommunicationDashboardView />
       </main>
     </ProtectedRoute>

@@ -15,14 +15,21 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Sparkles, ShieldCheck, Crown, 
   ArrowRight, Check, ChevronRight,
-  Monitor, MessageCircle, Settings, AlertCircle
+  Monitor, MessageCircle, Settings, AlertCircle, Loader2, CheckCircle2
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { 
+  Form, 
+  FormControl, 
+  FormField, 
+  FormItem, 
+  FormLabel, 
+  FormMessage 
+} from "@/components/ui/form";
 
-// Robust Validation Schema
 const conciergeSchema = z.object({
   full_name: z.string().min(3, "Full name must be at least 3 characters"),
   email: z.string().email("Please provide a valid corporate email address"),
@@ -30,9 +37,7 @@ const conciergeSchema = z.object({
   company_name: z.string().optional(),
   customization_details: z.string().optional(),
   interested_modules: z.array(z.string()).optional(),
-}).refine((data) => {
-  // Logic: Customization requires details
-  return true; // We'll handle step-specific validation in UI
+  event_count: z.string().optional(),
 });
 
 type ConciergeFormData = z.infer<typeof conciergeSchema>;
@@ -40,8 +45,31 @@ type ConciergeFormData = z.infer<typeof conciergeSchema>;
 interface ConciergeDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  initialType?: "Business Consultation" | "Private Demo" | "Portal Customization";
+  initialType?: ConciergeRequestType;
 }
+
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.05,
+      delayChildren: 0.1
+    }
+  }
+};
+
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 10 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    transition: { 
+      duration: 0.4, 
+      ease: [0.22, 1, 0.36, 1] 
+    } 
+  }
+};
 
 export function ConciergeDialog({ 
   isOpen, 
@@ -53,7 +81,7 @@ export function ConciergeDialog({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const { control, handleSubmit, watch, setValue, trigger, formState: { errors } } = useForm<ConciergeFormData>({
+  const form = useForm<ConciergeFormData>({
     resolver: zodResolver(conciergeSchema),
     defaultValues: {
       full_name: "",
@@ -61,10 +89,12 @@ export function ConciergeDialog({
       phone: "",
       company_name: "",
       customization_details: "",
-      interested_modules: []
+      interested_modules: [],
+      event_count: ""
     }
   });
 
+  const { control, handleSubmit, watch, setValue, trigger, formState: { errors } } = form;
   const formData = watch();
 
   const modules = [
@@ -102,8 +132,7 @@ export function ConciergeDialog({
     setValue("interested_modules", next);
   };
 
-  const onActualSubmit = async (data: ConciergeFormData) => {
-    // Final logic check
+  const onSubmit = async (data: ConciergeFormData) => {
     if (requestType === "Portal Customization" && !data.customization_details) {
       toast({
         title: "Details Required",
@@ -141,7 +170,7 @@ export function ConciergeDialog({
         description: "An Orchestrix specialist will reach out to you within 24 hours.",
       });
       
-      setStep(4); // Success step
+      setStep(4);
     } catch (error) {
       toast({
         title: "Submission Error",
@@ -156,12 +185,12 @@ export function ConciergeDialog({
   const resetAndClose = () => {
     setStep(1);
     onClose();
+    form.reset();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={resetAndClose}>
       <DialogContent className="sm:max-w-[500px] bg-white border-stone-200 p-0 overflow-hidden">
-        {/* Luxury Header */}
         <div className="h-32 bg-stone-900 flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
           <motion.div 
@@ -230,93 +259,132 @@ export function ConciergeDialog({
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-4"
               >
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name" className={errors.full_name ? "text-rose-500" : ""}>Full Name</Label>
-                    <Controller
-                      name="full_name"
-                      control={control}
-                      render={({ field }) => (
-                        <Input 
-                          {...field}
-                          id="full_name" 
-                          placeholder="Master John Doe" 
-                          className={errors.full_name ? "border-rose-300 focus:ring-rose-200" : "border-stone-200"}
+                <Form {...form}>
+                  <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                    <motion.div 
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="show"
+                      className="grid grid-cols-1 gap-6"
+                    >
+                      <motion.div variants={itemVariants}>
+                        <FormField
+                          control={control}
+                          name="full_name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[#1C1917] font-medium text-xs uppercase tracking-widest opacity-70">Full Name</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Regina M." 
+                                  {...field} 
+                                  className="bg-white/50 border-[#D6D3D1] focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 transition-all h-11"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-red-500 text-[10px]" />
+                            </FormItem>
+                          )}
                         />
-                      )}
-                    />
-                    {errors.full_name && (
-                      <p className="text-[10px] text-rose-500 flex items-center gap-1">
-                        <AlertCircle className="w-3 h-3" /> {errors.full_name.message}
-                      </p>
-                    )}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company</Label>
-                    <Controller
-                      name="company_name"
-                      control={control}
-                      render={({ field }) => (
-                        <Input 
-                          {...field}
-                          id="company" 
-                          placeholder="Luxury Events Ltd." 
-                          className="border-stone-200"
+                      </motion.div>
+
+                      <motion.div variants={itemVariants}>
+                        <FormField
+                          control={control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[#1C1917] font-medium text-xs uppercase tracking-widest opacity-70">Professional Email</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  type="email"
+                                  placeholder="regina@manilaevents.com" 
+                                  {...field} 
+                                  className="bg-white/50 border-[#D6D3D1] focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 transition-all h-11"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-red-500 text-[10px]" />
+                            </FormItem>
+                          )}
                         />
-                      )}
-                    />
-                  </div>
-                </div>
+                      </motion.div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="email" className={errors.email ? "text-rose-500" : ""}>Email Address</Label>
-                  <Controller
-                    name="email"
-                    control={control}
-                    render={({ field }) => (
-                      <Input 
-                        {...field}
-                        id="email" 
-                        type="email" 
-                        placeholder="john@example.com" 
-                        className={errors.email ? "border-rose-300 focus:ring-rose-200" : "border-stone-200"}
-                      />
-                    )}
-                  />
-                  {errors.email && (
-                    <p className="text-[10px] text-rose-500 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" /> {errors.email.message}
-                    </p>
-                  )}
-                </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <motion.div variants={itemVariants}>
+                          <FormField
+                            control={control}
+                            name="company_name"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-[#1C1917] font-medium text-xs uppercase tracking-widest opacity-70">Company</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="Manila Events" 
+                                    {...field} 
+                                    className="bg-white/50 border-[#D6D3D1] focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 transition-all h-11"
+                                  />
+                                </FormControl>
+                                <FormMessage className="text-red-500 text-[10px]" />
+                              </FormItem>
+                            )}
+                          />
+                        </motion.div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className={errors.phone ? "text-rose-500" : ""}>Contact Number</Label>
-                  <Controller
-                    name="phone"
-                    control={control}
-                    render={({ field }) => (
-                      <Input 
-                        {...field}
-                        id="phone" 
-                        placeholder="+63 9XX XXX XXXX" 
-                        className={errors.phone ? "border-rose-300 focus:ring-rose-200" : "border-stone-200"}
-                      />
-                    )}
-                  />
-                  {errors.phone && (
-                    <p className="text-[10px] text-rose-500 flex items-center gap-1">
-                      <AlertCircle className="w-3 h-3" /> {errors.phone.message}
-                    </p>
-                  )}
-                </div>
+                        <motion.div variants={itemVariants}>
+                          <FormField
+                            control={control}
+                            name="event_count"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-[#1C1917] font-medium text-xs uppercase tracking-widest opacity-70">Annual Events</FormLabel>
+                                <FormControl>
+                                  <Input 
+                                    placeholder="20+" 
+                                    {...field} 
+                                    className="bg-white/50 border-[#D6D3D1] focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 transition-all h-11"
+                                  />
+                                </FormControl>
+                                <FormMessage className="text-red-500 text-[10px]" />
+                              </FormItem>
+                            )}
+                          />
+                        </motion.div>
+                      </div>
 
-                <div className="flex gap-3 pt-4">
-                  <Button variant="outline" className="flex-1" onClick={handleBack}>Back</Button>
-                  <Button className="flex-[2] bg-stone-900 text-white hover:bg-stone-800" onClick={handleNextStep}>
-                    Nearly There <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </div>
+                      <motion.div variants={itemVariants}>
+                        <FormField
+                          control={control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="text-[#1C1917] font-medium text-xs uppercase tracking-widest opacity-70">Phone Number</FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="+63 9xx xxx xxxx" 
+                                  {...field} 
+                                  className="bg-white/50 border-[#D6D3D1] focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 transition-all h-11"
+                                />
+                              </FormControl>
+                              <FormMessage className="text-red-500 text-[10px]" />
+                            </FormItem>
+                          )}
+                        />
+                      </motion.div>
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      <div className="flex gap-3 pt-4">
+                        <Button variant="outline" className="flex-1" type="button" onClick={handleBack}>Back</Button>
+                        <Button className="flex-[2] bg-stone-900 text-white hover:bg-stone-800" type="button" onClick={handleNextStep}>
+                          Nearly There <ChevronRight className="w-4 h-4 ml-2" />
+                        </Button>
+                      </div>
+                    </motion.div>
+                  </form>
+                </Form>
               </motion.div>
             )}
 
@@ -368,10 +436,17 @@ export function ConciergeDialog({
                   <Button variant="outline" className="flex-1" onClick={handleBack}>Back</Button>
                   <Button 
                     className="flex-[2] bg-stone-900 text-white hover:bg-stone-800" 
-                    onClick={handleSubmit(onActualSubmit)}
+                    onClick={handleSubmit(onSubmit)}
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? "Processing..." : "Submit to Concierge"}
+                    {isSubmitting ? (
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Processing...</span>
+                      </div>
+                    ) : (
+                      "Submit to Concierge"
+                    )}
                   </Button>
                 </div>
               </motion.div>

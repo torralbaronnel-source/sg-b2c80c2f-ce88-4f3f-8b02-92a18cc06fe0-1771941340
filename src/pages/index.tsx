@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Head from "next/head";
 import Link from "next/link";
-import { motion, AnimatePresence, Variants } from "framer-motion";
+import { motion, AnimatePresence, Variants, useScroll, useTransform } from "framer-motion";
 import { 
   ArrowRight, 
   ChevronRight, 
@@ -62,6 +62,12 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [conciergeOpen, setConciergeOpen] = useState(false);
   const [conciergeType, setConciergeType] = useState<"Private Demo" | "Business Consultation" | "Portal Customization">("Private Demo");
+
+  // Parallax scroll hooks
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 500], [0, 150]);
+  const y2 = useTransform(scrollY, [0, 500], [0, -100]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0.4]);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -128,10 +134,20 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-48 pb-32 overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-primary/5 rounded-full blur-[120px] -z-10 animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-stone-200/50 rounded-full blur-[120px] -z-10" />
+      <section className="relative min-h-[90vh] flex items-center pt-24 overflow-hidden">
+        {/* Parallax Background Layers */}
+        <motion.div 
+          style={{ y: y1, opacity }}
+          className="absolute inset-0 z-0"
+        >
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center opacity-[0.03]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#F5F5F4] via-transparent to-[#F5F5F4]" />
+        </motion.div>
+        
+        <motion.div 
+          style={{ y: y2 }}
+          className="absolute right-[-10%] top-[20%] w-[40%] h-[60%] rounded-full bg-[#D4AF37] blur-[120px] opacity-[0.08] z-0"
+        />
 
         <div className="container mx-auto px-6 relative z-10">
           <div className="max-w-5xl mx-auto text-center">
@@ -165,22 +181,36 @@ export default function LandingPage() {
             </motion.p>
 
             <motion.div 
-              className="flex flex-col sm:flex-row items-center justify-center gap-6"
+              className="flex flex-col sm:flex-row items-center justify-center gap-4"
               variants={fadeIn}
               initial="initial"
-              whileInView="whileInView"
-              transition={{ ...commonTransition, delay: 0.3 }}
+              whileInView="animate"
               viewport={commonViewport}
+              transition={commonTransition}
             >
-              <Button 
-                onClick={() => handleRequestDemo("consultation")}
-                className="bg-brand-primary hover:bg-brand-primary/90 text-white w-full sm:w-auto px-10 py-8 rounded-full text-lg font-bold uppercase tracking-widest shadow-2xl shadow-brand-primary/20"
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                animate={{
+                  boxShadow: ["0 0 0 rgba(212, 175, 55, 0.2)", "0 0 15px rgba(212, 175, 55, 0.4)", "0 0 0 rgba(212, 175, 55, 0.2)"],
+                }}
+                transition={{
+                  boxShadow: {
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }
+                }}
+                className="w-full sm:w-auto"
               >
-                Request Access <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button variant="outline" className="w-full sm:w-auto px-10 py-8 rounded-full text-lg font-bold uppercase tracking-widest border-2 border-stone-200 hover:bg-stone-50">
-                Watch Film <Play className="ml-2 w-5 h-5 fill-current" />
-              </Button>
+                <Button 
+                  size="lg" 
+                  className="bg-[#D4AF37] hover:bg-[#B8962E] text-white px-8 h-14 text-lg rounded-full w-full sm:w-auto font-medium shadow-lg transition-colors duration-300"
+                  onClick={() => handleRequestDemo("demo")}
+                >
+                  Request Access <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </motion.div>
             </motion.div>
           </div>
         </div>
@@ -338,34 +368,6 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Testimonial Section */}
-      <section className="py-32 relative overflow-hidden bg-white">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-brand-primary/5 blur-[150px] -z-10" />
-        <div className="container mx-auto px-6 text-center">
-          <motion.div 
-            variants={scaleIn} 
-            initial="initial" 
-            whileInView="whileInView" 
-            transition={commonTransition} 
-            viewport={commonViewport}
-          >
-            <div className="flex justify-center gap-1 mb-10">
-              {[1, 2, 3, 4, 5].map((s) => <Star key={s} className="w-6 h-6 fill-brand-primary text-brand-primary" />)}
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter text-stone-950 max-w-4xl mx-auto mb-10 leading-[1.1]">
-              "Orchestrix isn't just a tool; it's our secret weapon. Our client satisfaction scores have soared since we migrated our production to this system."
-            </h2>
-            <div className="flex items-center justify-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-stone-200" />
-              <div className="text-left">
-                <div className="font-black text-stone-950 tracking-tight">Regina M.</div>
-                <div className="text-stone-400 text-sm font-bold uppercase tracking-widest">Lead Planner, Manila Events</div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
 

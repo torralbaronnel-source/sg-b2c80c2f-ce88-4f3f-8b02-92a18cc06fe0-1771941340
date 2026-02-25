@@ -21,6 +21,9 @@ import {
   PhoneCall,
   ClipboardList,
   Store,
+  ChevronDown,
+  ChevronRight,
+  User as UserIcon,
 } from "lucide-react"
 
 import {
@@ -42,49 +45,53 @@ import { cn } from "@/lib/utils"
 import { memo } from "react"
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   {
-    name: "CRM & Clients",
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "CRM & Clients",
     icon: Users,
     children: [
-      { name: "Clients", href: "/crm" },
-      { name: "Leads & Pipeline", href: "/leads" },
-      { name: "Communication Log", href: "/communications" },
+      { title: "Clients", url: "/crm" },
+      { title: "Leads & Pipeline", url: "/leads" },
+      { title: "Communication Log", url: "/communications" },
     ],
   },
   {
-    name: "Event Management",
+    title: "Event Management",
     icon: Calendar,
     children: [
-      { name: "All Events", href: "/events" },
-      { name: "Event Timelines", href: "/timelines" },
-      { name: "Venues", href: "/venues" },
-      { name: "Guest Lists", href: "/guests" },
+      { title: "All Events", url: "/events" },
+      { title: "Event Timelines", url: "/timelines" },
+      { title: "Venues", url: "/venues" },
+      { title: "Guest Lists", url: "/guests" },
     ],
   },
   {
-    name: "Finance",
+    title: "Finance",
     icon: DollarSign,
     children: [
-      { name: "Quotes", href: "/quotes" },
-      { name: "Invoices", href: "/invoices" },
-      { name: "Payments", href: "/finance" },
-      { name: "Contracts", href: "/contracts" },
+      { title: "Quotes", url: "/quotes" },
+      { title: "Invoices", url: "/invoices" },
+      { title: "Payments", url: "/finance" },
+      { title: "Contracts", url: "/contracts" },
     ],
   },
   {
-    name: "Resources",
+    title: "Resources",
     icon: Briefcase,
     children: [
-      { name: "Services & Packages", href: "/services" },
-      { name: "Staff & Crew", href: "/staff" },
-      { name: "Vendors", href: "/vendors" },
-      { name: "Equipment", href: "/equipment" },
+      { title: "Services & Packages", url: "/services" },
+      { title: "Staff & Crew", url: "/staff" },
+      { title: "Vendors", url: "/vendors" },
+      { title: "Equipment", url: "/equipment" },
     ],
   },
-  { name: "Tasks", href: "/tasks", icon: ClipboardList },
-  { name: "WhatsApp", href: "/whatsapp", icon: MessageSquare },
-  { name: "Settings", href: "/profile", icon: Settings },
+  { title: "Tasks", url: "/tasks", icon: ClipboardList },
+  { title: "WhatsApp", url: "/whatsapp", icon: MessageSquare },
+  { title: "Settings", url: "/profile", icon: Settings },
 ]
 
 const systemItems = [
@@ -151,12 +158,33 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupLabel>Main Platforms</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
-                <MemoizedNavItem 
-                  key={item.title} 
-                  item={item} 
-                  isActive={router.pathname === item.url} 
-                />
+              {navigation.map((item) => (
+                <React.Fragment key={item.title}>
+                  {item.children ? (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton tooltip={item.title}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </SidebarMenuButton>
+                      <SidebarMenu className="ml-6 border-l border-slate-100 pl-2">
+                        {item.children.map((child) => (
+                          <SidebarMenuItem key={child.title}>
+                            <SidebarMenuButton asChild isActive={router.pathname === child.url}>
+                              <Link href={child.url}>
+                                <span>{child.title}</span>
+                              </Link>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </SidebarMenuItem>
+                  ) : (
+                    <MemoizedNavItem 
+                      item={item} 
+                      isActive={router.pathname === item.url} 
+                    />
+                  )}
+                </React.Fragment>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -183,7 +211,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <Link href="/profile" className="flex items-center gap-3">
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100">
-                  <UserCircle className="h-5 w-5 text-gray-600" />
+                  <UserIcon className="h-5 w-5 text-gray-600" />
                 </div>
                 <div className="flex flex-col gap-0.5 group-data-[collapsible=icon]:hidden">
                   <span className="text-sm font-medium">{profile?.full_name || "Admin User"}</span>

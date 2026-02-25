@@ -61,7 +61,9 @@ import {
   Zap,
   BarChart3,
   Settings,
+  ArrowRight,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 type SortBy = "full_name" | "created_at" | "total_spent";
 type SortDir = "asc" | "desc";
@@ -320,6 +322,41 @@ export function CRMDashboardView() {
     { label: "Active", value: "Active", count: stats.byStatus["Active"] || 0, color: "bg-green-500" },
     { label: "Completed", value: "Completed", count: stats.byStatus["Completed"] || 0, color: "bg-emerald-500" },
   ];
+
+  const STAGES: ProjectStage[] = ["Client", "Lead", "Contract", "Event", "Production", "Delivery", "Billing", "Archive"];
+
+  function LifecycleTracker({ currentStage }: { currentStage: ProjectStage }) {
+    const currentIndex = STAGES.indexOf(currentStage);
+
+    return (
+      <div className="flex items-center justify-between w-full px-4 py-6 bg-slate-50 rounded-xl mb-6">
+        {STAGES.map((stage, index) => (
+          <React.Fragment key={stage}>
+            <div className="flex flex-col items-center gap-2">
+              <div className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all",
+                index <= currentIndex ? "bg-blue-600 text-white shadow-md" : "bg-slate-200 text-slate-500"
+              )}>
+                {index < currentIndex ? <CheckCircle2 className="w-5 h-5" /> : index + 1}
+              </div>
+              <span className={cn(
+                "text-[10px] font-bold uppercase tracking-wider",
+                index <= currentIndex ? "text-blue-600" : "text-slate-400"
+              )}>
+                {stage}
+              </span>
+            </div>
+            {index < STAGES.length - 1 && (
+              <div className={cn(
+                "h-[2px] flex-1 mx-2",
+                index < currentIndex ? "bg-blue-600" : "bg-slate-200"
+              )} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">

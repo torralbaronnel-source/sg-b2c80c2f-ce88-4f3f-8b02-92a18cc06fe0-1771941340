@@ -23,10 +23,12 @@ export type Database = {
           coordinator_id: string
           country: string | null
           created_at: string | null
+          current_stage: string | null
           email: string | null
           full_name: string
           id: string
           last_contact_date: string | null
+          lifecycle_history: Json | null
           next_followup_date: string | null
           notes: string | null
           phone: string | null
@@ -44,10 +46,12 @@ export type Database = {
           coordinator_id: string
           country?: string | null
           created_at?: string | null
+          current_stage?: string | null
           email?: string | null
           full_name: string
           id?: string
           last_contact_date?: string | null
+          lifecycle_history?: Json | null
           next_followup_date?: string | null
           notes?: string | null
           phone?: string | null
@@ -65,10 +69,12 @@ export type Database = {
           coordinator_id?: string
           country?: string | null
           created_at?: string | null
+          current_stage?: string | null
           email?: string | null
           full_name?: string
           id?: string
           last_contact_date?: string | null
+          lifecycle_history?: Json | null
           next_followup_date?: string | null
           notes?: string | null
           phone?: string | null
@@ -513,6 +519,7 @@ export type Database = {
       }
       events: {
         Row: {
+          billing_status: string | null
           budget: number | null
           call_time: string | null
           client_email: string | null
@@ -520,11 +527,13 @@ export type Database = {
           client_phone: string | null
           coordinator_id: string
           created_at: string | null
+          delivery_status: string | null
           description: string | null
           event_date: string
           id: string
           location: string | null
           package_type: string | null
+          production_status: string | null
           server_id: string | null
           status: string | null
           title: string
@@ -532,6 +541,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          billing_status?: string | null
           budget?: number | null
           call_time?: string | null
           client_email?: string | null
@@ -539,11 +549,13 @@ export type Database = {
           client_phone?: string | null
           coordinator_id: string
           created_at?: string | null
+          delivery_status?: string | null
           description?: string | null
           event_date: string
           id?: string
           location?: string | null
           package_type?: string | null
+          production_status?: string | null
           server_id?: string | null
           status?: string | null
           title: string
@@ -551,6 +563,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          billing_status?: string | null
           budget?: number | null
           call_time?: string | null
           client_email?: string | null
@@ -558,11 +571,13 @@ export type Database = {
           client_phone?: string | null
           coordinator_id?: string
           created_at?: string | null
+          delivery_status?: string | null
           description?: string | null
           event_date?: string
           id?: string
           location?: string | null
           package_type?: string | null
+          production_status?: string | null
           server_id?: string | null
           status?: string | null
           title?: string

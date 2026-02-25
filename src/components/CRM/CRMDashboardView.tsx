@@ -1023,14 +1023,14 @@ export function CRMDashboardView() {
       <Card className="border-none shadow-sm bg-white overflow-hidden">
         <div className="relative aspect-video w-full bg-slate-100">
           <img 
-            src="/uploads/image_2901538e-3222-4480-81dd-664393cd0132.png" 
-            alt="CRM Client Lifecycle" 
+            src="/uploads/image_b60488ac-6356-4d38-9686-277964237a3b.png" 
+            alt="CRM Overview" 
             className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
         </div>
         <CardHeader>
-          <CardTitle className="text-sm font-semibold">CRM Client Lifecycle</CardTitle>
+          <CardTitle className="text-sm font-semibold">CRM Overview</CardTitle>
           <CardDescription className="text-xs">Manage your client pipeline with ease</CardDescription>
         </CardHeader>
       </Card>

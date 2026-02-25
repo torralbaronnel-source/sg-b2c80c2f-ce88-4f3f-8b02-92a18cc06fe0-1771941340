@@ -100,8 +100,8 @@ export function OverviewDashboardView() {
         <Card className="col-span-4 overflow-hidden border-none bg-slate-50/50 dark:bg-slate-900/50">
           <div className="relative aspect-video w-full">
             <img 
-              src="/uploads/image_975e9db6-e94d-4ca6-90fc-0d2c85e7f617.png" 
-              alt="Dashboard Analytics" 
+              src="/uploads/image_c8b24bc1-dcef-49cd-80e7-448bd8426a35.png" 
+              alt="Dashboard Preview" 
               className="h-full w-full object-cover opacity-90 hover:opacity-100 transition-opacity"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />

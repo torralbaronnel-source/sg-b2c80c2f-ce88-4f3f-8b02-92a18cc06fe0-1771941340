@@ -43,7 +43,7 @@ export const communicationService = {
         {
           event: "INSERT",
           schema: "public",
-          table: "messages",
+          table: "whatsapp_messages",
           filter: `communication_id=eq.${communicationId}`,
         },
         (payload) => callback(payload.new)
@@ -52,6 +52,35 @@ export const communicationService = {
 
     return () => {
       supabase.removeChannel(channel);
+    };
+  },
+
+  subscribeToTyping(communicationId: string, userName: string, onTypingUpdate: (users: string[]) => void) {
+    const channel = supabase.channel(`typing:${communicationId}`, {
+      config: {
+        presence: {
+          key: userName,
+        },
+      },
+    });
+
+    channel
+      .on("presence", { event: "sync" }, () => {
+        const state = channel.presenceState();
+        const typingUsers = Object.keys(state).filter((name) => name !== userName);
+        onTypingUpdate(typingUsers);
+      })
+      .subscribe();
+
+    return {
+      setTyping: (isTyping: boolean) => {
+        if (isTyping) {
+          channel.track({ typing: true, at: new Date().toISOString() });
+        } else {
+          channel.untrack();
+        }
+      },
+      unsubscribe: () => supabase.removeChannel(channel),
     };
   }
 };

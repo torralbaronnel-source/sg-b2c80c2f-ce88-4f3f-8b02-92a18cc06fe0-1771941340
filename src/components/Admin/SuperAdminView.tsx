@@ -64,6 +64,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { ConciergeManager } from "./ConciergeManager";
+import { RolesManagementView } from "./RolesManagementView";
 
 interface Organization {
   id: string;
@@ -417,12 +418,27 @@ export function SuperAdminView() {
         </Dialog>
       </div>
 
-      <TabsContent value="concierge" className="mt-6">
-        <ConciergeManager />
-      </TabsContent>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList className="bg-slate-100 p-1">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="users">Users & Staff</TabsTrigger>
+          <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
+          <TabsTrigger value="audit">Audit Log</TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="users" className="mt-6">
-      </TabsContent>
+        <TabsContent value="overview" className="space-y-4">
+          <TabsContent value="concierge" className="mt-6">
+            <ConciergeManager />
+          </TabsContent>
+        </TabsContent>
+
+        <TabsContent value="roles" className="space-y-4">
+          <RolesManagementView />
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-4">
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

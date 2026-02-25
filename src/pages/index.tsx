@@ -1,14 +1,13 @@
 import React from "react";
-import { AppLayout } from "@/components/Layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { OverviewDashboardView } from "@/components/Dashboard/OverviewDashboardView";
+import { SEO } from "@/components/SEO";
 
 export default function IndexPage() {
   return (
     <ProtectedRoute>
-      <AppLayout>
-        <OverviewDashboardView />
-      </AppLayout>
+      <SEO title="Dashboard | Orchestrix" />
+      <OverviewDashboardView />
     </ProtectedRoute>
   );
 }

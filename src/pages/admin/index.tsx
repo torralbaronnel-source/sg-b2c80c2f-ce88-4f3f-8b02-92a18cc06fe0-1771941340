@@ -1,13 +1,13 @@
 import React from "react";
-import { SEO } from "@/components/SEO";
-import { PortalAdminView } from "@/components/Admin/PortalAdminView";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SuperAdminView } from "@/components/Admin/SuperAdminView";
+import { SEO } from "@/components/SEO";
 
 export default function AdminPage() {
   return (
     <ProtectedRoute>
-      <SEO title="Portal Admin | Orchestrix" />
-      <PortalAdminView />
+      <SEO title="Admin Portal | Orchestrix" />
+      <SuperAdminView />
     </ProtectedRoute>
   );
 }

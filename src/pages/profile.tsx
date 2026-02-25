@@ -1,12 +1,12 @@
 import React from "react";
-import { SEO } from "@/components/SEO";
-import { ProfileView } from "@/components/Profile/ProfileView";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ProfileView } from "@/components/Profile/ProfileView";
+import { SEO } from "@/components/SEO";
 
 export default function ProfilePage() {
   return (
     <ProtectedRoute>
-      <SEO title="My Profile | Orchestrix" />
+      <SEO title="Profile | Orchestrix" />
       <ProfileView />
     </ProtectedRoute>
   );

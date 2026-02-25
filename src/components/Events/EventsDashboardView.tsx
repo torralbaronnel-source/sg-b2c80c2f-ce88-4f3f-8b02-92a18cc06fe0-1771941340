@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import Link from "next/link";
 
 export function EventsDashboardView() {
   const { events, loading, createEvent, isCreateDialogOpen, setIsCreateDialogOpen } = useEvent();
@@ -158,7 +159,11 @@ export function EventsDashboardView() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{event.title}</h3>
+                          <h3 className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                            <Link href={`/events/${event.id}`} className="hover:underline text-primary font-semibold">
+                              {event.title}
+                            </Link>
+                          </h3>
                           {getStatusBadge(event.status)}
                         </div>
                         <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">

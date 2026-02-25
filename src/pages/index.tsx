@@ -32,7 +32,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBF9] font-sans selection:bg-[#D4AF37]/30">
+    <div className="min-h-screen bg-[#FBFBF9] text-[#2D2D2D] font-sans selection:bg-[#D4AF37]/30">
       <Head>
         <title>Orchestrix | Luxury Event Coordination OS</title>
         <meta name="description" content="The premier operating system for high-end wedding and event production professionals." />

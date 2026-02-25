@@ -20,7 +20,7 @@ export const serverService = {
     const to = from + pageSize - 1;
 
     try {
-      // We select from server_members and join the servers table with count
+      // We select from server_members and join the servers table
       const { data, error, count } = await supabase
         .from("server_members")
         .select(`
@@ -30,11 +30,11 @@ export const serverService = {
         .range(from, to);
 
       if (error) {
-        console.error("Database query error:", error);
+        console.error("Critical Policy/Query Error:", error.message);
+        // Fallback: return empty but don't crash
         return { servers: [], totalCount: 0 };
       }
 
-      // Map to a cleaner format, ensuring servers exists (in case of RLS filtering)
       const servers = (data || [])
         .filter(item => item.servers)
         .map(item => ({
@@ -47,7 +47,7 @@ export const serverService = {
         totalCount: count || 0
       };
     } catch (err) {
-      console.error("Unexpected service error:", err);
+      console.error("System-level server fetch error:", err);
       return { servers: [], totalCount: 0 };
     }
   },

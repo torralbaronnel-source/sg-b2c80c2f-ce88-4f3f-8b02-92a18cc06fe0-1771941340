@@ -476,6 +476,53 @@ export type Database = {
           },
         ]
       }
+      event_cues: {
+        Row: {
+          assigned_role: string | null
+          created_at: string | null
+          cue_type: string | null
+          description: string | null
+          duration_minutes: number | null
+          event_id: string
+          id: string
+          start_time: string
+          status: string | null
+          title: string
+        }
+        Insert: {
+          assigned_role?: string | null
+          created_at?: string | null
+          cue_type?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_id: string
+          id?: string
+          start_time: string
+          status?: string | null
+          title: string
+        }
+        Update: {
+          assigned_role?: string | null
+          created_at?: string | null
+          cue_type?: string | null
+          description?: string | null
+          duration_minutes?: number | null
+          event_id?: string
+          id?: string
+          start_time?: string
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_cues_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_services: {
         Row: {
           assigned_staff_id: string | null
@@ -796,42 +843,54 @@ export type Database = {
       }
       guests: {
         Row: {
+          attendance_status: string | null
+          check_in_time: string | null
           contact: string | null
           created_at: string | null
           event_id: string
           id: string
+          is_vip: boolean | null
           meal_preference: string | null
           name: string
           notes: string | null
           rsvp_status: string | null
           seat_number: number | null
           table_number: number | null
+          ticket_type: string | null
           updated_at: string | null
         }
         Insert: {
+          attendance_status?: string | null
+          check_in_time?: string | null
           contact?: string | null
           created_at?: string | null
           event_id: string
           id?: string
+          is_vip?: boolean | null
           meal_preference?: string | null
           name: string
           notes?: string | null
           rsvp_status?: string | null
           seat_number?: number | null
           table_number?: number | null
+          ticket_type?: string | null
           updated_at?: string | null
         }
         Update: {
+          attendance_status?: string | null
+          check_in_time?: string | null
           contact?: string | null
           created_at?: string | null
           event_id?: string
           id?: string
+          is_vip?: boolean | null
           meal_preference?: string | null
           name?: string
           notes?: string | null
           rsvp_status?: string | null
           seat_number?: number | null
           table_number?: number | null
+          ticket_type?: string | null
           updated_at?: string | null
         }
         Relationships: [

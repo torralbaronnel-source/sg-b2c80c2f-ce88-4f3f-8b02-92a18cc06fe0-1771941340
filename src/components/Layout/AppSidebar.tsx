@@ -90,14 +90,14 @@ const navigationItems: NavGroup[] = [
     ],
   },
   {
-    title: "Production",
-    url: "/production",
+    title: "Production Tools",
     icon: Briefcase,
-  },
-  {
-    title: "Inventory",
-    url: "/inventory",
-    icon: Package,
+    items: [
+      { title: "Production Hub", url: "/production", icon: LayoutDashboard },
+      { title: "Asset Inventory", url: "/inventory", icon: Package },
+      { title: "Run of Show", url: "/timelines", icon: Clock },
+      { title: "Guest Manifest", url: "/guests", icon: Users },
+    ],
   },
   {
     title: "Finance",

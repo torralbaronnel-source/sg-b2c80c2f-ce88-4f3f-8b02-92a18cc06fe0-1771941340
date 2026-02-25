@@ -325,14 +325,15 @@ export function CRMDashboardView() {
     { label: "Completed", value: "Completed", count: stats.byStatus["Completed"] || 0, color: "bg-emerald-500" },
   ];
 
-  const STAGES: ProjectStage[] = ["Client", "Lead", "Contract", "Event", "Production", "Delivery", "Billing", "Archive"];
+  const [selectedStage, setSelectedStage] = useState<ProjectStage | 'All'>('All');
+  const stages: ProjectStage[] = ['Discovery', 'Proposal', 'Contract', 'Pre-Production', 'Live', 'Post-Show', 'Archived'];
 
   function LifecycleTracker({ currentStage }: { currentStage: ProjectStage }) {
-    const currentIndex = STAGES.indexOf(currentStage);
+    const currentIndex = stages.indexOf(currentStage);
 
     return (
       <div className="flex items-center justify-between w-full px-4 py-6 bg-slate-50 rounded-xl mb-6">
-        {STAGES.map((stage, index) => (
+        {stages.map((stage, index) => (
           <React.Fragment key={stage}>
             <div className="flex flex-col items-center gap-2">
               <div className={cn(
@@ -348,7 +349,7 @@ export function CRMDashboardView() {
                 {stage}
               </span>
             </div>
-            {index < STAGES.length - 1 && (
+            {index < stages.length - 1 && (
               <div className={cn(
                 "h-[2px] flex-1 mx-2",
                 index < currentIndex ? "bg-blue-600" : "bg-slate-200"

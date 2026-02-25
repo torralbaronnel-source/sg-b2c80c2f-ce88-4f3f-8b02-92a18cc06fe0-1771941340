@@ -1,42 +1,49 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type ProjectStage = 
-  | "Client" 
-  | "Lead" 
-  | "Contract" 
-  | "Event" 
-  | "Production" 
-  | "Delivery" 
-  | "Billing" 
-  | "Archive";
-
 export const lifecycleService = {
-  async getProjectStatus(clientId: string) {
+  // Run of Show (ROS) Methods
+  async getEventCues(eventId: string) {
     const { data, error } = await supabase
-      .from("clients")
-      .select("status, current_stage")
-      .eq("id", clientId)
-      .single();
-    
-    if (error) throw error;
-    return data;
+      .from("event_cues")
+      .select("*")
+      .eq("event_id", eventId)
+      .order("start_time", { ascending: true });
+    return { data, error };
   },
 
-  async transitionToStage(clientId: string, stage: ProjectStage) {
+  async updateCueStatus(cueId: string, status: string) {
     const { data, error } = await supabase
-      .from("clients")
-      .update({ current_stage: stage })
-      .eq("id", clientId)
+      .from("event_cues")
+      .update({ status } as any)
+      .eq("id", cueId)
       .select()
       .single();
+    return { data, error };
+  },
 
-    if (error) throw error;
-    
-    // Trigger side effects based on stage
-    if (stage === "Event") {
-      // Auto-create initial event placeholders if needed
-    }
-    
-    return data;
+  // Guest Manifest & Check-in Methods
+  async getEventGuests(eventId: string) {
+    const { data, error } = await supabase
+      .from("guests")
+      .select("*")
+      .eq("event_id", eventId)
+      .order("name", { ascending: true });
+    return { data, error };
+  },
+
+  async checkInGuest(guestId: string, status: string = 'checked-in') {
+    const { data, error } = await supabase
+      .from("guests")
+      .update({ 
+        attendance_status: status,
+        check_in_time: status === 'checked-in' ? new Date().toISOString() : null
+      } as any)
+      .eq("id", guestId)
+      .select()
+      .single();
+    return { data, error };
   }
 };
+
+// Re-export ProjectStage if needed by CRM or other views
+export type ProjectStage = 'Discovery' | 'Proposal' | 'Contract' | 'Pre-Production' | 'Live' | 'Post-Show' | 'Archived';

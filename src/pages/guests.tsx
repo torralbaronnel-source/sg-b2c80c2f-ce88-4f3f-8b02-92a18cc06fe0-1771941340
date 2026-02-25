@@ -1,18 +1,28 @@
-import React from "react";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { SEO } from "@/components/SEO";
+import { GuestManifestView } from "@/components/Events/GuestManifestView";
+import { Users } from "lucide-react";
 
 export default function GuestsPage() {
   return (
     <ProtectedRoute>
-      <SEO title="Guest Lists | Orchestrix" />
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Guest Lists</h1>
-          <p className="text-muted-foreground">Manage guest lists, RSVPs, and seating arrangements</p>
+      <AppLayout>
+        <div className="p-6 max-w-5xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-blue-50 rounded-xl">
+                <Users className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Front of House</h1>
+                <p className="text-sm font-medium text-slate-500">Live Guest Manifest & Attendance Tracking</p>
+              </div>
+            </div>
+          </div>
+          
+          <GuestManifestView />
         </div>
-        {/* Guest management interface will be built here */}
-      </div>
+      </AppLayout>
     </ProtectedRoute>
   );
 }

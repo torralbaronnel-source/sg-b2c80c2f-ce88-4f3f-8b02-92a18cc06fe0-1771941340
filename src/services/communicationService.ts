@@ -6,13 +6,21 @@ export type CommunicationMessage = Database["public"]["Tables"]["whatsapp_messag
 
 export const communicationService = {
   async getCommunications() {
-    const serverId = typeof window !== "undefined" ? localStorage.getItem("selectedServerId") : null;
-    if (!serverId) return [];
+    const { data: profile } = await supabase.auth.getUser();
+    if (!profile.user) return [];
+
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("current_server_id")
+      .eq("id", profile.user.id)
+      .single();
+
+    if (!profileData?.current_server_id) return [];
 
     const { data, error } = await supabase
       .from("communications")
       .select("*")
-      .eq("server_id", serverId)
+      .eq("server_id", profileData.current_server_id)
       .order("updated_at", { ascending: false });
 
     if (error) throw error;
@@ -26,17 +34,22 @@ export const communicationService = {
       .eq("communication_id", communicationId)
       .order("timestamp", { ascending: true });
     
-    return { data, error };
+    if (error) throw error;
+    return data || [];
   },
 
   async sendMessage(communicationId: string, content: string, senderName: string) {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw new Error("Not authenticated");
+
     const { data, error } = await supabase
       .from("whatsapp_messages")
       .insert({
         communication_id: communicationId,
         content,
         sender_name: senderName,
-        is_from_me: true
+        is_from_me: true,
+        status: 'sent'
       })
       .select()
       .single();
@@ -44,23 +57,50 @@ export const communicationService = {
     if (!error) {
       await supabase
         .from("communications")
-        .update({ last_message: content, updated_at: new Date().toISOString() })
+        .update({ 
+          last_message: content, 
+          updated_at: new Date().toISOString() 
+        })
         .eq("id", communicationId);
     }
     
-    return { data, error };
-  },
-
-  async createCommunication(comm: any) {
-    const serverId = typeof window !== "undefined" ? localStorage.getItem("selectedServerId") : null;
-    
-    const { data, error } = await supabase
-      .from("communications")
-      .insert([{ ...comm, server_id: serverId }])
-      .select()
-      .single();
-
     if (error) throw error;
     return data;
+  },
+
+  subscribeToMessages(communicationId: string, onMessage: (message: CommunicationMessage) => void) {
+    return supabase
+      .channel(`messages:${communicationId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "whatsapp_messages",
+          filter: `communication_id=eq.${communicationId}`,
+        },
+        (payload) => {
+          onMessage(payload.new as CommunicationMessage);
+        }
+      )
+      .subscribe();
+  },
+
+  subscribeToCommunications(serverId: string, onUpdate: () => void) {
+    return supabase
+      .channel(`communications:${serverId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "communications",
+          filter: `server_id=eq.${serverId}`,
+        },
+        () => {
+          onUpdate();
+        }
+      )
+      .subscribe();
   }
 };

@@ -1,106 +1,61 @@
-import React, { memo, useState, useEffect } from "react";
-import { useRouter } from "next/router";
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import React from "react";
+import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { useAuth } from "@/contexts/AuthContext";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { Button } from "@/components/ui/button";
-import { Plus, Bell, Search, Server } from "lucide-react";
-import { useEvent } from "@/contexts/EventContext";
+import { Server, Activity } from "lucide-react";
 import Link from "next/link";
 
-const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password", "/terms", "/privacy"];
+interface AppLayoutProps {
+  children: React.ReactNode;
+}
 
-// Memoize the layout to prevent re-renders during navigation
-export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { isLoading, user } = useAuth();
-  const router = useRouter();
-  const { currentServer } = useAuth();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center">
-        <div className="text-center">
-          <div className="spinner-border animate-spin inline-block w-10 h-10 border-4 rounded-full border-gray-300 border-t-gray-500"></div>
-          <div className="mt-4 text-gray-500">Loading...</div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!mounted) return null;
-
-  const isPublicPage = PUBLIC_PAGES.includes(router.pathname);
-
-  // Do not render shell on public pages to avoid double-wrapping
-  if (isPublicPage) {
-    return <>{children}</>;
-  }
-
+export function AppLayout({ children }: AppLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-gray-50/50">
+      <div className="flex min-h-screen w-full bg-slate-50/50">
         <AppSidebar />
-        <SidebarInset className="flex flex-col">
-          <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center justify-between border-b bg-white px-4">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="-ml-1" />
-              <div className="flex items-center gap-4 px-2">
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold text-gray-900 leading-tight">
-                    {currentServer?.name || "Orchestrix"}
-                  </span>
-                  {currentServer && (
-                    <span className="text-[10px] font-medium text-emerald-600 uppercase tracking-widest flex items-center gap-1">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                      </span>
-                      Live Production Node
-                    </span>
-                  )}
+        <SidebarInset className="flex flex-col flex-1">
+          {/* Enhanced Header with Branding & Infrastructure Trigger */}
+          <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white/80 px-6 backdrop-blur-md">
+            <div className="flex items-center gap-4">
+              <SidebarTrigger />
+              <div className="h-4 w-[1px] bg-slate-200" />
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-500 text-white font-bold text-xl shadow-lg shadow-amber-500/20">
+                  R
+                </div>
+                <div>
+                  <h2 className="text-sm font-bold tracking-tight text-slate-900 uppercase">Red Production</h2>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-medium text-slate-500 uppercase tracking-widest">Active Production Node</span>
+                  </div>
                 </div>
               </div>
             </div>
-            
-            <div className="flex items-center gap-3">
+
+            <div className="flex items-center gap-4">
               <Link href="/servers">
-                <Button variant="ghost" size="sm" className="hidden lg:flex items-center gap-2 text-gray-600 hover:text-gray-900">
-                  <Server className="h-4 w-4" />
-                  <span>Mission Control</span>
+                <Button variant="outline" size="sm" className="hidden md:flex items-center gap-2 border-slate-200 bg-white hover:bg-slate-50 text-slate-700 shadow-sm">
+                  <Server className="h-4 w-4 text-slate-500" />
+                  <span className="font-semibold text-xs">Manage Infrastructure</span>
                 </Button>
               </Link>
-              <Button variant="ghost" size="icon" className="relative text-gray-600">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-              </Button>
-              <GlobalScheduleButton />
+              <div className="h-8 w-[1px] bg-slate-200 mx-2" />
+              <ThemeSwitch />
             </div>
           </header>
-          <main className="flex-1 p-4 md:p-6 lg:p-8">
-            {children}
+
+          <main className="flex-1 overflow-y-auto p-6">
+            <div className="mx-auto max-w-7xl">
+              {children}
+            </div>
           </main>
         </SidebarInset>
       </div>
+      <Toaster />
     </SidebarProvider>
-  );
-}
-
-AppLayout.displayName = "AppLayout";
-
-function GlobalScheduleButton() {
-  const { setIsCreateDialogOpen } = useEvent();
-  return (
-    <Button 
-      onClick={() => setIsCreateDialogOpen(true)}
-      className="bg-gray-900 hover:bg-gray-800 text-white gap-2 font-medium"
-    >
-      <Plus className="h-4 w-4" />
-      <span className="hidden sm:inline">Schedule Event</span>
-    </Button>
   );
 }

@@ -326,7 +326,6 @@ export function CRMDashboardView() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="invisible h-0 w-0 overflow-hidden">
-          {/* Hidden title for SEO/Structure but removed visually per user request */}
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">CRM & Client Management</h1>
         </div>
 
@@ -550,153 +549,76 @@ export function CRMDashboardView() {
         </Dialog>
       </div>
 
-      {/* Pipeline Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-slate-50 to-slate-100">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-slate-900">
-              <Users className="h-4 w-4" />
-              Total Clients
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-slate-900">{stats.total}</div>
-            <p className="text-xs text-slate-700 mt-1">All clients in system</p>
-          </CardContent>
-        </Card>
+      {/* Search and Filters */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+        <div className="relative w-full md:max-w-sm">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by name, email, company..."
+            className="pl-9 border-gray-300"
+          />
+        </div>
 
-        {getPipelineStages().map((stage) => (
-          <Card key={stage.value} className={`border-0 shadow-sm bg-gradient-to-br from-${stage.color === "bg-blue-500" ? "blue" : stage.color === "bg-yellow-500" ? "yellow" : stage.color === "bg-green-500" ? "green" : "emerald"}-50 to-${stage.color === "bg-blue-500" ? "blue" : stage.color === "bg-yellow-500" ? "yellow" : stage.color === "bg-green-500" ? "green" : "emerald"}-100`}>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-medium flex items-center gap-2">
-                <div className={`h-3 w-3 rounded-full ${stage.color}`}></div>
-                {stage.label}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{stage.count}</div>
-              <p className="text-xs text-gray-600 mt-1">{((stage.count / stats.total) * 100).toFixed(0)}% of pipeline</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+        <div className="flex items-center gap-2">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
+            <SelectTrigger className="w-[150px] border-gray-300">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All statuses</SelectItem>
+              <SelectItem value="Lead">Lead</SelectItem>
+              <SelectItem value="Prospect">Prospect</SelectItem>
+              <SelectItem value="Active">Active</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
+              <SelectItem value="Archived">Archived</SelectItem>
+            </SelectContent>
+          </Select>
 
-      {/* Financial & Performance Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-green-50 to-green-100">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-green-900">
-              <DollarSign className="h-4 w-4" />
-              Total Revenue
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-900">₱{(stats.totalSpent / 1000).toFixed(1)}k</div>
-            <p className="text-xs text-green-700 mt-1">All time earnings</p>
-          </CardContent>
-        </Card>
+          <Select value={sourceFilter} onValueChange={setSourceFilter}>
+            <SelectTrigger className="w-[150px] border-gray-300">
+              <SelectValue placeholder="Source" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All sources</SelectItem>
+              {sources.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-purple-50 to-purple-100">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-purple-900">
-              <TrendingUp className="h-4 w-4" />
-              Conversion Rate
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-purple-900">{stats.conversionRate.toFixed(1)}%</div>
-            <p className="text-xs text-purple-700 mt-1">Lead to booking</p>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-2 md:ml-auto">
+          <Select value={sortBy} onValueChange={(v: SortBy) => setSortBy(v)}>
+            <SelectTrigger className="w-[140px] border-gray-300">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="created_at">Date Added</SelectItem>
+              <SelectItem value="full_name">Name</SelectItem>
+              <SelectItem value="total_spent">Revenue</SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Card className="border-0 shadow-sm bg-gradient-to-br from-rose-50 to-rose-100">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2 text-rose-900">
-              <Calendar className="h-4 w-4" />
-              Avg Event Value
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-rose-900">₱{(stats.avgEventValue / 1000).toFixed(1)}k</div>
-            <p className="text-xs text-rose-700 mt-1">Per event average</p>
-          </CardContent>
-        </Card>
-      </div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+            className="border-gray-300"
+          >
+            <ArrowUpDown className="h-4 w-4" />
+          </Button>
 
-      {/* Filters */}
-      <div className="rounded-lg border bg-white p-4 shadow-sm">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row md:items-center gap-3">
-            <div className="relative w-full md:max-w-sm">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name, email, company..."
-                className="pl-9 border-gray-300"
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Filter className="h-4 w-4 text-muted-foreground" />
-              <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
-                <SelectTrigger className="w-[150px] border-gray-300">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All statuses</SelectItem>
-                  <SelectItem value="Lead">Lead</SelectItem>
-                  <SelectItem value="Prospect">Prospect</SelectItem>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                  <SelectItem value="Archived">Archived</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={sourceFilter} onValueChange={setSourceFilter}>
-                <SelectTrigger className="w-[150px] border-gray-300">
-                  <SelectValue placeholder="Source" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All sources</SelectItem>
-                  {sources.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {s}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2 md:ml-auto">
-              <Select value={sortBy} onValueChange={(v: SortBy) => setSortBy(v)}>
-                <SelectTrigger className="w-[140px] border-gray-300">
-                  <SelectValue placeholder="Sort by" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="created_at">Date Added</SelectItem>
-                  <SelectItem value="full_name">Name</SelectItem>
-                  <SelectItem value="total_spent">Revenue</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-                className="border-gray-300"
-              >
-                <ArrowUpDown className="h-4 w-4" />
-              </Button>
-
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
-                  <X className="h-4 w-4" />
-                  Clear
-                </Button>
-              )}
-            </div>
-          </div>
+          {hasActiveFilters && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
+              <X className="h-4 w-4" />
+              Clear
+            </Button>
+          )}
         </div>
       </div>
 

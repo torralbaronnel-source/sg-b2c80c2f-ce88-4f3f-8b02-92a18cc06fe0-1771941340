@@ -43,8 +43,8 @@ const conciergeSchema = z.object({
 type ConciergeFormData = z.infer<typeof conciergeSchema>;
 
 interface ConciergeDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   type?: "demo" | "consultation";
 }
 
@@ -72,8 +72,8 @@ const itemVariants: Variants = {
 };
 
 export function ConciergeDialog({ 
-  isOpen, 
-  onClose, 
+  open, 
+  onOpenChange, 
   type = "consultation" 
 }: ConciergeDialogProps) {
   const [step, setStep] = useState(1);
@@ -184,12 +184,12 @@ export function ConciergeDialog({
 
   const resetAndClose = () => {
     setStep(1);
-    onClose();
+    onOpenChange(false);
     form.reset();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={resetAndClose}>
+    <Dialog open={open} onOpenChange={resetAndClose}>
       <DialogContent className="sm:max-w-[500px] bg-white border-stone-200 p-0 overflow-hidden">
         <div className="h-32 bg-stone-900 flex items-center justify-center relative overflow-hidden">
           <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />

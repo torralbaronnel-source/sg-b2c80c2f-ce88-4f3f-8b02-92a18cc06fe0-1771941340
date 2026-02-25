@@ -14,7 +14,8 @@ import {
   Clock, 
   ChevronRight,
   Settings2,
-  Info
+  Info,
+  Download
 } from "lucide-react";
 import { aiService, AIAction } from "@/services/aiService";
 import { supabase } from "@/integrations/supabase/client";
@@ -213,6 +214,25 @@ export function NanoCommandCenter() {
 
     if (metadata.type === "sql_result" && Array.isArray(metadata.data)) {
       const columns = metadata.data.length > 0 ? Object.keys(metadata.data[0]) : [];
+      
+      const downloadCSV = () => {
+        if (!metadata.data || !Array.isArray(metadata.data)) return;
+        const headers = columns.join(",");
+        const rows = metadata.data.map(row => 
+          columns.map(col => `"${String(row[col]).replace(/"/g, '""')}"`).join(",")
+        );
+        const csv = [headers, ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.setAttribute("hidden", "");
+        a.setAttribute("href", url);
+        a.setAttribute("download", `nano_sql_export_${new Date().getTime()}.csv`);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      };
+
       return (
         <div className="mt-4 border border-zinc-800 rounded-md overflow-hidden bg-zinc-950/50">
           <div className="bg-zinc-900 px-3 py-2 border-b border-zinc-800 flex items-center justify-between">
@@ -220,9 +240,20 @@ export function NanoCommandCenter() {
               <Database className="w-4 h-4 text-purple-400" />
               <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">SQL Result Set</span>
             </div>
-            <Badge variant="outline" className="text-[10px] border-zinc-700 text-zinc-500">
-              {metadata.data.length} rows
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={downloadCSV}
+                className="h-6 px-2 text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 gap-1.5"
+              >
+                <Download className="w-3 h-3" />
+                Export CSV
+              </Button>
+              <Badge variant="outline" className="text-[10px] border-zinc-700 text-zinc-500">
+                {metadata.data.length} rows
+              </Badge>
+            </div>
           </div>
           <ScrollArea className="h-[200px] w-full">
             <table className="w-full text-left border-collapse min-w-full">

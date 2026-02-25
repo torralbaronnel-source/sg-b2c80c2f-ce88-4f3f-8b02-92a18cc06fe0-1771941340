@@ -21,7 +21,8 @@ import { useEvent } from "@/contexts/EventContext";
 import { cn } from "@/lib/utils";
 
 export function GuestManifestView() {
-  const { event: currentEvent } = useEvent();
+  const { activeEvent } = useEvent();
+  const currentEvent = activeEvent;
   const { toast } = useToast();
   const [guests, setGuests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

@@ -28,6 +28,7 @@ import Link from "next/link"
 import { useRouter } from "next/router"
 import { useAuth } from "@/contexts/AuthContext"
 import { cn } from "@/lib/utils"
+import { memo } from "react"
 
 const navItems = [
   {
@@ -85,6 +86,29 @@ const systemItems = [
   }
 ]
 
+function NavItem({ item, isActive }: { item: any, isActive: boolean }) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        asChild
+        isActive={isActive}
+        tooltip={item.title}
+        className={cn(
+          "transition-all duration-200",
+          isActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-muted"
+        )}
+      >
+        <Link href={item.url} prefetch={true}>
+          <item.icon className={cn("h-4 w-4", isActive && "text-primary")} />
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+}
+
+const MemoizedNavItem = memo(NavItem);
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const router = useRouter()
   const { profile, currentServer } = useAuth()
@@ -114,28 +138,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarMenu>
               {navItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={router.pathname === item.url}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300 group",
-                      router.pathname === item.url 
-                        ? "bg-[#D4AF37] text-white shadow-lg shadow-[#D4AF37]/30" 
-                        : "text-neutral-500 hover:bg-neutral-50 hover:text-[#D4AF37]"
-                    )}
-                  >
-                    <Link href={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                      {item.badge && (
-                        <span className="ml-auto flex h-5 items-center rounded bg-red-100 px-1.5 text-[10px] font-medium text-red-600">
-                          {item.badge}
-                        </span>
-                      )}
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <MemoizedNavItem 
+                  key={item.title} 
+                  item={item} 
+                  isActive={router.pathname === item.url} 
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
@@ -146,23 +153,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarGroupContent>
             <SidebarMenu>
               {systemItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={router.pathname === item.url}
-                    className={cn(
-                      "flex items-center gap-3 px-4 py-6 rounded-2xl transition-all duration-300 group",
-                      router.pathname === item.url 
-                        ? "bg-[#D4AF37] text-white shadow-lg shadow-[#D4AF37]/30" 
-                        : "text-neutral-500 hover:bg-neutral-50 hover:text-[#D4AF37]"
-                    )}
-                  >
-                    <Link href={item.url} className="flex items-center gap-2">
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                <MemoizedNavItem 
+                  key={item.title} 
+                  item={item} 
+                  isActive={router.pathname === item.url} 
+                />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>

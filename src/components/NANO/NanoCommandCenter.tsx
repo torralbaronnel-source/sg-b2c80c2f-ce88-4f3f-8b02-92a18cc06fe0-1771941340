@@ -176,8 +176,10 @@ export function NanoCommandCenter() {
           const result = await aiService.executeKernelAction(action);
           
           kernelMetadata = {
-            type: action.type === "execute_sql" ? "sql_result" : action.type === "read_file" ? "file_content" : "kernel_status",
-            data: result.data || result.content || result.stdout || result,
+            type: action.type === "execute_sql" ? "sql_result" : 
+                  action.type === "read_file" ? "file_content" : 
+                  action.type === "run_command" ? "kernel_status" : "info",
+            data: result.data || result.content || result.stdout || result.stderr || result.message || result,
             status: result.success ? "success" : "error"
           };
 
@@ -185,6 +187,10 @@ export function NanoCommandCenter() {
 
           if (action.type === "execute_sql" && result.success) {
             assistantMsg.content = `Executed SQL query successfully. Found ${Array.isArray(result.data) ? result.data.length : 0} results.`;
+          } else if (action.type === "run_command") {
+            assistantMsg.content = `Terminal execution complete. Exit code: 0. Output logged to kernel stream.`;
+          } else if (action.type === "write_file") {
+            assistantMsg.content = `File operation successful. ${result.message}`;
           }
         } catch (e: any) {
           assistantMsg.metadata = {

@@ -13,11 +13,9 @@ import {
   CheckCircle2, 
   Clock, 
   ChevronRight,
-  Settings2,
-  Info,
   Download,
   Search,
-  Filter
+  Info
 } from "lucide-react";
 import { aiService, AIAction } from "@/services/aiService";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,11 +44,6 @@ const AVAILABLE_MODELS = [
   { id: "gpt-4o-mini", name: "GPT-4o-Mini (Fast)", description: "Optimized for speed" },
   { id: "o1-preview", name: "o1-Preview (Reasoning)", description: "Advanced logic & reasoning" },
   { id: "o1-mini", name: "o1-Mini (Fast Reasoning)", description: "Faster advanced logic" },
-  { id: "gpt-5", name: "GPT-5 (Flagship)", description: "Next-generation intelligence" },
-  { id: "gpt-5.1", name: "GPT-5.1 (Pro)", description: "Enhanced 5-series reasoning" },
-  { id: "gpt-5.1-nano", name: "GPT-5.1 NANO", description: "Kernel-optimized intelligence" },
-  { id: "gpt-5.1-mini", name: "GPT-5.1 Mini", description: "High-speed 5-series" },
-  { id: "gpt-5.2", name: "GPT-5.2 (Elite)", description: "Maximum intelligence output" },
 ];
 
 export function NanoCommandCenter() {
@@ -173,7 +166,6 @@ export function NanoCommandCenter() {
         timestamp: new Date().toLocaleTimeString(),
       };
 
-      // Safety check for .match() on potentially non-string response
       const responseText = typeof response === "string" ? response : "";
       const actionMatch = responseText.match(/\[ACTION:\s*(\{.*?\})\s*\]/s);
       let kernelMetadata: any = null;
@@ -219,30 +211,31 @@ export function NanoCommandCenter() {
     }
   };
 
+  const downloadCSV = (data: any[]) => {
+    if (!data || !Array.isArray(data) || data.length === 0) return;
+    const columns = Object.keys(data[0]);
+    const headers = columns.join(",");
+    const rows = data.map(row => 
+      columns.map(col => `"${String(row[col]).replace(/"/g, '""')}"`).join(",")
+    );
+    const csv = [headers, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.setAttribute("hidden", "");
+    a.setAttribute("href", url);
+    a.setAttribute("download", `nano_sql_export_${new Date().getTime()}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
   const renderMetadata = (metadata: Message["metadata"]) => {
     if (!metadata) return null;
 
     if (metadata.type === "sql_result" && Array.isArray(metadata.data)) {
       const columns = metadata.data.length > 0 ? Object.keys(metadata.data[0]) : [];
       
-      const downloadCSV = () => {
-        if (!metadata.data || !Array.isArray(metadata.data)) return;
-        const headers = columns.join(",");
-        const rows = metadata.data.map(row => 
-          columns.map(col => `"${String(row[col]).replace(/"/g, '""')}"`).join(",")
-        );
-        const csv = [headers, ...rows].join("\n");
-        const blob = new Blob([csv], { type: "text/csv" });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.setAttribute("hidden", "");
-        a.setAttribute("href", url);
-        a.setAttribute("download", `nano_sql_export_${new Date().getTime()}.csv`);
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-      };
-
       return (
         <div className="mt-4 border border-zinc-800 rounded-md overflow-hidden bg-zinc-950/50">
           <div className="bg-zinc-900 px-3 py-2 border-b border-zinc-800 flex items-center justify-between">
@@ -254,7 +247,7 @@ export function NanoCommandCenter() {
               <Button 
                 variant="ghost" 
                 size="sm" 
-                onClick={downloadCSV}
+                onClick={() => downloadCSV(metadata.data)}
                 className="h-6 px-2 text-[10px] text-zinc-500 hover:text-white hover:bg-zinc-800 gap-1.5"
               >
                 <Download className="w-3 h-3" />

@@ -1,44 +1,68 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 40 20% 98%; /* Alabaster / Off-white */
-    --foreground: 222 47% 11%;
-
+    /* Primary brand colors shifted to be default (White & Gold theme) */
+    --background: 0 0% 100%;
+    --foreground: 20 14.3% 4.1%;
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-
+    --card-foreground: 20 14.3% 4.1%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 20 14.3% 4.1%;
+    
+    /* Luxury Gold as Primary Action Color */
+    --primary: 43 63% 53%; 
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 43 10% 95%;
+    --secondary-foreground: 43 63% 40%;
+    
+    --muted: 43 10% 96.1%;
+    --muted-foreground: 43 10% 40%;
+    
+    --accent: 43 63% 53%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 60 9.1% 97.8%;
+    
+    --border: 43 20% 90%;
+    --input: 43 20% 90%;
+    --ring: 43 63% 53%;
+    --radius: 0.75rem;
 
-    --primary: 31 80% 55%; /* Rich Bronze Gold */
-    --primary-foreground: 40 20% 98%;
+    /* Custom Brand Specs */
+    --brand-gold: 43 63% 53%;
+    --brand-gold-dark: 43 63% 40%;
+    --brand-charcoal: 24 10% 10%;
+  }
 
-    --secondary: 40 10% 90%;
-    --secondary-foreground: 222 47% 11%;
-
-    --muted: 40 10% 90%;
-    --muted-foreground: 215 16% 47%;
-
-    --accent: 31 80% 55%;
-    --accent-foreground: 222 47% 11%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 40 10% 85%;
-    --input: 40 10% 85%;
-    --ring: 31 80% 55%;
-
-    --radius: 1rem;
-
-    --brand-primary: 31 80% 45%;
-    --brand-accent: 222 47% 11%;
-    --brand-secondary: 40 20% 95%;
+  .dark {
+    /* Sophisticated Charcoal & Gold theme */
+    --background: 24 10% 10%;
+    --foreground: 60 9.1% 97.8%;
+    --card: 24 10% 10%;
+    --card-foreground: 60 9.1% 97.8%;
+    --popover: 24 10% 10%;
+    --popover-foreground: 60 9.1% 97.8%;
+    
+    --primary: 43 63% 53%;
+    --primary-foreground: 24 9.8% 10%;
+    
+    --secondary: 12 6.5% 15.1%;
+    --secondary-foreground: 43 63% 53%;
+    
+    --muted: 12 6.5% 15.1%;
+    --muted-foreground: 24 5.4% 63.9%;
+    
+    --accent: 43 63% 53%;
+    --accent-foreground: 24 9.8% 10%;
+    
+    --border: 12 6.5% 15.1%;
+    --input: 12 6.5% 15.1%;
+    --ring: 43 63% 53%;
   }
 }
 
@@ -47,54 +71,20 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
-    background-image: 
-      radial-gradient(at 0% 0%, hsla(31,80%,55%,0.03) 0, transparent 50%), 
-      radial-gradient(at 100% 100%, hsla(222,47%,11%,0.02) 0, transparent 50%);
-  }
-  h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight text-brand-accent;
+    @apply bg-background text-foreground;
   }
 }
 
-.luxury-card {
-  @apply bg-white border border-stone-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-500 relative overflow-hidden;
-}
+@layer components {
+  .hero-gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-gold via-brand-gold/90 to-brand-gold/70;
+  }
+  
+  .glass-panel {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
 
-.luxury-card::before {
-  content: '';
-  @apply absolute inset-0 opacity-0 transition-opacity duration-500 pointer-events-none;
-  background: radial-gradient(circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(217, 119, 6, 0.08) 0%, transparent 80%);
-}
-
-.luxury-card:hover::before {
-  @apply opacity-100;
-}
-
-.luxury-card:hover {
-  @apply border-primary/30 shadow-[0_20px_50px_rgba(180,83,9,0.12)] -translate-y-2;
-}
-
-.gold-text {
-  background: linear-gradient(135deg, #B45309 0%, #D97706 50%, #92400E 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.gold-button {
-  background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
-  @apply text-white shadow-[0_10px_20px_rgba(180,83,9,0.2)] hover:shadow-[0_15px_30px_rgba(180,83,9,0.3)] hover:scale-[1.02] transition-all duration-300;
-}
-
-.glass-nav {
-  @apply bg-white/80 backdrop-blur-md border-b border-stone-200/60 sticky top-0 z-50;
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-.animate-float {
-  animation: float 5s ease-in-out infinite;
+  .btn-gold {
+    @apply bg-brand-gold hover:bg-brand-gold-dark text-white font-semibold transition-all duration-300 shadow-[0_0_20px_rgba(212,175,55,0.3)] hover:shadow-[0_0_30px_rgba(212,175,55,0.5)] transform hover:-translate-y-0.5;
+  }
 }

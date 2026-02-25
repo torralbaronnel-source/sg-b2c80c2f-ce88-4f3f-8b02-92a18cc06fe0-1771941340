@@ -149,83 +149,44 @@ export default function LandingPage() {
           className="absolute right-[-10%] top-[20%] w-[40%] h-[60%] rounded-full bg-[#D4AF37] blur-[120px] opacity-[0.08] z-0"
         />
 
-        <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-5xl mx-auto text-center">
-            <motion.div variants={fadeIn} initial="initial" whileInView="whileInView" transition={commonTransition} viewport={commonViewport}>
-              <Badge className="bg-brand-primary/10 text-brand-primary border-brand-primary/20 mb-8 py-2 px-6 rounded-full text-sm font-bold tracking-widest uppercase">
-                Premium Event Solutions | Philippines
-              </Badge>
+        <div className="relative z-10 container mx-auto px-4 pt-32 pb-20">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-6">
+                Redefining <span className="text-brand-gold">Luxury</span> Event Coordination
+              </h1>
+              <p className="text-xl text-white/80 max-w-2xl mx-auto leading-relaxed">
+                Orchestrix is the premier operating system for high-end wedding and event production professionals.
+              </p>
             </motion.div>
-            
-            <motion.h1 
-              className="text-7xl md:text-9xl font-black tracking-tighter text-stone-950 mb-10 leading-[0.85]"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="whileInView"
-              transition={{ ...commonTransition, delay: 0.1 }}
-              viewport={commonViewport}
-            >
-              TOTAL <br />
-              <span className="text-brand-primary italic font-serif font-normal lowercase tracking-normal">Orchestration.</span>
-            </motion.h1>
-
-            <motion.p 
-              className="text-xl md:text-2xl text-stone-600 mb-14 leading-relaxed max-w-2xl mx-auto font-medium"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="whileInView"
-              transition={{ ...commonTransition, delay: 0.2 }}
-              viewport={commonViewport}
-            >
-              The definitive operating system for elite wedding planners and production houses. Elevate every detail from inquiry to applause.
-            </motion.p>
 
             <motion.div 
-              className="flex flex-col sm:flex-row items-center justify-center gap-6"
-              variants={fadeIn}
-              initial="initial"
-              whileInView="whileInView"
-              viewport={commonViewport}
-              transition={commonTransition}
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                animate={{
-                  boxShadow: ["0 0 0 rgba(212, 175, 55, 0.2)", "0 0 20px rgba(212, 175, 55, 0.5)", "0 0 0 rgba(212, 175, 55, 0.2)"],
-                }}
-                transition={{
-                  boxShadow: {
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }
-                }}
-                className="w-full sm:w-auto"
+              <Button 
+                size="lg" 
+                className="btn-gold rounded-full px-10 h-14 text-lg"
+                onClick={() => handleRequestDemo("demo")}
               >
-                <Button 
-                  size="lg" 
-                  className="bg-[#D4AF37] hover:bg-[#B8962E] text-white px-10 h-16 text-xl rounded-full w-full sm:w-auto font-bold shadow-2xl transition-all duration-500 uppercase tracking-widest"
-                  onClick={() => handleRequestDemo("demo")}
-                >
-                  Request Access <ArrowRight className="ml-3 h-6 w-6" />
-                </Button>
-              </motion.div>
-
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                className="w-full sm:w-auto"
+                Request Access
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="rounded-full px-10 h-14 text-lg border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
+                onClick={() => handleRequestDemo("consultation")}
               >
-                <Button 
-                  size="lg" 
-                  variant="outline"
-                  className="border-2 border-stone-300 text-stone-600 hover:bg-stone-50 px-10 h-16 text-xl rounded-full w-full sm:w-auto font-bold uppercase tracking-widest transition-all duration-500"
-                  onClick={() => handleRequestDemo("consultation")}
-                >
-                  Business Consultation
-                </Button>
-              </motion.div>
+                Business Consultation
+              </Button>
             </motion.div>
           </div>
         </div>

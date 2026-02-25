@@ -27,10 +27,34 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
+import { aiService } from "@/services/aiService";
+import { Label } from "@/components/ui/label";
+import { toast } from "@/hooks/use-toast";
 
 export function PortalAdminView() {
   const { user, profile, currentServer } = useAuth();
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [testPrompt, setTestPrompt] = React.useState("");
+  const [aiResponse, setAiResponse] = React.useState("");
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const handleTestAI = async () => {
+    if (!testPrompt) return;
+    setIsLoading(true);
+    try {
+      const result = await aiService.generateResponse(testPrompt);
+      setAiResponse(result || "No response");
+      toast({ title: "Success", description: "OpenAI response received." });
+    } catch (error: any) {
+      toast({ 
+        title: "AI Error", 
+        description: error.message || "Failed to fetch from OpenAI",
+        variant: "destructive" 
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const MOCK_MEMBERS = [
     { id: "1", name: "Admin User", email: "admin@orchestrix.com", role: "Owner", status: "Active" },
@@ -148,6 +172,36 @@ export function PortalAdminView() {
               ))}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>AI Integration (OpenAI)</CardTitle>
+          <CardDescription>
+            Test your OpenAI integration. Ensure <code>NEXT_PUBLIC_OPENAI_API_KEY</code> is set in Environment Settings.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label>Test Prompt</Label>
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Ask something to your AI..." 
+                value={testPrompt}
+                onChange={(e) => setTestPrompt(e.target.value)}
+              />
+              <Button onClick={handleTestAI} disabled={isLoading}>
+                {isLoading ? "Thinking..." : "Test AI"}
+              </Button>
+            </div>
+          </div>
+          {aiResponse && (
+            <div className="p-4 bg-muted rounded-md text-sm whitespace-pre-wrap">
+              <strong>Response:</strong><br />
+              {aiResponse}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -46,10 +46,15 @@ export const serverService = {
           
         if (serverError) throw serverError;
         
-        return (flatMembers || []).map(m => ({
+        const servers = (flatMembers || []).map(m => ({
           ...(flatServers?.find(s => s.id === m.server_id) || {}),
           userRole: m.role
         })).filter(s => s.id);
+
+        return {
+          servers,
+          totalCount: servers.length
+        };
       }
       throw error;
     }

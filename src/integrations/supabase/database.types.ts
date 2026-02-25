@@ -148,6 +148,7 @@ export type Database = {
       }
       communications: {
         Row: {
+          category: string | null
           contact_name: string
           contact_type: string | null
           coordinator_id: string
@@ -156,15 +157,18 @@ export type Database = {
           id: string
           last_message: string | null
           metadata: Json | null
+          pinned_message_id: string | null
           platform: string
           priority: string | null
           server_id: string | null
           status: string | null
+          type: string | null
           unread_count: number | null
           updated_at: string | null
           vendor: string | null
         }
         Insert: {
+          category?: string | null
           contact_name: string
           contact_type?: string | null
           coordinator_id: string
@@ -173,15 +177,18 @@ export type Database = {
           id?: string
           last_message?: string | null
           metadata?: Json | null
+          pinned_message_id?: string | null
           platform: string
           priority?: string | null
           server_id?: string | null
           status?: string | null
+          type?: string | null
           unread_count?: number | null
           updated_at?: string | null
           vendor?: string | null
         }
         Update: {
+          category?: string | null
           contact_name?: string
           contact_type?: string | null
           coordinator_id?: string
@@ -190,10 +197,12 @@ export type Database = {
           id?: string
           last_message?: string | null
           metadata?: Json | null
+          pinned_message_id?: string | null
           platform?: string
           priority?: string | null
           server_id?: string | null
           status?: string | null
+          type?: string | null
           unread_count?: number | null
           updated_at?: string | null
           vendor?: string | null
@@ -1847,6 +1856,8 @@ export type Database = {
           id: string
           is_from_me: boolean | null
           metadata: Json | null
+          reactions: Json | null
+          reply_to_id: string | null
           sender_name: string
           status: string | null
           timestamp: string | null
@@ -1858,6 +1869,8 @@ export type Database = {
           id?: string
           is_from_me?: boolean | null
           metadata?: Json | null
+          reactions?: Json | null
+          reply_to_id?: string | null
           sender_name: string
           status?: string | null
           timestamp?: string | null
@@ -1869,6 +1882,8 @@ export type Database = {
           id?: string
           is_from_me?: boolean | null
           metadata?: Json | null
+          reactions?: Json | null
+          reply_to_id?: string | null
           sender_name?: string
           status?: string | null
           timestamp?: string | null
@@ -1879,6 +1894,13 @@ export type Database = {
             columns: ["communication_id"]
             isOneToOne: false
             referencedRelation: "communications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_messages_reply_to_id_fkey"
+            columns: ["reply_to_id"]
+            isOneToOne: false
+            referencedRelation: "whatsapp_messages"
             referencedColumns: ["id"]
           },
         ]

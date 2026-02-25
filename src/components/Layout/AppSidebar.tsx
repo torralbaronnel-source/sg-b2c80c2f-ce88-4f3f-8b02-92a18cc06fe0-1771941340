@@ -114,7 +114,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { profile, currentServer } = useAuth()
 
   return (
-    <Sidebar className="border-r border-neutral-100 bg-white">
+    <Sidebar className="border-r border-neutral-100 bg-white" {...props}>
       <SidebarHeader className="border-b border-sidebar-border/50 p-4">
         <div className="flex items-center gap-3">
           <div className="flex aspect-square size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">

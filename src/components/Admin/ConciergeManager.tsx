@@ -37,7 +37,7 @@ export function ConciergeManager() {
     try {
       setLoading(true);
       const data = await conciergeService.getAllRequests();
-      setRequests(data);
+      setRequests(data as ConciergeRequest[]);
     } catch (error) {
       console.error("Error fetching concierge requests:", error);
       toast({

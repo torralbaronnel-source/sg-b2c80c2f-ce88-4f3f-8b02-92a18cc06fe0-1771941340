@@ -1,15 +1,13 @@
-import { OverviewDashboardView } from "@/components/Dashboard/OverviewDashboardView";
-import { AppLayout } from "@/components/Layout/AppLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import React from "react";
 import { SEO } from "@/components/SEO";
+import { OverviewDashboardView } from "@/components/Dashboard/OverviewDashboardView";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function DashboardPage() {
   return (
     <ProtectedRoute>
-      <AppLayout>
-        <SEO title="Dashboard | Orchestrix" />
-        <OverviewDashboardView />
-      </AppLayout>
+      <SEO title="Overview | Orchestrix" />
+      <OverviewDashboardView />
     </ProtectedRoute>
   );
 }

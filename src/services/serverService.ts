@@ -149,6 +149,10 @@ export const serverService = {
     return true;
   },
 
+  async setSelectedServer(serverId: string) {
+    return this.selectServer(serverId);
+  },
+
   async updateServerBlueprint(serverId: string, blueprint: any): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Not authenticated");

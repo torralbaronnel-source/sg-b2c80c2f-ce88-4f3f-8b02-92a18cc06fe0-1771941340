@@ -1,15 +1,13 @@
-import { FinanceDashboardView } from "@/components/Finance/FinanceDashboardView";
-import { AppLayout } from "@/components/Layout/AppLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import React from "react";
 import { SEO } from "@/components/SEO";
+import { FinanceDashboardView } from "@/components/Finance/FinanceDashboardView";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function FinancePage() {
   return (
     <ProtectedRoute>
-      <AppLayout>
-        <SEO title="Finance | Orchestrix" />
-        <FinanceDashboardView />
-      </AppLayout>
+      <SEO title="Finance | Orchestrix" />
+      <FinanceDashboardView />
     </ProtectedRoute>
   );
 }

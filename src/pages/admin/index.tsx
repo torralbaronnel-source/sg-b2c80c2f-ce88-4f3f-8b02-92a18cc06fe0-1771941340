@@ -1,15 +1,13 @@
-import { PortalAdminView } from "@/components/Admin/PortalAdminView";
-import { AppLayout } from "@/components/Layout/AppLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import React from "react";
 import { SEO } from "@/components/SEO";
+import { PortalAdminView } from "@/components/Admin/PortalAdminView";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function AdminPage() {
   return (
     <ProtectedRoute>
-      <AppLayout>
-        <SEO title="Portal Admin | Orchestrix" />
-        <PortalAdminView />
-      </AppLayout>
+      <SEO title="Portal Admin | Orchestrix" />
+      <PortalAdminView />
     </ProtectedRoute>
   );
 }

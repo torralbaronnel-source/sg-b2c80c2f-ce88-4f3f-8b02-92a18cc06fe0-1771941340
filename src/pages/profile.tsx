@@ -1,15 +1,13 @@
-import { ProfileView } from "@/components/Profile/ProfileView";
-import { AppLayout } from "@/components/Layout/AppLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import React from "react";
 import { SEO } from "@/components/SEO";
+import { ProfileView } from "@/components/Profile/ProfileView";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function ProfilePage() {
   return (
     <ProtectedRoute>
-      <AppLayout>
-        <SEO title="Profile | Orchestrix" />
-        <ProfileView />
-      </AppLayout>
+      <SEO title="My Profile | Orchestrix" />
+      <ProfileView />
     </ProtectedRoute>
   );
 }

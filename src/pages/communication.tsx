@@ -1,15 +1,13 @@
-import { CommunicationDashboardView } from "@/components/Communication/CommunicationDashboardView";
-import { AppLayout } from "@/components/Layout/AppLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import React from "react";
 import { SEO } from "@/components/SEO";
+import { CommunicationDashboardView } from "@/components/Communication/CommunicationDashboardView";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function CommunicationPage() {
   return (
     <ProtectedRoute>
-      <AppLayout>
-        <SEO title="Communication | Orchestrix" />
-        <CommunicationDashboardView />
-      </AppLayout>
+      <SEO title="Communication | Orchestrix" />
+      <CommunicationDashboardView />
     </ProtectedRoute>
   );
 }

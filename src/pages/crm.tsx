@@ -1,15 +1,13 @@
-import { CRMDashboardView } from "@/components/CRM/CRMDashboardView";
-import { AppLayout } from "@/components/Layout/AppLayout";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
+import React from "react";
 import { SEO } from "@/components/SEO";
+import { CRMDashboardView } from "@/components/CRM/CRMDashboardView";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 export default function CRMPage() {
   return (
     <ProtectedRoute>
-      <AppLayout>
-        <SEO title="CRM & Clients | Orchestrix" />
-        <CRMDashboardView />
-      </AppLayout>
+      <SEO title="CRM & Clients | Orchestrix" />
+      <CRMDashboardView />
     </ProtectedRoute>
   );
 }

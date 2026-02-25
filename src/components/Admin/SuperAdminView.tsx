@@ -67,6 +67,7 @@ import { ConciergeManager } from "./ConciergeManager";
 import { RolesManagementView } from "./RolesManagementView";
 import { UserManagementView } from "./UserManagementView";
 import { OrgManagementView } from "./OrgManagementView";
+import { RoleAnalyticsView } from "./RoleAnalyticsView";
 
 interface Organization {
   id: string;
@@ -426,6 +427,7 @@ export function SuperAdminView() {
           <TabsTrigger value="users">Users & Staff</TabsTrigger>
           <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
           <TabsTrigger value="org">Org Hierarchy & SaaS</TabsTrigger>
+          <TabsTrigger value="analytics">Security Analytics</TabsTrigger>
           <TabsTrigger value="audit">Audit Log</TabsTrigger>
         </TabsList>
 
@@ -445,6 +447,10 @@ export function SuperAdminView() {
 
         <TabsContent value="org" className="space-y-4">
           <OrgManagementView />
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <RoleAnalyticsView />
         </TabsContent>
       </Tabs>
     </div>

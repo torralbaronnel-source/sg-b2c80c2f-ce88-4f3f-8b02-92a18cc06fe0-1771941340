@@ -157,8 +157,8 @@ export function ProfileView() {
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="hierarchy">Role & Hierarchy</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="hierarchy">Role & Hierarchy</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -235,58 +235,22 @@ export function ProfileView() {
           </div>
         </TabsContent>
 
-        <TabsContent value="hierarchy">
-          <HierarchyStatusView />
-        </TabsContent>
-
-        <TabsContent value="security" className="mt-6">
-          <Card className="border-none shadow-sm bg-slate-50/50">
+        <TabsContent value="security">
+          <Card>
             <CardHeader>
-              <CardTitle>Edit Your Profile</CardTitle>
-              <CardDescription>Keep your contact details and visuals up to date</CardDescription>
+              <CardTitle>Security Settings</CardTitle>
+              <CardDescription>Manage your password and account security</CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleUpdate} className="space-y-6 max-w-2xl">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name">Full Name</Label>
-                    <Input id="full_name" name="full_name" defaultValue={profile?.full_name || ""} placeholder="John Doe" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input id="phone" name="phone" defaultValue={profile?.phone || ""} placeholder="+1 (555) 000-0000" />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bio">About Me</Label>
-                  <Textarea id="bio" name="bio" defaultValue={profile?.bio || ""} placeholder="Tell your team about your background..." className="min-h-[120px]" />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="avatar_url">Profile Picture URL</Label>
-                    <div className="flex gap-2">
-                      <Input id="avatar_url" name="avatar_url" defaultValue={profile?.avatar_url || ""} placeholder="https://..." />
-                      <Button type="button" size="icon" variant="outline">
-                        <Camera className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cover_url">Cover Image URL</Label>
-                    <Input id="cover_url" name="cover_url" defaultValue={profile?.cover_url || ""} placeholder="https://..." />
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-4">
-                  <Button type="submit" disabled={updating}>
-                    {updating ? "Saving..." : "Save Changes"}
-                  </Button>
-                </div>
-              </form>
+            <CardContent className="space-y-4">
+              <Button variant="outline" onClick={() => window.location.href = '/forgot-password'}>
+                Change Password
+              </Button>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="hierarchy">
+          <HierarchyStatusView />
         </TabsContent>
       </Tabs>
     </div>

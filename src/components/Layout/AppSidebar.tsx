@@ -34,7 +34,8 @@ import {
   ChevronDown,
   LayoutGrid,
   Zap,
-  PlayCircle
+  PlayCircle,
+  Shield
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";

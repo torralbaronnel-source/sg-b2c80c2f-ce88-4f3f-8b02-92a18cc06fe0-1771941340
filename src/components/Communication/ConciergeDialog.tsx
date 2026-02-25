@@ -15,9 +15,27 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Sparkles, ShieldCheck, Crown, 
   ArrowRight, Check, ChevronRight,
-  Monitor, MessageCircle, Settings
+  Monitor, MessageCircle, Settings, AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+
+// Robust Validation Schema
+const conciergeSchema = z.object({
+  full_name: z.string().min(3, "Full name must be at least 3 characters"),
+  email: z.string().email("Please provide a valid corporate email address"),
+  phone: z.string().min(10, "Please provide a valid contact number"),
+  company_name: z.string().optional(),
+  customization_details: z.string().optional(),
+  interested_modules: z.array(z.string()).optional(),
+}).refine((data) => {
+  // Logic: Customization requires details
+  return true; // We'll handle step-specific validation in UI
+});
+
+type ConciergeFormData = z.infer<typeof conciergeSchema>;
 
 interface ConciergeDialogProps {
   isOpen: boolean;
@@ -28,39 +46,73 @@ interface ConciergeDialogProps {
 export function ConciergeDialog({ isOpen, onClose, initialType = "Private Demo" }: ConciergeDialogProps) {
   const [step, setStep] = useState(1);
   const [requestType, setRequestType] = useState<ConciergeRequestType>(initialType);
-  const [formData, setFormData] = useState({
-    full_name: "",
-    email: "",
-    phone: "",
-    company_name: "",
-    customization_details: "",
-    interested_modules: [] as string[]
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  const { control, handleSubmit, watch, setValue, trigger, formState: { errors } } = useForm<ConciergeFormData>({
+    resolver: zodResolver(conciergeSchema),
+    defaultValues: {
+      full_name: "",
+      email: "",
+      phone: "",
+      company_name: "",
+      customization_details: "",
+      interested_modules: []
+    }
+  });
+
+  const formData = watch();
 
   const modules = [
     "Finances & Ledger", "Live Event Hub", "CRM & Bookings", 
     "Guest Management", "Media Vault", "White Labeling"
   ];
 
-  const handleNext = () => setStep(s => s + 1);
+  const handleNextStep = async () => {
+    let fieldsToValidate: Array<keyof ConciergeFormData> = [];
+    
+    if (step === 2) {
+      fieldsToValidate = ["full_name", "email", "phone"];
+    }
+    
+    const isValid = await trigger(fieldsToValidate);
+    
+    if (isValid) {
+      setStep(s => s + 1);
+    } else {
+      toast({
+        title: "Validation Error",
+        description: "Please correct the highlighted fields before proceeding.",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleBack = () => setStep(s => s - 1);
 
   const toggleModule = (module: string) => {
-    setFormData(prev => ({
-      ...prev,
-      interested_modules: prev.interested_modules.includes(module)
-        ? prev.interested_modules.filter(m => m !== module)
-        : [...prev.interested_modules, module]
-    }));
+    const current = formData.interested_modules || [];
+    const next = current.includes(module)
+      ? current.filter(m => m !== module)
+      : [...current, module];
+    setValue("interested_modules", next);
   };
 
-  const handleSubmit = async () => {
-    if (!formData.full_name || !formData.email) {
+  const onActualSubmit = async (data: ConciergeFormData) => {
+    // Final logic check
+    if (requestType === "Portal Customization" && !data.customization_details) {
       toast({
-        title: "Missing Details",
-        description: "Please provide your name and email to continue.",
+        title: "Details Required",
+        description: "Please specify your customization requirements.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (requestType === "Private Demo" && (!data.interested_modules || data.interested_modules.length === 0)) {
+      toast({
+        title: "Selection Required",
+        description: "Please select at least one module for the demo.",
         variant: "destructive"
       });
       return;
@@ -69,7 +121,12 @@ export function ConciergeDialog({ isOpen, onClose, initialType = "Private Demo" 
     try {
       setIsSubmitting(true);
       await conciergeService.submitRequest({
-        ...formData,
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone,
+        company_name: data.company_name,
+        customization_details: data.customization_details,
+        interested_modules: data.interested_modules,
         request_type: requestType,
         status: "New",
         priority: "Medium"
@@ -94,14 +151,6 @@ export function ConciergeDialog({ isOpen, onClose, initialType = "Private Demo" 
 
   const resetAndClose = () => {
     setStep(1);
-    setFormData({
-      full_name: "",
-      email: "",
-      phone: "",
-      company_name: "",
-      customization_details: "",
-      interested_modules: []
-    });
     onClose();
   };
 
@@ -163,7 +212,7 @@ export function ConciergeDialog({ isOpen, onClose, initialType = "Private Demo" 
                   ))}
                 </div>
 
-                <Button className="w-full mt-4 bg-stone-900 text-white hover:bg-stone-800" onClick={handleNext}>
+                <Button className="w-full mt-4 bg-stone-900 text-white hover:bg-stone-800" onClick={() => setStep(2)}>
                   Continue <ChevronRight className="w-4 h-4 ml-2" />
                 </Button>
               </motion.div>
@@ -179,49 +228,88 @@ export function ConciergeDialog({ isOpen, onClose, initialType = "Private Demo" 
               >
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="full_name">Full Name</Label>
-                    <Input 
-                      id="full_name" 
-                      placeholder="Master John Doe" 
-                      value={formData.full_name}
-                      onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                    <Label htmlFor="full_name" className={errors.full_name ? "text-rose-500" : ""}>Full Name</Label>
+                    <Controller
+                      name="full_name"
+                      control={control}
+                      render={({ field }) => (
+                        <Input 
+                          {...field}
+                          id="full_name" 
+                          placeholder="Master John Doe" 
+                          className={errors.full_name ? "border-rose-300 focus:ring-rose-200" : "border-stone-200"}
+                        />
+                      )}
                     />
+                    {errors.full_name && (
+                      <p className="text-[10px] text-rose-500 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" /> {errors.full_name.message}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="company">Company/Organization</Label>
-                    <Input 
-                      id="company" 
-                      placeholder="Luxury Events Ltd." 
-                      value={formData.company_name}
-                      onChange={(e) => setFormData({...formData, company_name: e.target.value})}
+                    <Label htmlFor="company">Company</Label>
+                    <Controller
+                      name="company_name"
+                      control={control}
+                      render={({ field }) => (
+                        <Input 
+                          {...field}
+                          id="company" 
+                          placeholder="Luxury Events Ltd." 
+                          className="border-stone-200"
+                        />
+                      )}
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email Address</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="john@example.com" 
-                    value={formData.email}
-                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                  <Label htmlFor="email" className={errors.email ? "text-rose-500" : ""}>Email Address</Label>
+                  <Controller
+                    name="email"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        {...field}
+                        id="email" 
+                        type="email" 
+                        placeholder="john@example.com" 
+                        className={errors.email ? "border-rose-300 focus:ring-rose-200" : "border-stone-200"}
+                      />
+                    )}
                   />
+                  {errors.email && (
+                    <p className="text-[10px] text-rose-500 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {errors.email.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Contact Number</Label>
-                  <Input 
-                    id="phone" 
-                    placeholder="+63 9XX XXX XXXX" 
-                    value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                  <Label htmlFor="phone" className={errors.phone ? "text-rose-500" : ""}>Contact Number</Label>
+                  <Controller
+                    name="phone"
+                    control={control}
+                    render={({ field }) => (
+                      <Input 
+                        {...field}
+                        id="phone" 
+                        placeholder="+63 9XX XXX XXXX" 
+                        className={errors.phone ? "border-rose-300 focus:ring-rose-200" : "border-stone-200"}
+                      />
+                    )}
                   />
+                  {errors.phone && (
+                    <p className="text-[10px] text-rose-500 flex items-center gap-1">
+                      <AlertCircle className="w-3 h-3" /> {errors.phone.message}
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex gap-3 pt-4">
                   <Button variant="outline" className="flex-1" onClick={handleBack}>Back</Button>
-                  <Button className="flex-[2] bg-stone-900 text-white hover:bg-stone-800" onClick={handleNext}>
+                  <Button className="flex-[2] bg-stone-900 text-white hover:bg-stone-800" onClick={handleNextStep}>
                     Nearly There <ChevronRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
@@ -239,11 +327,16 @@ export function ConciergeDialog({ isOpen, onClose, initialType = "Private Demo" 
                 {requestType === 'Portal Customization' ? (
                   <div className="space-y-3">
                     <Label>Bespoke Requirements</Label>
-                    <Textarea 
-                      placeholder="Tell us exactly what you'd like to see modified or added to your private portal..."
-                      className="min-h-[150px] resize-none"
-                      value={formData.customization_details}
-                      onChange={(e) => setFormData({...formData, customization_details: e.target.value})}
+                    <Controller
+                      name="customization_details"
+                      control={control}
+                      render={({ field }) => (
+                        <Textarea 
+                          {...field}
+                          placeholder="Tell us exactly what you'd like to see modified or added to your private portal..."
+                          className="min-h-[150px] resize-none border-stone-200"
+                        />
+                      )}
                     />
                     <p className="text-[10px] text-stone-400 italic">Our engineering team will review these requirements for technical feasibility.</p>
                   </div>
@@ -255,7 +348,7 @@ export function ConciergeDialog({ isOpen, onClose, initialType = "Private Demo" 
                         <div key={module} className="flex items-center space-x-2">
                           <Checkbox 
                             id={module} 
-                            checked={formData.interested_modules.includes(module)}
+                            checked={formData.interested_modules?.includes(module)}
                             onCheckedChange={() => toggleModule(module)}
                           />
                           <label htmlFor={module} className="text-sm text-stone-600 leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -271,7 +364,7 @@ export function ConciergeDialog({ isOpen, onClose, initialType = "Private Demo" 
                   <Button variant="outline" className="flex-1" onClick={handleBack}>Back</Button>
                   <Button 
                     className="flex-[2] bg-stone-900 text-white hover:bg-stone-800" 
-                    onClick={handleSubmit}
+                    onClick={handleSubmit(onActualSubmit)}
                     disabled={isSubmitting}
                   >
                     {isSubmitting ? "Processing..." : "Submit to Concierge"}

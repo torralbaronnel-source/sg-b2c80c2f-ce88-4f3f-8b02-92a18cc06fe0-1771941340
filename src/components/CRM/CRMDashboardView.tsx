@@ -46,7 +46,7 @@ export function CRMDashboardView() {
   const { toast } = useToast();
 
   const [clients, setClients] = useState<any[]>([]);
-  const [stats, setStats] = useState({ total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0 });
+  const [stats, setStats] = useState({ total: 0, byStatus: {} as Record<string, number>, totalSpent: 0, totalEvents: 0 });
   const [loading, setLoading] = useState(true);
 
   // Filters

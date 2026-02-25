@@ -851,18 +851,21 @@ export type Database = {
           command: string
           executed_at: string | null
           id: string
+          metadata: Json | null
           user_id: string | null
         }
         Insert: {
           command: string
           executed_at?: string | null
           id?: string
+          metadata?: Json | null
           user_id?: string | null
         }
         Update: {
           command?: string
           executed_at?: string | null
           id?: string
+          metadata?: Json | null
           user_id?: string | null
         }
         Relationships: []

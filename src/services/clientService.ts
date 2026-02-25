@@ -174,25 +174,38 @@ export const clientService = {
 
   async getClientDetails(clientId: string): Promise<ClientDetailsResponse | null> {
     try {
-      const clientQuery = supabase
+      const { data: client } = await supabase
         .from("clients")
-        .select("*");
-      
-      const { data: client } = await (clientQuery.eq("id", clientId).maybeSingle() as any);
+        .select("*")
+        .match({ id: clientId })
+        .maybeSingle();
 
       if (!client) return null;
 
-      const eventsQuery = supabase.from("events").select("*");
-      const quotesQuery = supabase.from("quotes").select("*");
-      const invoicesQuery = supabase.from("invoices").select("*");
-      const communicationsQuery = supabase.from("communications").select("*");
-      const tasksQuery = supabase.from("tasks").select("*").limit(100);
+      const { data: events } = await supabase
+        .from("events")
+        .select("*")
+        .match({ client_id: clientId });
 
-      const { data: events } = await (eventsQuery.eq("client_id", clientId) as any);
-      const { data: quotes } = await (quotesQuery.eq("client_id", clientId) as any);
-      const { data: invoices } = await (invoicesQuery.eq("client_id", clientId) as any);
-      const { data: communications } = await (communicationsQuery.eq("client_id", clientId) as any);
-      const { data: tasks } = await (tasksQuery as any);
+      const { data: quotes } = await supabase
+        .from("quotes")
+        .select("*")
+        .match({ client_id: clientId });
+
+      const { data: invoices } = await supabase
+        .from("invoices")
+        .select("*")
+        .match({ client_id: clientId });
+
+      const { data: communications } = await supabase
+        .from("communications")
+        .select("*")
+        .match({ client_id: clientId });
+
+      const { data: tasks } = await supabase
+        .from("tasks")
+        .select("*")
+        .limit(100);
 
       const eventIds = (events || []).map((e: any) => e.id);
       const filteredTasks = (tasks || []).filter((t: any) => eventIds.includes(t.event_id));

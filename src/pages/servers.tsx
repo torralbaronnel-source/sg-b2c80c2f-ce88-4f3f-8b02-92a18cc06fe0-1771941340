@@ -22,7 +22,9 @@ import {
   Cpu,
   BrainCircuit,
   Lock,
-  CheckCircle2
+  CheckCircle2,
+  MoreVertical,
+  Wrench
 } from "lucide-react";
 import { serverService, ServerBlueprint } from "@/services/serverService";
 import { useToast } from "@/hooks/use-toast";
@@ -81,10 +83,35 @@ export default function ServersPage() {
     rules: { autoArchive: false, requireContract: true, enableRealtime: true, strictBudgeting: false }
   });
   
+  // Blueprint Management State
+  const [editingServer, setEditingServer] = useState<Server | null>(null);
+  const [isBlueprintDialogOpen, setIsBlueprintDialogOpen] = useState(false);
+  const [editBlueprint, setEditBlueprint] = useState<ServerBlueprint | null>(null);
+
   const [inviteCode, setInviteCode] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
   
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const loadServers = useCallback(async (page: number) => {
+    setLoading(true);
+    try {
+      const result = await serverService.getMyServers(page, PAGE_SIZE);
+      setServers(result.servers);
+      setTotalCount(result.totalCount);
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Connection Error", description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    loadServers(currentPage);
+  }, [currentPage, loadServers]);
+
   const validateStep = (currentStep: number): boolean => {
     switch (currentStep) {
       case 1:
@@ -108,9 +135,6 @@ export default function ServersPage() {
           return false;
         }
         return true;
-      case 3:
-        // Governance rules are optional but we could enforce at least one security rule if needed
-        return true;
       default:
         return true;
     }
@@ -121,26 +145,6 @@ export default function ServersPage() {
       setStep(s => s + 1);
     }
   };
-
-  const router = useRouter();
-  const { toast } = useToast();
-
-  const loadServers = useCallback(async (page: number) => {
-    setLoading(true);
-    try {
-      const result = await serverService.getMyServers(page, PAGE_SIZE);
-      setServers(result.servers);
-      setTotalCount(result.totalCount);
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Connection Error", description: error.message });
-    } finally {
-      setLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    loadServers(currentPage);
-  }, [currentPage, loadServers]);
 
   const handleAiAnalyze = async () => {
     if (!aiNotes.trim() || !industry.trim()) {
@@ -172,9 +176,8 @@ export default function ServersPage() {
       toast({ 
         variant: "destructive", 
         title: "AI Analysis Failed", 
-        description: "Could not connect to AI strategist. Please configure manually." 
+        description: "Could not connect to AI strategist. Using manual config." 
       });
-      // Fallback to manual if AI fails
       setStep(2);
     } finally {
       setIsAiAnalyzing(false);
@@ -192,12 +195,36 @@ export default function ServersPage() {
       });
       toast({ title: "Infrastructure Deployed", description: "Your custom production environment is live." });
       setIsWizardOpen(false);
-      router.push("/dashboard");
+      loadServers(1);
     } catch (error: any) {
       toast({ variant: "destructive", title: "Deployment Failed", description: error.message });
     } finally {
       setActionLoading(false);
     }
+  };
+
+  const handleUpdateBlueprint = async () => {
+    if (!editingServer || !editBlueprint) return;
+    setActionLoading(true);
+    try {
+      await serverService.updateServerBlueprint(editingServer.id, editBlueprint);
+      toast({ title: "Blueprint Updated", description: "Infrastructure modifications synchronized." });
+      setIsBlueprintDialogOpen(false);
+      loadServers(currentPage);
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Update Failed", description: error.message });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openBlueprintDialog = (server: Server) => {
+    setEditingServer(server);
+    setEditBlueprint(server.blueprint || {
+      modules: { crm: false, finance: false, communication: false, whatsapp: false, events: false },
+      rules: { autoArchive: false, requireContract: false, enableRealtime: false, strictBudgeting: false }
+    });
+    setIsBlueprintDialogOpen(true);
   };
 
   const handleJoinServer = async (e: React.FormEvent) => {
@@ -327,28 +354,44 @@ export default function ServersPage() {
                   {filteredServers.map((server) => (
                     <Card 
                       key={server.id} 
-                      className="group border-neutral-200/60 hover:border-[#D4AF37] transition-all cursor-pointer bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1"
-                      onClick={() => selectServer(server.id)}
+                      className="group border-neutral-200/60 hover:border-[#D4AF37] transition-all bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl"
                     >
                       <CardHeader className="p-8">
                         <div className="flex justify-between items-start mb-6">
                           <div className="p-3 rounded-2xl bg-neutral-50 border border-neutral-100 group-hover:bg-[#D4AF37]/5 transition-colors">
                             <Cpu className="w-6 h-6 text-[#D4AF37]" />
                           </div>
-                          <Badge className={cn(
-                            "rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.1em] font-medium",
-                            server.userRole === "portal_admin" 
-                              ? "bg-black text-white" 
-                              : "bg-neutral-100 text-neutral-500"
-                          )}>
-                            {server.userRole === "portal_admin" ? "Root Access" : "Guest Node"}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge className={cn(
+                              "rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.1em] font-medium",
+                              server.userRole === "portal_admin" 
+                                ? "bg-black text-white" 
+                                : "bg-neutral-100 text-neutral-500"
+                            )}>
+                              {server.userRole === "portal_admin" ? "Root Access" : "Guest Node"}
+                            </Badge>
+                            
+                            {server.userRole === "portal_admin" && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+                                    <MoreVertical className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => openBlueprintDialog(server)} className="gap-2">
+                                    <Wrench className="w-4 h-4" /> Manage Blueprint
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
                         </div>
                         <CardTitle className="text-2xl font-light group-hover:text-[#D4AF37] transition-colors mb-2">
                           {server.name}
                         </CardTitle>
                         <div className="flex items-center gap-3">
-                          <span className="text-xs font-mono text-neutral-300 uppercase tracking-widest">{server.id}</span>
+                          <span className="text-xs font-mono text-neutral-300 uppercase tracking-widest">{server.id.substring(0, 8)}...</span>
                           {server.industry && (
                             <Badge variant="secondary" className="bg-blue-50 text-blue-600 border-none text-[10px] px-2">
                               {server.industry}
@@ -363,9 +406,13 @@ export default function ServersPage() {
                           ))}
                           <div className="w-6 h-6 rounded-full border-2 border-white bg-neutral-100 flex items-center justify-center text-[8px] text-neutral-400">+12</div>
                         </div>
-                        <div className="flex items-center gap-2 text-[#D4AF37] font-medium text-sm">
+                        <Button 
+                          variant="ghost" 
+                          onClick={() => selectServer(server.id)}
+                          className="flex items-center gap-2 text-[#D4AF37] font-medium text-sm hover:text-[#B8962E] hover:bg-transparent p-0"
+                        >
                           Initialize <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                        </div>
+                        </Button>
                       </CardContent>
                     </Card>
                   ))}
@@ -405,7 +452,10 @@ export default function ServersPage() {
                   <p className="text-neutral-500 text-sm mt-2 italic">Scale your agency infrastructure with AI-assisted blueprinting.</p>
                 </div>
                 <Button 
-                  onClick={() => setIsWizardOpen(true)}
+                  onClick={() => {
+                    setStep(1);
+                    setIsWizardOpen(true);
+                  }}
                   className="w-full h-14 bg-[#D4AF37] hover:bg-[#B8962E] text-white rounded-2xl text-lg font-light tracking-wide shadow-lg shadow-[#D4AF37]/20"
                 >
                   Start Deployment
@@ -442,28 +492,19 @@ export default function ServersPage() {
                 </form>
               </div>
             </Card>
-
-            <div className="p-6 rounded-[32px] bg-blue-50/50 border border-blue-100/50 flex gap-4">
-              <ShieldCheck className="w-6 h-6 text-blue-500 shrink-0" />
-              <div className="text-[11px] text-blue-700 leading-relaxed font-light italic">
-                <strong>Kernel Notice:</strong> Deployment grants root access (portal_admin) to all system sub-processes within the new node environment.
-              </div>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Advanced Deployment Wizard */}
+      {/* Deployment Wizard */}
       <Dialog open={isWizardOpen} onOpenChange={setIsWizardOpen}>
         <DialogContent className="max-w-4xl rounded-[40px] p-0 overflow-hidden border-none shadow-3xl">
           <div className="grid grid-cols-1 md:grid-cols-3 min-h-[600px]">
-            {/* Sidebar */}
             <div className="bg-neutral-900 p-10 text-white space-y-12">
               <div className="flex items-center gap-3">
                 <BrainCircuit className="w-8 h-8 text-[#D4AF37]" />
                 <span className="text-xl font-light tracking-widest uppercase">Orchestrix AI</span>
               </div>
-              
               <div className="space-y-8">
                 {[
                   { s: 1, l: "Intelligence", d: "Context & Industry" },
@@ -485,24 +526,12 @@ export default function ServersPage() {
                   </div>
                 ))}
               </div>
-
-              <div className="pt-12">
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                  <p className="text-[10px] text-neutral-400 leading-relaxed italic">
-                    "GPT-5.1 Nano is actively monitoring your input to optimize the underlying database constraints."
-                  </p>
-                </div>
-              </div>
             </div>
 
-            {/* Content Area */}
             <div className="md:col-span-2 p-12 bg-white flex flex-col">
               <AnimatePresence mode="wait">
                 {step === 1 && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8 flex-1"
-                  >
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 flex-1">
                     <div>
                       <h2 className="text-3xl font-light text-neutral-900">Core Identity</h2>
                       <p className="text-neutral-500 mt-2">Define the industry context for AI optimization.</p>
@@ -510,60 +539,31 @@ export default function ServersPage() {
                     <div className="space-y-6">
                       <div className="space-y-2">
                         <Label className="text-xs uppercase tracking-widest text-neutral-400">Node Designation</Label>
-                        <Input 
-                          placeholder="e.g. Royal Production Hub" 
-                          value={newServerName}
-                          onChange={(e) => setNewServerName(e.target.value)}
-                          className="h-14 bg-neutral-50 border-neutral-200 rounded-2xl text-lg font-light"
-                        />
+                        <Input placeholder="e.g. Royal Production Hub" value={newServerName} onChange={(e) => setNewServerName(e.target.value)} className="h-14 bg-neutral-50 border-neutral-200 rounded-2xl text-lg font-light" />
                       </div>
                       <div className="space-y-2">
                         <Label className="text-xs uppercase tracking-widest text-neutral-400">Industry Vertical</Label>
-                        <Input 
-                          placeholder="e.g. Luxury Weddings, Tech Events" 
-                          value={industry}
-                          onChange={(e) => setIndustry(e.target.value)}
-                          className="h-14 bg-neutral-50 border-neutral-200 rounded-2xl"
-                        />
+                        <Input placeholder="e.g. Luxury Weddings" value={industry} onChange={(e) => setIndustry(e.target.value)} className="h-14 bg-neutral-50 border-neutral-200 rounded-2xl" />
                       </div>
                       <div className="space-y-2">
-                        <Label className="text-xs uppercase tracking-widest text-neutral-400 flex justify-between">
-                          Strategic Intent (Notes)
-                          <Badge className="bg-purple-100 text-purple-600 border-none text-[9px]">AI ENABLED</Badge>
-                        </Label>
-                        <Textarea 
-                          placeholder="Describe your workflow needs... GPT-5.1 Nano will handle the rest."
-                          className="min-h-[120px] bg-neutral-50 border-neutral-200 rounded-2xl resize-none italic font-light"
-                          value={aiNotes}
-                          onChange={(e) => setAiNotes(e.target.value)}
-                        />
+                        <Label className="text-xs uppercase tracking-widest text-neutral-400">Strategic Intent</Label>
+                        <Textarea placeholder="Describe workflow..." className="min-h-[120px] bg-neutral-50 border-neutral-200 rounded-2xl" value={aiNotes} onChange={(e) => setAiNotes(e.target.value)} />
                       </div>
                     </div>
                   </motion.div>
                 )}
 
                 {step === 2 && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8 flex-1"
-                  >
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 flex-1">
                     <div>
                       <h2 className="text-3xl font-light text-neutral-900">Module Blueprinting</h2>
-                      <p className="text-neutral-500 mt-2">Toggle integrated micro-services for this node.</p>
+                      <p className="text-neutral-500 mt-2">Toggle integrated micro-services.</p>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       {Object.entries(blueprint.modules).map(([key, value]) => (
                         <div key={key} className="p-4 rounded-2xl border border-neutral-100 bg-neutral-50 flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <Box className="w-4 h-4 text-neutral-400" />
-                            <span className="text-sm font-medium uppercase tracking-wider">{key}</span>
-                          </div>
-                          <Switch 
-                            checked={value} 
-                            onCheckedChange={(c) => setBlueprint(prev => ({
-                              ...prev, modules: { ...prev.modules, [key]: c }
-                            }))} 
-                          />
+                          <span className="text-sm font-medium uppercase tracking-wider">{key}</span>
+                          <Switch checked={value} onCheckedChange={(c) => setBlueprint(prev => ({ ...prev, modules: { ...prev.modules, [key]: c } }))} />
                         </div>
                       ))}
                     </div>
@@ -571,27 +571,16 @@ export default function ServersPage() {
                 )}
 
                 {step === 3 && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8 flex-1"
-                  >
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 flex-1">
                     <div>
-                      <h2 className="text-3xl font-light text-neutral-900">Governance & Logic</h2>
-                      <p className="text-neutral-500 mt-2">Configure automated operational protocols.</p>
+                      <h2 className="text-3xl font-light text-neutral-900">Governance</h2>
+                      <p className="text-neutral-500 mt-2">Operational protocols.</p>
                     </div>
                     <div className="space-y-4">
                       {Object.entries(blueprint.rules).map(([key, value]) => (
                         <div key={key} className="p-5 rounded-3xl border border-neutral-100 bg-white shadow-sm flex items-center justify-between">
-                          <div>
-                            <div className="text-sm font-medium text-neutral-800 uppercase tracking-widest">{key.replace(/([A-Z])/g, ' $1')}</div>
-                            <div className="text-[10px] text-neutral-400 mt-1 italic">Automated system trigger</div>
-                          </div>
-                          <Switch 
-                            checked={value} 
-                            onCheckedChange={(c) => setBlueprint(prev => ({
-                              ...prev, rules: { ...prev.rules, [key]: c }
-                            }))} 
-                          />
+                          <span className="text-sm font-medium uppercase tracking-widest">{key.replace(/([A-Z])/g, ' $1')}</span>
+                          <Switch checked={value} onCheckedChange={(c) => setBlueprint(prev => ({ ...prev, rules: { ...prev.rules, [key]: c } }))} />
                         </div>
                       ))}
                     </div>
@@ -599,57 +588,107 @@ export default function ServersPage() {
                 )}
 
                 {step === 4 && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                    className="space-y-8 flex-1 flex flex-col items-center justify-center text-center"
-                  >
+                  <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8 flex-1 flex flex-col items-center justify-center text-center">
                     <div className="w-24 h-24 rounded-full bg-green-50 flex items-center justify-center mb-6">
                       <Lock className="w-10 h-10 text-green-500" />
                     </div>
-                    <div>
-                      <h2 className="text-3xl font-light text-neutral-900">Ready for Compilation</h2>
-                      <p className="text-neutral-500 mt-4 max-w-sm">
-                        All constraints have been validated. Clicking deploy will initialize a secure, isolated production cluster for <span className="text-neutral-900 font-medium">"{newServerName}"</span>.
-                      </p>
-                    </div>
+                    <h2 className="text-3xl font-light text-neutral-900">Ready for Compilation</h2>
                   </motion.div>
                 )}
               </AnimatePresence>
 
               <div className="pt-12 flex justify-between items-center border-t border-neutral-100 mt-auto">
-                {step > 1 ? (
-                  <Button variant="ghost" onClick={() => setStep(s => s - 1)} className="rounded-xl px-8">
-                    Back
-                  </Button>
-                ) : (
-                  <div />
-                )}
-                
+                {step > 1 ? <Button variant="ghost" onClick={() => setStep(s => s - 1)}>Back</Button> : <div />}
                 {step === 1 ? (
-                  <Button 
-                    onClick={handleAiAnalyze} 
-                    disabled={isAiAnalyzing || !aiNotes || !industry || !newServerName}
-                    className="bg-black text-white hover:bg-neutral-800 rounded-xl px-8 h-12 gap-2"
-                  >
-                    {isAiAnalyzing ? "Analyzing..." : "AI Blueprint"}
-                    <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+                  <Button onClick={handleAiAnalyze} disabled={isAiAnalyzing} className="bg-black text-white rounded-xl px-8 h-12 gap-2">
+                    {isAiAnalyzing ? "Analyzing..." : "AI Blueprint"} <Sparkles className="w-4 h-4" />
                   </Button>
                 ) : step < 4 ? (
-                  <Button onClick={handleNextStep} className="bg-black text-white hover:bg-neutral-800 rounded-xl px-8 h-12">
-                    Continue
-                  </Button>
+                  <Button onClick={handleNextStep} className="bg-black text-white rounded-xl px-8 h-12">Continue</Button>
                 ) : (
-                  <Button 
-                    onClick={handleDeploy} 
-                    disabled={actionLoading}
-                    className="bg-[#D4AF37] hover:bg-[#B8962E] text-white rounded-xl px-12 h-12 font-medium"
-                  >
+                  <Button onClick={handleDeploy} disabled={actionLoading} className="bg-[#D4AF37] text-white rounded-xl px-12 h-12">
                     {actionLoading ? "Deploying..." : "Finalize & Deploy"}
                   </Button>
                 )}
               </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Blueprint Management Dialog */}
+      <Dialog open={isBlueprintDialogOpen} onOpenChange={setIsBlueprintDialogOpen}>
+        <DialogContent className="max-w-2xl rounded-[40px] p-10 bg-white border-none shadow-3xl">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 rounded-2xl bg-[#D4AF37]/10 text-[#D4AF37]">
+                <Wrench className="w-6 h-6" />
+              </div>
+              <div>
+                <DialogTitle className="text-3xl font-light">Infrastructure Blueprint</DialogTitle>
+                <DialogDescription className="italic">Modify operational modules and rules for {editingServer?.name}.</DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {editBlueprint && (
+            <div className="space-y-8 mt-6">
+              <div className="space-y-4">
+                <h3 className="text-xs uppercase tracking-[0.2em] font-medium text-neutral-400">Operational Modules</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  {Object.entries(editBlueprint.modules).map(([key, value]) => (
+                    <div key={key} className="p-4 rounded-2xl border border-neutral-100 bg-neutral-50/50 flex items-center justify-between">
+                      <span className="text-sm font-medium uppercase tracking-wider">{key}</span>
+                      <Switch 
+                        checked={value} 
+                        onCheckedChange={(c) => setEditBlueprint(prev => prev ? ({
+                          ...prev, modules: { ...prev.modules, [key]: c }
+                        }) : null)} 
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-xs uppercase tracking-[0.2em] font-medium text-neutral-400">Governance Rules</h3>
+                <div className="space-y-3">
+                  {Object.entries(editBlueprint.rules).map(([key, value]) => (
+                    <div key={key} className="p-4 rounded-2xl border border-neutral-100 bg-white shadow-sm flex items-center justify-between">
+                      <span className="text-sm font-medium uppercase tracking-widest">{key.replace(/([A-Z])/g, ' $1')}</span>
+                      <Switch 
+                        checked={value} 
+                        onCheckedChange={(c) => setEditBlueprint(prev => prev ? ({
+                          ...prev, rules: { ...prev.rules, [key]: c }
+                        }) : null)} 
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {editBlueprint.aiNotes && (
+                <div className="p-6 rounded-3xl bg-purple-50/30 border border-purple-100/50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-purple-400" />
+                    <span className="text-[10px] uppercase tracking-widest font-bold text-purple-500">Original AI Intent</span>
+                  </div>
+                  <p className="text-sm italic text-purple-800/70 leading-relaxed font-light">{editBlueprint.aiNotes}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="mt-10">
+            <Button variant="ghost" onClick={() => setIsBlueprintDialogOpen(false)} className="rounded-xl px-8">Cancel</Button>
+            <Button 
+              onClick={handleUpdateBlueprint} 
+              disabled={actionLoading}
+              className="bg-black text-white hover:bg-neutral-800 rounded-xl px-12 h-12 shadow-lg"
+            >
+              {actionLoading ? "Synchronizing..." : "Apply Changes"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

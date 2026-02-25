@@ -147,5 +147,19 @@ export const serverService = {
     const { error } = await supabase.from("profiles").update({ current_server_id: serverId }).eq("id", user.id);
     if (error) throw error;
     return true;
+  },
+
+  async updateServerBlueprint(serverId: string, blueprint: ServerBlueprint) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Unauthorized");
+
+    const { error } = await supabase
+      .from("servers")
+      .update({ blueprint: blueprint as any })
+      .eq("id", serverId)
+      .eq("owner_id", user.id);
+
+    if (error) throw error;
+    return true;
   }
 };

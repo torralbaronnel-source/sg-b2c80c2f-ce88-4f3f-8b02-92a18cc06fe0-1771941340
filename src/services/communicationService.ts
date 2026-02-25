@@ -35,20 +35,18 @@ export const communicationService = {
     });
   },
 
-  subscribeToMessages(communicationId: string, onUpdate: () => void) {
+  subscribeToMessages(communicationId: string, callback: (payload: any) => void) {
     const channel = supabase
-      .channel(`whatsapp_messages:${communicationId}`)
+      .channel(`chat:${communicationId}`)
       .on(
         "postgres_changes",
         {
           event: "INSERT",
           schema: "public",
-          table: "whatsapp_messages",
+          table: "messages",
           filter: `communication_id=eq.${communicationId}`,
         },
-        () => {
-          onUpdate();
-        }
+        (payload) => callback(payload.new)
       )
       .subscribe();
 

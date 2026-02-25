@@ -67,13 +67,15 @@ export function CommunicationDashboardView() {
     }
   }, [messages]);
 
-  // Handle auto-collapse on mobile
+  // Handle auto-collapse and view mode on mobile
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 768) {
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
         setSidebarOpen(false);
       } else {
         setSidebarOpen(true);
+        setViewMode("List"); // Always show list on desktop
       }
     };
     handleResize();
@@ -100,116 +102,117 @@ export function CommunicationDashboardView() {
     setSelectedChat(chat);
     if (window.innerWidth < 768) {
       setViewMode("Chat");
+      setSidebarOpen(false);
     }
   };
 
   return (
-    <div className="flex h-screen w-full bg-white overflow-hidden text-sm sm:text-base">
-      {/* Activity Bar - Collapsible or Hidden on Mobile */}
+    <div className="flex h-screen w-full bg-white overflow-hidden text-xs md:text-sm">
+      {/* Activity Bar - Dark Nav */}
       <div className={cn(
-        "bg-[#201f1f] flex-col items-center py-4 space-y-4 transition-all duration-300",
-        sidebarOpen ? "w-16 flex" : "w-0 hidden md:flex md:w-16"
+        "bg-[#201f1f] flex-col items-center py-4 space-y-4 transition-all duration-300 shrink-0",
+        sidebarOpen ? "w-12 flex" : "w-0 hidden md:flex md:w-12"
       )}>
-        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
-          <Bell className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10">
+          <Bell className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-white bg-white/10">
-          <MessageSquare className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-white bg-white/10">
+          <MessageSquare className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
-          <Users className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10">
+          <Users className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
-          <Calendar className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10">
+          <Calendar className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
-          <CheckSquare className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10">
+          <CheckSquare className="h-4 w-4" />
         </Button>
-        <Button variant="ghost" size="icon" className="text-white/70 hover:text-white hover:bg-white/10">
-          <FileText className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/10">
+          <FileText className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Chat List Sidebar */}
       <div className={cn(
-        "border-r flex flex-col transition-all duration-300 bg-[#f5f5f5]",
-        sidebarOpen ? "w-full md:w-64 lg:w-72" : "w-0 hidden md:flex md:w-64 lg:w-72",
+        "border-r flex flex-col transition-all duration-300 bg-[#f5f5f5] shrink-0",
+        sidebarOpen ? "w-full md:w-56 lg:w-64" : "w-0 hidden md:flex md:w-56 lg:w-64",
         viewMode === "Chat" && "hidden md:flex"
       )}>
-        <div className="p-4 flex items-center justify-between">
-          <h1 className="font-bold text-lg md:text-xl">Chat</h1>
-          <div className="flex gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8"><Search className="h-4 w-4" /></Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8"><Plus className="h-4 w-4" /></Button>
+        <div className="p-3 flex items-center justify-between shrink-0">
+          <h1 className="font-bold text-base md:text-lg">Chat</h1>
+          <div className="flex gap-0.5">
+            <Button variant="ghost" size="icon" className="h-7 w-7"><Search className="h-3.5 w-3.5" /></Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7"><Plus className="h-3.5 w-3.5" /></Button>
           </div>
         </div>
         
-        <div className="px-4 pb-2">
+        <div className="px-3 pb-2 shrink-0">
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-3 w-3 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-2 h-3 w-3 text-muted-foreground" />
             <Input 
-              placeholder="Search or start a new chat" 
-              className="pl-8 h-8 text-xs bg-white border-none shadow-sm"
+              placeholder="Search chats" 
+              className="pl-7 h-7 text-[10px] bg-white border-none shadow-sm focus-visible:ring-1"
             />
           </div>
         </div>
 
-        <ScrollArea className="flex-1 no-scrollbar">
-          <div className="p-2 space-y-4">
+        <ScrollArea className="flex-1 no-scrollbar overflow-y-auto">
+          <div className="p-1.5 space-y-3">
             <div>
-              <p className="px-2 pb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Event Channels</p>
+              <p className="px-2 pb-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Event Channels</p>
               {channels.filter(c => c.type === "Channel").map(channel => (
                 <button
                   key={channel.id}
                   onClick={() => selectChat(channel)}
                   className={cn(
-                    "w-full flex items-center gap-2 p-2 rounded-md transition-colors text-left group",
+                    "w-full flex items-center gap-2 p-1.5 rounded-md transition-colors text-left group",
                     selectedChat?.id === channel.id ? "bg-white shadow-sm" : "hover:bg-white/50"
                   )}
                 >
-                  <div className="h-8 w-8 rounded bg-[#6264a7] flex items-center justify-center text-white shrink-0">
-                    <span className="text-xs font-bold">#</span>
+                  <div className="h-7 w-7 rounded bg-[#6264a7] flex items-center justify-center text-white shrink-0">
+                    <span className="text-[10px] font-bold">#</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
-                      <p className="font-semibold text-xs truncate">{channel.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{channel.time}</p>
+                      <p className="font-semibold text-[11px] truncate">{channel.name}</p>
+                      <p className="text-[9px] text-muted-foreground">{channel.time}</p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground truncate">{channel.lastMsg}</p>
+                    <p className="text-[9px] text-muted-foreground truncate leading-none mt-0.5">{channel.lastMsg}</p>
                   </div>
                 </button>
               ))}
             </div>
 
             <div>
-              <p className="px-2 pb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Recent Chats</p>
+              <p className="px-2 pb-1 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Recent Chats</p>
               {channels.filter(c => c.type === "DM").map(chat => (
                 <button
                   key={chat.id}
                   onClick={() => selectChat(chat)}
                   className={cn(
-                    "w-full flex items-center gap-2 p-2 rounded-md transition-colors text-left",
+                    "w-full flex items-center gap-2 p-1.5 rounded-md transition-colors text-left",
                     selectedChat?.id === chat.id ? "bg-white shadow-sm" : "hover:bg-white/50"
                   )}
                 >
                   <div className="relative shrink-0">
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-7 w-7">
                       <AvatarImage src="" />
-                      <AvatarFallback className="text-[10px] font-bold bg-muted">{chat.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                      <AvatarFallback className="text-[9px] font-bold bg-muted">{chat.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                     </Avatar>
                     {chat.status && (
                       <div className={cn(
-                        "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-white",
+                        "absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-white",
                         chat.status === "online" ? "bg-green-500" : "bg-yellow-500"
                       )} />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-baseline">
-                      <p className="font-semibold text-xs truncate">{chat.name}</p>
-                      <p className="text-[10px] text-muted-foreground">{chat.time}</p>
+                      <p className="font-semibold text-[11px] truncate">{chat.name}</p>
+                      <p className="text-[9px] text-muted-foreground">{chat.time}</p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground truncate">{chat.lastMsg}</p>
+                    <p className="text-[9px] text-muted-foreground truncate leading-none mt-0.5">{chat.lastMsg}</p>
                   </div>
                 </button>
               ))}
@@ -226,64 +229,58 @@ export function CommunicationDashboardView() {
         {selectedChat ? (
           <>
             {/* Header */}
-            <div className="h-12 border-b flex items-center justify-between px-3 md:px-4 shrink-0">
+            <div className="h-10 border-b flex items-center justify-between px-2 md:px-3 shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="md:hidden h-8 w-8"
+                  className="md:hidden h-7 w-7"
                   onClick={() => setViewMode("List")}
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3.5 w-3.5" />
                 </Button>
                 <div className="relative shrink-0">
-                  <div className="h-7 w-7 md:h-8 md:w-8 rounded bg-[#6264a7] flex items-center justify-center text-white">
-                    <span className="text-xs font-bold">{selectedChat.type === "Channel" ? "#" : selectedChat.name[0]}</span>
+                  <div className="h-6 w-6 md:h-7 md:w-7 rounded bg-[#6264a7] flex items-center justify-center text-white">
+                    <span className="text-[10px] font-bold">{selectedChat.type === "Channel" ? "#" : selectedChat.name[0]}</span>
                   </div>
                 </div>
                 <div className="min-w-0">
-                  <h2 className="font-bold text-xs md:text-sm truncate">{selectedChat.name}</h2>
-                  <div className="flex items-center gap-1">
-                    <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
-                    <span className="text-[10px] text-muted-foreground">Available</span>
+                  <h2 className="font-bold text-[11px] md:text-xs truncate leading-tight">{selectedChat.name}</h2>
+                  <div className="flex items-center gap-0.5">
+                    <div className="h-1 w-1 rounded-full bg-green-500" />
+                    <span className="text-[8px] text-muted-foreground">Active</span>
                   </div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-1 md:gap-4 ml-2">
-                <div className="hidden sm:flex border-b">
+              <div className="flex items-center gap-1 md:gap-3 ml-2">
+                <div className="hidden sm:flex items-center border-b">
                   {(["Chat", "Files", "Tasks", "AI Insights"] as TabType[]).map((tab) => (
                     <button
                       key={tab}
                       onClick={() => setActiveTab(tab)}
                       className={cn(
-                        "px-3 py-3 text-xs font-medium transition-colors relative h-12 flex items-center",
+                        "px-2 py-2 text-[10px] font-medium transition-colors relative h-10 flex items-center",
                         activeTab === tab ? "text-[#6264a7]" : "text-muted-foreground hover:text-foreground"
                       )}
                     >
-                      <div className="flex items-center gap-1.5">
-                        {tab === "Chat" && <MessageSquare className="h-3 w-3" />}
-                        {tab === "Files" && <FileText className="h-3 w-3" />}
-                        {tab === "Tasks" && <CheckSquare className="h-3 w-3" />}
-                        {tab === "AI Insights" && <Smile className="h-3 w-3" />}
-                        <span>{tab}</span>
-                      </div>
+                      <span>{tab}</span>
                       {activeTab === tab && (
                         <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#6264a7]" />
                       )}
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-0.5 md:gap-1">
-                  <Button variant="ghost" size="icon" className="h-8 w-8"><Video className="h-4 w-4" /></Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8"><Info className="h-4 w-4" /></Button>
+                <div className="flex items-center gap-0.5">
+                  <Button variant="ghost" size="icon" className="h-7 w-7"><Video className="h-3.5 w-3.5" /></Button>
+                  <Button variant="ghost" size="icon" className="h-7 w-7"><Info className="h-3.5 w-3.5" /></Button>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 md:hidden"
+                    className="h-7 w-7 md:hidden"
                     onClick={() => setSidebarOpen(!sidebarOpen)}
                   >
-                    <Menu className="h-4 w-4" />
+                    <Menu className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
@@ -291,22 +288,22 @@ export function CommunicationDashboardView() {
 
             {/* Messages Area */}
             <div className="flex-1 flex flex-col min-h-0">
-              <ScrollArea className="flex-1 no-scrollbar p-3 md:p-6" ref={scrollRef}>
-                <div className="max-w-4xl mx-auto space-y-4">
+              <ScrollArea className="flex-1 no-scrollbar p-2 md:p-4" ref={scrollRef}>
+                <div className="max-w-3xl mx-auto space-y-3">
                   {messages.map((msg, idx) => {
                     const isOwn = msg.is_from_me;
                     const showAvatar = idx === 0 || messages[idx - 1]?.is_from_me !== msg.is_from_me;
                     
                     return (
                       <div key={idx} className={cn(
-                        "flex gap-2 group",
+                        "flex gap-1.5 group",
                         isOwn ? "flex-row-reverse" : "flex-row"
                       )}>
                         {!isOwn && (
-                          <div className="w-6 shrink-0">
+                          <div className="w-5 shrink-0">
                             {showAvatar && (
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback className="text-[8px] bg-[#6264a7] text-white">
+                              <Avatar className="h-5 w-5">
+                                <AvatarFallback className="text-[7px] bg-[#6264a7] text-white">
                                   {msg.sender_name?.[0] || "?"}
                                 </AvatarFallback>
                               </Avatar>
@@ -314,49 +311,44 @@ export function CommunicationDashboardView() {
                           </div>
                         )}
                         <div className={cn(
-                          "max-w-[85%] md:max-w-[70%]",
-                          isOwn ? "items-end" : "items-start"
+                          "max-w-[85%] md:max-w-[75%]",
+                          isOwn ? "items-end text-right" : "items-start text-left"
                         )}>
                           {showAvatar && !isOwn && (
-                            <p className="text-[10px] text-muted-foreground mb-1 ml-1 font-semibold">{msg.sender_name}</p>
+                            <p className="text-[9px] text-muted-foreground mb-0.5 ml-1 font-semibold">{msg.sender_name}</p>
                           )}
                           <div className={cn(
-                            "p-2 rounded-lg text-xs md:text-sm",
+                            "p-1.5 rounded-md text-[11px] md:text-xs",
                             isOwn ? "bg-[#e8ebfa] text-[#242424] rounded-tr-none" : "bg-white border shadow-sm rounded-tl-none"
                           )}>
-                            <p className="leading-relaxed">{msg.content}</p>
+                            <p className="leading-tight">{msg.content}</p>
                           </div>
-                          <p className="text-[8px] text-muted-foreground mt-1 px-1">2:45 PM</p>
+                          <p className="text-[7px] text-muted-foreground mt-0.5 px-0.5 uppercase">10:45 AM</p>
                         </div>
                       </div>
                     );
                   })}
                   {messages.length === 0 && (
-                    <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4 opacity-40">
-                      <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                        <MessageSquare className="h-8 w-8" />
-                      </div>
-                      <p className="text-sm font-medium">No messages yet. Start the conversation!</p>
+                    <div className="h-full flex flex-col items-center justify-center text-center p-6 space-y-3 opacity-30">
+                      <MessageSquare className="h-6 w-6" />
+                      <p className="text-[10px] font-medium">No messages. Start the coordination.</p>
                     </div>
                   )}
                 </div>
               </ScrollArea>
 
               {/* Input Area */}
-              <div className="p-3 md:p-4 border-t shrink-0">
-                <div className="max-w-4xl mx-auto bg-white border rounded-lg shadow-sm">
-                  <div className="flex items-center gap-1 p-1 border-b">
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><Paperclip className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><Smile className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><AtSign className="h-3.5 w-3.5" /></Button>
-                    <div className="h-4 w-px bg-border mx-1" />
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><Bold className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground"><Italic className="h-3.5 w-3.5" /></Button>
+              <div className="p-2 md:p-3 border-t shrink-0">
+                <div className="max-w-3xl mx-auto bg-white border rounded-md shadow-sm">
+                  <div className="flex items-center gap-0.5 p-0.5 border-b">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground"><Paperclip className="h-3 w-3" /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground"><Smile className="h-3 w-3" /></Button>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground"><Bold className="h-3 w-3" /></Button>
                   </div>
-                  <div className="flex items-end p-2 gap-2">
+                  <div className="flex items-end p-1.5 gap-1.5">
                     <textarea 
-                      placeholder={`Message ${selectedChat.name}`}
-                      className="flex-1 bg-transparent border-none focus:ring-0 resize-none py-1 min-h-[40px] max-h-32 text-xs md:text-sm no-scrollbar outline-none"
+                      placeholder="Type a message..."
+                      className="flex-1 bg-transparent border-none focus:ring-0 resize-none py-1 min-h-[32px] max-h-24 text-[11px] md:text-xs no-scrollbar outline-none"
                       rows={1}
                       value={newMessage}
                       onChange={(e) => setNewMessage(e.target.value)}
@@ -369,10 +361,10 @@ export function CommunicationDashboardView() {
                     />
                     <Button 
                       size="icon" 
-                      className="h-8 w-8 bg-[#6264a7] hover:bg-[#4b4d8a] text-white shrink-0 rounded-full"
+                      className="h-7 w-7 bg-[#6264a7] hover:bg-[#4b4d8a] text-white shrink-0 rounded-full"
                       onClick={handleSendMessage}
                     >
-                      <Send className="h-3.5 w-3.5" />
+                      <Send className="h-3 w-3" />
                     </Button>
                   </div>
                 </div>
@@ -380,20 +372,14 @@ export function CommunicationDashboardView() {
             </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-[#f5f5f5]">
-            <div className="h-20 w-20 rounded-full bg-white shadow-sm flex items-center justify-center mb-4">
-              <MessageSquare className="h-10 w-10 text-[#6264a7]" />
+          <div className="flex-1 flex flex-col items-center justify-center text-center p-6 bg-[#f5f5f5]">
+            <div className="h-16 w-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-3">
+              <MessageSquare className="h-8 w-8 text-[#6264a7]" />
             </div>
-            <h3 className="text-lg font-bold">Select a chat to start</h3>
-            <p className="text-xs text-muted-foreground max-w-xs mt-2">
-              Choose a channel or direct message from the sidebar to start coordinating with your team.
+            <h3 className="text-sm font-bold">Select a chat</h3>
+            <p className="text-[10px] text-muted-foreground max-w-[180px] mt-1.5">
+              Choose a channel or direct message to start coordinating.
             </p>
-            <Button 
-              className="mt-6 md:hidden bg-[#6264a7]"
-              onClick={() => setViewMode("List")}
-            >
-              View Channels
-            </Button>
           </div>
         )}
       </div>

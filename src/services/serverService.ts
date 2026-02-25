@@ -77,6 +77,7 @@ export const serverService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
+    console.log("Starting server deployment for user:", user.id);
     const serverId = generateServerId();
     
     // 1. Create the server
@@ -86,12 +87,17 @@ export const serverService = {
         name,
         server_handle: serverId,
         owner_id: user.id,
-        invite_code: generateServerId() // Use same logic for 18-digit invite codes
+        invite_code: generateServerId()
       })
       .select()
       .single();
 
-    if (serverError) throw serverError;
+    if (serverError) {
+      console.error("Step 1 Failed (Create Server):", serverError);
+      throw serverError;
+    }
+
+    console.log("Step 1 Success: Server created with ID", server.id);
 
     // 2. Add creator as portal_admin
     const { error: memberError } = await supabase
@@ -102,13 +108,23 @@ export const serverService = {
         role: "portal_admin"
       });
 
-    if (memberError) throw memberError;
+    if (memberError) {
+      console.error("Step 2 Failed (Add Member):", memberError);
+      throw memberError;
+    }
+
+    console.log("Step 2 Success: Member added");
 
     // 3. Set as current server
-    await supabase
+    const { error: profileError } = await supabase
       .from("profiles")
       .update({ current_server_id: server.id })
       .eq("id", user.id);
+
+    if (profileError) {
+      console.error("Step 3 Failed (Update Profile):", profileError);
+      // We don't throw here as the server is already created
+    }
 
     return server;
   },
@@ -117,6 +133,8 @@ export const serverService = {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
+    console.log("Attempting to join server with code:", inviteCode);
+
     // 1. Find server by invite code
     const { data: server, error: fetchError } = await supabase
       .from("servers")
@@ -124,7 +142,10 @@ export const serverService = {
       .eq("invite_code", inviteCode)
       .single();
 
-    if (fetchError || !server) throw new Error("Invalid invite code");
+    if (fetchError || !server) {
+      console.error("Join Step 1 Failed (Fetch Server):", fetchError);
+      throw new Error("Invalid invite code");
+    }
 
     // 2. Add member
     const { error: joinError } = await supabase
@@ -136,6 +157,7 @@ export const serverService = {
       });
 
     if (joinError) {
+      console.error("Join Step 2 Failed (Add Member):", joinError);
       if (joinError.code === "23505") throw new Error("Already a member of this server");
       throw joinError;
     }

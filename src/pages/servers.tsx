@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { serverService, ServerBlueprint } from "@/services/serverService";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { 
   DropdownMenu, 
@@ -105,32 +106,42 @@ export default function ServersPage() {
   }, [currentPage, loadServers]);
 
   const handleAiAnalyze = async () => {
-    if (!aiNotes.trim()) return;
+    if (!aiNotes.trim() || !industry.trim()) {
+      toast({ variant: "destructive", title: "Missing Context", description: "Please provide both an industry and strategic intent notes." });
+      return;
+    }
     setIsAiAnalyzing(true);
     
-    // Simulate GPT-5.1 Nano analysis
-    setTimeout(() => {
-      const isWedding = aiNotes.toLowerCase().includes("wedding") || aiNotes.toLowerCase().includes("event");
-      const isFintech = aiNotes.toLowerCase().includes("money") || aiNotes.toLowerCase().includes("bank");
-      
-      setBlueprint(prev => ({
-        ...prev,
-        modules: {
-          ...prev.modules,
-          whatsapp: isWedding,
-          finance: isFintech || isWedding,
-        },
-        rules: {
-          ...prev.rules,
-          strictBudgeting: isFintech,
-          requireContract: isWedding || isFintech
-        }
-      }));
-      
-      setIsAiAnalyzing(false);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-server-blueprint', {
+        body: { industry, notes: aiNotes }
+      });
+
+      if (error) throw error;
+
+      if (data) {
+        setBlueprint({
+          modules: data.modules,
+          rules: data.rules
+        });
+        
+        setStep(2);
+        toast({ 
+          title: "AI Strategy Generated", 
+          description: data.reasoning || "GPT-5.1 Nano has optimized your infrastructure blueprint." 
+        });
+      }
+    } catch (error: any) {
+      toast({ 
+        variant: "destructive", 
+        title: "AI Analysis Failed", 
+        description: "Could not connect to AI strategist. Please configure manually." 
+      });
+      // Fallback to manual if AI fails
       setStep(2);
-      toast({ title: "AI Strategy Generated", description: "GPT-5.1 Nano has optimized your infrastructure blueprint." });
-    }, 2000);
+    } finally {
+      setIsAiAnalyzing(false);
+    }
   };
 
   const handleDeploy = async () => {

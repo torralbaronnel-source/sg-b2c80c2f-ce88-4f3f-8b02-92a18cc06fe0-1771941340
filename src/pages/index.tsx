@@ -61,7 +61,7 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [conciergeOpen, setConciergeOpen] = useState(false);
-  const [conciergeType, setConciergeType] = useState<"demo" | "consultation">("demo");
+  const [conciergeType, setConciergeType] = useState<"Private Demo" | "Business Consultation" | "Portal Customization">("Private Demo");
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -71,7 +71,7 @@ export default function LandingPage() {
 
   const handleRequestDemo = (type: "demo" | "consultation") => {
     const mappedType = type === "demo" ? "Private Demo" : "Business Consultation";
-    setConciergeType(mappedType as any);
+    setConciergeType(mappedType);
     setConciergeOpen(true);
   };
 

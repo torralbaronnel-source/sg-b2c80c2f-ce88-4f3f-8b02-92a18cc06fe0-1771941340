@@ -11,14 +11,26 @@ import Link from "next/link";
 const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password", "/terms", "/privacy"];
 
 // Memoize the layout to prevent re-renders during navigation
-export const AppLayout = memo(({ children }: { children: React.ReactNode }) => {
+export function AppLayout({ children }: { children: React.ReactNode }) {
+  const { isLoading, user } = useAuth();
   const router = useRouter();
-  const { user, isLoading, currentServer } = useAuth();
+  const { currentServer } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <div className="text-center">
+          <div className="spinner-border animate-spin inline-block w-10 h-10 border-4 rounded-full border-gray-300 border-t-gray-500"></div>
+          <div className="mt-4 text-gray-500">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   if (!mounted) return null;
 
@@ -76,7 +88,7 @@ export const AppLayout = memo(({ children }: { children: React.ReactNode }) => {
       </div>
     </SidebarProvider>
   );
-});
+}
 
 AppLayout.displayName = "AppLayout";
 

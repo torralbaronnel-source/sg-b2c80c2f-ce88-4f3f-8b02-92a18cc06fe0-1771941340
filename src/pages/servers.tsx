@@ -17,11 +17,13 @@ import {
   Wrench,
   Filter,
   LayoutGrid,
-  List
+  List,
+  Database
 } from "lucide-react";
 import { serverService, ServerBlueprint } from "@/services/serverService";
-import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { SEO } from "@/components/SEO";
+import { useToast } from "@/hooks/use-toast";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -55,10 +57,12 @@ export default function ServersPage() {
   const [servers, setServers] = useState<Server[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingServer, setLoadingServer] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | "portal_admin" | "member">("all");
-  const [sortBy, setSortBy] = useState<"name" | "newest">("newest");
+  const [industryFilter, setIndustryFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"name" | "newest" | "industry">("newest");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   
   const [editingServer, setEditingServer] = useState<Server | null>(null);
@@ -69,6 +73,7 @@ export default function ServersPage() {
   const [actionLoading, setActionLoading] = useState(false);
   
   const router = useRouter();
+  const { profile, currentServer, setCurrentServer, refreshProfile } = useAuth();
   const { toast } = useToast();
 
   const loadServers = useCallback(async (page: number) => {
@@ -130,25 +135,52 @@ export default function ServersPage() {
     }
   };
 
-  const selectServer = async (serverId: string) => {
+  const handleSelectServer = async (server: any) => {
+    // 1. Instant UI Feedback (Optimistic)
+    const previousServer = currentServer;
+    setLoadingServer(server.id);
+    setCurrentServer({ id: server.id, name: server.name });
+    
     try {
-      await serverService.selectServer(serverId);
+      // 2. Background DB Update
+      await serverService.selectServer(server.id);
+      
+      toast({
+        title: "Switched to Node",
+        description: `Now connected to ${server.name}`,
+      });
+
+      // 3. Fast Navigation
       router.push("/dashboard");
-    } catch (error: any) {
-      toast({ variant: "destructive", title: "Session Error", description: error.message });
+    } catch (error) {
+      // 4. Rollback on failure
+      setCurrentServer(previousServer);
+      console.error("Switch error:", error);
+      toast({
+        variant: "destructive",
+        title: "Switch Failed",
+        description: "Reverting to previous node connection.",
+      });
+    } finally {
+      setLoadingServer(null);
     }
   };
 
   const filteredServers = servers
     .filter(s => {
-      const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.id.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           s.id.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesRole = roleFilter === "all" || s.userRole === roleFilter;
-      return matchesSearch && matchesRole;
+      const matchesIndustry = industryFilter === "all" || s.industry === industryFilter;
+      return matchesSearch && matchesRole && matchesIndustry;
     })
     .sort((a, b) => {
       if (sortBy === "name") return a.name.localeCompare(b.name);
+      if (sortBy === "industry") return (a.industry || "").localeCompare(b.industry || "");
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });
+
+  const industries = Array.from(new Set(servers.map(s => s.industry).filter(Boolean)));
 
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -173,7 +205,7 @@ export default function ServersPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
               <Input 
                 placeholder="Search fleet..." 
-                className="pl-10 w-full md:w-[250px] bg-white border-neutral-200 focus:ring-[#D4AF37]"
+                className="pl-10 w-full md:w-[250px] bg-white border-neutral-200 focus:ring-[#D4AF37] rounded-full"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -181,16 +213,51 @@ export default function ServersPage() {
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 border-neutral-200 rounded-full">
+                <Button variant="outline" className="gap-2 border-neutral-200 rounded-full h-10 px-4">
                   <Filter className="w-4 h-4" />
-                  Filter
+                  {roleFilter === "all" ? "All Roles" : roleFilter.replace("_", " ")}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent align="end" className="w-56 rounded-xl">
                 <DropdownMenuLabel>Governance</DropdownMenuLabel>
                 <DropdownMenuItem onClick={() => setRoleFilter("all")}>All Clusters</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setRoleFilter("portal_admin")}>Root Access Only</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setRoleFilter("member")}>Guest Nodes</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {industries.length > 0 && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="gap-2 border-neutral-200 rounded-full h-10 px-4">
+                    <Database className="w-4 h-4" />
+                    {industryFilter === "all" ? "All Industries" : industryFilter}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                  <DropdownMenuLabel>Industry</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setIndustryFilter("all")}>All Sectors</DropdownMenuItem>
+                  {industries.map(ind => (
+                    <DropdownMenuItem key={ind} onClick={() => setIndustryFilter(ind!)}>
+                      {ind}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2 border-neutral-200 rounded-full h-10 px-4">
+                  <ArrowRight className="w-4 h-4 rotate-90" />
+                  Sort: {sortBy}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 rounded-xl">
+                <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+                <DropdownMenuItem onClick={() => setSortBy("newest")}>Date Created (Newest)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("name")}>Server Name (A-Z)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setSortBy("industry")}>Industry</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -293,7 +360,7 @@ export default function ServersPage() {
                         </div>
                         <Button 
                           variant="ghost" 
-                          onClick={() => selectServer(server.id)}
+                          onClick={() => handleSelectServer(server)}
                           className="flex items-center gap-2 text-[#D4AF37] font-medium text-sm hover:text-[#B8962E] hover:bg-transparent p-0"
                         >
                           Initialize <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />

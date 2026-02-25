@@ -15,14 +15,14 @@ import { Eye, EyeOff, Loader2, ShieldCheck, Lock, Mail, User, Building2 } from "
 import { SEO } from "@/components/SEO";
 import { motion } from "framer-motion";
 
-const LoginPage: NextPage = () => {
-  const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
-  
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { isLoading, user } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+  
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<"team" | "client">("team");
   
@@ -34,11 +34,11 @@ const LoginPage: NextPage = () => {
   const [lockoutTime, setLockoutTime] = useState(0);
 
   useEffect(() => {
-    if (user && !authLoading) {
+    if (!isLoading && user) {
       console.log("Login Page: User detected, redirecting to dashboard");
       router.push("/dashboard");
     }
-  }, [user, authLoading, router]);
+  }, [user, isLoading, router]);
 
   useEffect(() => {
     if (lockoutTime > 0) {
@@ -51,7 +51,7 @@ const LoginPage: NextPage = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setError(null);
 
     try {
       const { error } = await authService.signIn(email, password);
@@ -59,13 +59,12 @@ const LoginPage: NextPage = () => {
       toast({ title: "Authorized", description: "Identity verified. Redirecting to Mission Control." });
       router.push("/servers");
     } catch (error: any) {
+      setError(error.message || "Invalid credentials.");
       toast({
         title: "Access Denied",
         description: error.message || "Invalid credentials.",
         variant: "destructive",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -228,6 +227,4 @@ const LoginPage: NextPage = () => {
       </div>
     </div>
   );
-};
-
-export default LoginPage;
+}

@@ -14,15 +14,15 @@ import { useToast } from "@/hooks/use-toast";
 import { Eye, EyeOff, Loader2, ShieldCheck, Mail, User, Building2, CheckCircle2, Circle } from "lucide-react";
 import { SEO } from "@/components/SEO";
 
-const SignupPage: NextPage = () => {
+export default function SignupPage() {
+  const { isLoading, user } = useAuth();
   const router = useRouter();
-  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingState, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
   
@@ -36,13 +36,15 @@ const SignupPage: NextPage = () => {
   });
 
   useEffect(() => {
-    setStrength({
-      length: password.length >= 8,
-      upper: /[A-Z]/.test(password),
-      lower: /[a-z]/.test(password),
-      number: /[0-9]/.test(password),
-      special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
-    });
+    if (!isLoading && user) {
+      setStrength({
+        length: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+      });
+    }
   }, [password]);
 
   const isPasswordStrong = Object.values(strength).every(Boolean);
@@ -231,9 +233,9 @@ const SignupPage: NextPage = () => {
               <Button
                 type="submit"
                 className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-lg shadow-indigo-600/20"
-                disabled={isLoading}
+                disabled={isLoadingState}
               >
-                {isLoading ? (
+                {isLoadingState ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating Profile...
@@ -269,6 +271,4 @@ const SignupPage: NextPage = () => {
       </div>
     </div>
   );
-};
-
-export default SignupPage;
+}

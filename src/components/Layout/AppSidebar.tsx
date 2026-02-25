@@ -108,7 +108,6 @@ const navigationItems: NavGroup[] = [
   },
   {
     title: "System",
-    url: "#",
     icon: Cpu,
     items: [
       {

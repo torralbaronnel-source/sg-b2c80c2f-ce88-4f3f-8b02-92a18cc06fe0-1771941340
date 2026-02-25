@@ -11,7 +11,9 @@ import {
   AlertTriangle,
   Zap,
   CreditCard,
-  PlusCircle
+  PlusCircle,
+  LayoutDashboard,
+  Star
 } from "lucide-react";
 import { 
   Card, 
@@ -41,6 +43,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { ConciergeManager } from "./ConciergeManager";
 
 interface Organization {
   id: string;
@@ -61,6 +64,14 @@ export function SuperAdminView() {
     organizations: 0,
     activeEvents: 0
   });
+
+  const tabs = [
+    { id: "overview", label: "System Overview", icon: LayoutDashboard },
+    { id: "users", label: "User Management", icon: Users },
+    { id: "concierge", label: "Private Concierge", icon: Star },
+    { id: "events", label: "Global Events", icon: Calendar },
+    { id: "settings", label: "Infrastructure", icon: ShieldCheck },
+  ];
 
   useEffect(() => {
     fetchStats();
@@ -289,6 +300,13 @@ export function SuperAdminView() {
           </Table>
         </CardContent>
       </Card>
+
+      <TabsContent value="concierge" className="mt-6">
+        <ConciergeManager />
+      </TabsContent>
+
+      <TabsContent value="users" className="mt-6">
+      </TabsContent>
     </div>
   );
 }

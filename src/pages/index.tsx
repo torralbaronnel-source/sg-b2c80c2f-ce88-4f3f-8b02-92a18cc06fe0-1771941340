@@ -34,6 +34,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useInView } from "react-intersection-observer";
 import { SEO } from "@/components/SEO";
+import { ConciergeDialog } from "@/components/Communication/ConciergeDialog";
+import { ConciergeRequestType } from "@/services/conciergeService";
 
 // Types
 interface Module {
@@ -272,6 +274,8 @@ export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
   const [currentPage, setCurrentPage] = useState(1);
+  const [showConcierge, setShowConcierge] = useState(false);
+  const [conciergeType, setConciergeType] = useState<ConciergeRequestType>("Private Demo");
   const cardsPerPage = 6;
 
   // Filter and search logic
@@ -295,6 +299,11 @@ export default function LandingPage() {
   const scrollToGrid = () => {
     const grid = document.getElementById("feature-grid");
     if (grid) grid.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const handleRequestDemo = (type: ConciergeRequestType = "Private Demo") => {
+    setConciergeType(type);
+    setShowConcierge(true);
   };
 
   const categories = ["All", "Planning", "Client", "Finance", "Logistics"];
@@ -591,11 +600,18 @@ export default function LandingPage() {
               Join the world's most prestigious production teams. Experience the power of total orchestration.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-8">
-              <Button className="h-20 px-12 rounded-2xl bg-brand-primary text-white text-xl font-bold hover:shadow-[0_20px_40px_rgba(212,175,55,0.4)] transition-all scale-105">
-                Acquire Full Suite
+              <Button 
+                onClick={() => handleRequestDemo("Private Demo")}
+                className="bg-gold-dark hover:bg-gold-light text-white px-8 h-14 rounded-full text-lg font-medium transition-all transform hover:scale-105 shadow-xl shadow-gold-dark/20"
+              >
+                Request Private Demo
               </Button>
-              <Button variant="ghost" className="h-20 px-12 rounded-2xl text-white text-xl font-bold hover:bg-white/10">
-                Speak with a Consultant
+              <Button 
+                onClick={() => handleRequestDemo("Business Consultation")}
+                variant="outline" 
+                className="border-stone-200 hover:border-gold-dark text-stone-600 px-8 h-14 rounded-full text-lg font-medium transition-all"
+              >
+                Business Consultation
               </Button>
             </div>
           </div>
@@ -678,6 +694,12 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <ConciergeDialog 
+        isOpen={showConcierge} 
+        onClose={() => setShowConcierge(false)} 
+        initialType={conciergeType}
+      />
     </div>
   );
 }

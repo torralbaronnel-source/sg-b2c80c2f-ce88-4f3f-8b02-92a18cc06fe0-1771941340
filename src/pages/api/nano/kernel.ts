@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     switch (action) {
       case 'execute_sql': {
-        const { data, error } = await supabase.rpc('execute_sql', { sql_query: payload.query });
+        const { data, error } = await supabase.rpc('exec_sql', { sql_query: payload.query });
         if (error) throw error;
         return res.status(200).json({ success: true, data });
       }

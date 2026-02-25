@@ -25,6 +25,7 @@ export const serverService = {
 
     try {
       // Step 1: Fetch the membership records only (identifies WHICH servers)
+      // This uses the absolute_flat_member_select policy which has ZERO recursion.
       const { data: memberData, error: memberError, count } = await supabase
         .from("server_members")
         .select("server_id, role", { count: "exact" })
@@ -39,7 +40,7 @@ export const serverService = {
         return { servers: [], totalCount: 0 };
       }
 
-      // Step 2: Fetch the actual server details for those IDs
+      // Step 2: Fetch the actual server details for those IDs in a separate, simple query
       const serverIds = memberData.map(m => m.server_id);
       const { data: serverData, error: serverError } = await supabase
         .from("servers")
@@ -51,14 +52,15 @@ export const serverService = {
         return { servers: [], totalCount: 0 };
       }
 
-      // Merge the data back together
+      // Merge the data back together in the app layer
       const servers = memberData.map(member => {
         const details = serverData.find(s => s.id === member.server_id);
+        if (!details) return null;
         return {
           ...details,
           userRole: member.role
         };
-      }).filter(s => s.id); // Remove any that might not have been found
+      }).filter((s): s is any => s !== null);
 
       return {
         servers,

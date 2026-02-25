@@ -8,6 +8,7 @@ import { Search, Filter, MoreVertical, Send, Phone, Video, Loader2 } from "lucid
 import { whatsappService, Communication } from "@/services/whatsappService";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import Image from "next/image";
 
 export function WhatsAppManagerView() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);

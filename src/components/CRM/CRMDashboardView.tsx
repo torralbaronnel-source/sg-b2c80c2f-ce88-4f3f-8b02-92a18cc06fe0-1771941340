@@ -65,6 +65,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 type SortBy = "full_name" | "created_at" | "total_spent";
 type SortDir = "asc" | "desc";
@@ -363,300 +364,303 @@ export function CRMDashboardView() {
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="invisible h-0 w-0 overflow-hidden">
-          <h1 className="text-4xl font-bold tracking-tight text-gray-900">CRM & Client Management</h1>
-        </div>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Client Relationship Management</h1>
+            <p className="text-muted-foreground">Manage your client lifecycle and communications.</p>
+          </div>
 
-        <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white gap-2 shadow-lg hover:shadow-xl transition-shadow">
-              <Plus className="h-4 w-4" />
-              Add New Client
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-2xl">Create New Client Profile</DialogTitle>
-              <DialogDescription>
-                Step {createStep} of 3: Add complete client information for your CRM system
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-6 py-4">
-              {/* Step 1: Basic Information */}
-              {createStep === 1 && (
-                <div className="space-y-4 animate-in fade-in-50 duration-300">
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Personal Information
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2 col-span-2 md:col-span-1">
-                      <Label className="font-semibold text-gray-700">Full Name *</Label>
-                      <Input
-                        value={formData.full_name}
-                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                        placeholder="John Doe"
-                        className="border-gray-300"
-                      />
-                    </div>
-                    <div className="space-y-2 col-span-2 md:col-span-1">
-                      <Label className="font-semibold text-gray-700">Email *</Label>
-                      <Input
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        placeholder="john@example.com"
-                        className="border-gray-300"
-                      />
-                    </div>
-                    <div className="space-y-2 col-span-2 md:col-span-1">
-                      <Label className="font-semibold text-gray-700">Phone</Label>
-                      <Input
-                        value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+63 XXX XXX XXXX"
-                        className="border-gray-300"
-                      />
-                    </div>
-                    <div className="space-y-2 col-span-2 md:col-span-1">
-                      <Label className="font-semibold text-gray-700">Company</Label>
-                      <Input
-                        value={formData.company_name}
-                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                        placeholder="Company Name (if applicable)"
-                        className="border-gray-300"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Location & Source */}
-              {createStep === 2 && (
-                <div className="space-y-4 animate-in fade-in-50 duration-300">
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Location & Lead Source
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label className="font-semibold text-gray-700">City</Label>
-                      <Input
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                        placeholder="Manila"
-                        className="border-gray-300"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="font-semibold text-gray-700">Country</Label>
-                      <Input
-                        value={formData.country}
-                        onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                        placeholder="Philippines"
-                        className="border-gray-300"
-                      />
-                    </div>
-                    <div className="space-y-2 col-span-2">
-                      <Label className="font-semibold text-gray-700">Address</Label>
-                      <Input
-                        value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                        placeholder="Street address"
-                        className="border-gray-300"
-                      />
-                    </div>
-                    <div className="space-y-2 col-span-2 md:col-span-1">
-                      <Label className="font-semibold text-gray-700">Lead Source</Label>
-                      <Select value={formData.source} onValueChange={(v) => setFormData({ ...formData, source: v as any })}>
-                        <SelectTrigger className="border-gray-300">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Facebook">Facebook</SelectItem>
-                          <SelectItem value="Instagram">Instagram</SelectItem>
-                          <SelectItem value="Referral">Referral</SelectItem>
-                          <SelectItem value="Website">Website</SelectItem>
-                          <SelectItem value="Event">Event</SelectItem>
-                          <SelectItem value="Direct">Direct</SelectItem>
-                          <SelectItem value="Search">Search Engine</SelectItem>
-                          <SelectItem value="Other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2 col-span-2 md:col-span-1">
-                      <Label className="font-semibold text-gray-700">Initial Status</Label>
-                      <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v as any })}>
-                        <SelectTrigger className="border-gray-300">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Lead">Lead</SelectItem>
-                          <SelectItem value="Prospect">Prospect</SelectItem>
-                          <SelectItem value="Active">Active Client</SelectItem>
-                          <SelectItem value="Completed">Completed Project</SelectItem>
-                          <SelectItem value="Archived">Archived</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Notes & Summary */}
-              {createStep === 3 && (
-                <div className="space-y-4 animate-in fade-in-50 duration-300">
-                  <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    Notes & Summary
-                  </h3>
-                  <div className="space-y-2">
-                    <Label className="font-semibold text-gray-700">Notes & Preferences</Label>
-                    <Textarea
-                      value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                      placeholder="Add special preferences, event type preferences, budget range, event dates, or any important notes..."
-                      rows={5}
-                      className="border-gray-300"
-                    />
-                  </div>
-
-                  {/* Summary */}
-                  <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
-                    <h4 className="font-semibold text-gray-900">Client Summary</h4>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <p className="text-gray-600">Name</p>
-                        <p className="font-semibold text-gray-900">{formData.full_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Email</p>
-                        <p className="font-semibold text-gray-900">{formData.email}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Company</p>
-                        <p className="font-semibold text-gray-900">{formData.company_name || "N/A"}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Location</p>
-                        <p className="font-semibold text-gray-900">{formData.city}, {formData.country}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Lead Source</p>
-                        <p className="font-semibold text-gray-900">{formData.source}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Status</p>
-                        <Badge className={getStatusBadgeVariant(formData.status)}>{formData.status}</Badge>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <DialogFooter className="flex justify-between">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (createStep > 1) {
-                    setCreateStep(createStep - 1);
-                  } else {
-                    setIsCreateOpen(false);
-                    setCreateStep(1);
-                    resetForm();
-                  }
-                }}
-              >
-                {createStep > 1 ? "Back" : "Cancel"}
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-gradient-to-r from-blue-600 to-blue-700 text-white gap-2 shadow-lg hover:shadow-xl transition-shadow">
+                <Plus className="h-4 w-4" />
+                Add New Client
               </Button>
-              <div className="flex gap-2">
-                {createStep < 3 ? (
-                  <Button onClick={() => setCreateStep(createStep + 1)} className="bg-blue-600 hover:bg-blue-700">
-                    Next
-                  </Button>
-                ) : (
-                  <Button onClick={handleCreateClient} className="bg-green-600 hover:bg-green-700">
-                    Create Client
-                  </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-2xl">Create New Client Profile</DialogTitle>
+                <DialogDescription>
+                  Step {createStep} of 3: Add complete client information for your CRM system
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-6 py-4">
+                {/* Step 1: Basic Information */}
+                {createStep === 1 && (
+                  <div className="space-y-4 animate-in fade-in-50 duration-300">
+                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Personal Information
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2 col-span-2 md:col-span-1">
+                        <Label className="font-semibold text-gray-700">Full Name *</Label>
+                        <Input
+                          value={formData.full_name}
+                          onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                          placeholder="John Doe"
+                          className="border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2 md:col-span-1">
+                        <Label className="font-semibold text-gray-700">Email *</Label>
+                        <Input
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          placeholder="john@example.com"
+                          className="border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2 md:col-span-1">
+                        <Label className="font-semibold text-gray-700">Phone</Label>
+                        <Input
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          placeholder="+63 XXX XXX XXXX"
+                          className="border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2 md:col-span-1">
+                        <Label className="font-semibold text-gray-700">Company</Label>
+                        <Input
+                          value={formData.company_name}
+                          onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                          placeholder="Company Name (if applicable)"
+                          className="border-gray-300"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 2: Location & Source */}
+                {createStep === 2 && (
+                  <div className="space-y-4 animate-in fade-in-50 duration-300">
+                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                      <MapPin className="h-4 w-4" />
+                      Location & Lead Source
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="font-semibold text-gray-700">City</Label>
+                        <Input
+                          value={formData.city}
+                          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                          placeholder="Manila"
+                          className="border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="font-semibold text-gray-700">Country</Label>
+                        <Input
+                          value={formData.country}
+                          onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                          placeholder="Philippines"
+                          className="border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2">
+                        <Label className="font-semibold text-gray-700">Address</Label>
+                        <Input
+                          value={formData.address}
+                          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                          placeholder="Street address"
+                          className="border-gray-300"
+                        />
+                      </div>
+                      <div className="space-y-2 col-span-2 md:col-span-1">
+                        <Label className="font-semibold text-gray-700">Lead Source</Label>
+                        <Select value={formData.source} onValueChange={(v) => setFormData({ ...formData, source: v as any })}>
+                          <SelectTrigger className="border-gray-300">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Facebook">Facebook</SelectItem>
+                            <SelectItem value="Instagram">Instagram</SelectItem>
+                            <SelectItem value="Referral">Referral</SelectItem>
+                            <SelectItem value="Website">Website</SelectItem>
+                            <SelectItem value="Event">Event</SelectItem>
+                            <SelectItem value="Direct">Direct</SelectItem>
+                            <SelectItem value="Search">Search Engine</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2 col-span-2 md:col-span-1">
+                        <Label className="font-semibold text-gray-700">Initial Status</Label>
+                        <Select value={formData.status} onValueChange={(v) => setFormData({ ...formData, status: v as any })}>
+                          <SelectTrigger className="border-gray-300">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Lead">Lead</SelectItem>
+                            <SelectItem value="Prospect">Prospect</SelectItem>
+                            <SelectItem value="Active">Active Client</SelectItem>
+                            <SelectItem value="Completed">Completed Project</SelectItem>
+                            <SelectItem value="Archived">Archived</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Notes & Summary */}
+                {createStep === 3 && (
+                  <div className="space-y-4 animate-in fade-in-50 duration-300">
+                    <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                      <FileText className="h-4 w-4" />
+                      Notes & Summary
+                    </h3>
+                    <div className="space-y-2">
+                      <Label className="font-semibold text-gray-700">Notes & Preferences</Label>
+                      <Textarea
+                        value={formData.notes}
+                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                        placeholder="Add special preferences, event type preferences, budget range, event dates, or any important notes..."
+                        rows={5}
+                        className="border-gray-300"
+                      />
+                    </div>
+
+                    {/* Summary */}
+                    <div className="border rounded-lg p-4 bg-gray-50 space-y-3">
+                      <h4 className="font-semibold text-gray-900">Client Summary</h4>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                          <p className="text-gray-600">Name</p>
+                          <p className="font-semibold text-gray-900">{formData.full_name}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Email</p>
+                          <p className="font-semibold text-gray-900">{formData.email}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Company</p>
+                          <p className="font-semibold text-gray-900">{formData.company_name || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Location</p>
+                          <p className="font-semibold text-gray-900">{formData.city}, {formData.country}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Lead Source</p>
+                          <p className="font-semibold text-gray-900">{formData.source}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-600">Status</p>
+                          <Badge className={getStatusBadgeVariant(formData.status)}>{formData.status}</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
               </div>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
 
-      {/* Search and Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-        <div className="relative w-full md:max-w-sm">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by name, email, company..."
-            className="pl-9 border-gray-300"
-          />
+              <DialogFooter className="flex justify-between">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (createStep > 1) {
+                      setCreateStep(createStep - 1);
+                    } else {
+                      setIsCreateOpen(false);
+                      setCreateStep(1);
+                      resetForm();
+                    }
+                  }}
+                >
+                  {createStep > 1 ? "Back" : "Cancel"}
+                </Button>
+                <div className="flex gap-2">
+                  {createStep < 3 ? (
+                    <Button onClick={() => setCreateStep(createStep + 1)} className="bg-blue-600 hover:bg-blue-700">
+                      Next
+                    </Button>
+                  ) : (
+                    <Button onClick={handleCreateClient} className="bg-green-600 hover:bg-green-700">
+                      Create Client
+                    </Button>
+                  )}
+                </div>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
-            <SelectTrigger className="w-[150px] border-gray-300">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="Lead">Lead</SelectItem>
-              <SelectItem value="Prospect">Prospect</SelectItem>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Completed">Completed</SelectItem>
-              <SelectItem value="Archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
+        {/* Search and Filters */}
+        <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div className="relative w-full md:max-w-sm">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search by name, email, company..."
+              className="pl-9 border-gray-300"
+            />
+          </div>
 
-          <Select value={sourceFilter} onValueChange={setSourceFilter}>
-            <SelectTrigger className="w-[150px] border-gray-300">
-              <SelectValue placeholder="Source" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All sources</SelectItem>
-              {sources.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <Select value={statusFilter} onValueChange={(v: StatusFilter) => setStatusFilter(v)}>
+              <SelectTrigger className="w-[150px] border-gray-300">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="Lead">Lead</SelectItem>
+                <SelectItem value="Prospect">Prospect</SelectItem>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Completed">Completed</SelectItem>
+                <SelectItem value="Archived">Archived</SelectItem>
+              </SelectContent>
+            </Select>
 
-        <div className="flex items-center gap-2 md:ml-auto">
-          <Select value={sortBy} onValueChange={(v: SortBy) => setSortBy(v)}>
-            <SelectTrigger className="w-[140px] border-gray-300">
-              <SelectValue placeholder="Sort by" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="created_at">Date Added</SelectItem>
-              <SelectItem value="full_name">Name</SelectItem>
-              <SelectItem value="total_spent">Revenue</SelectItem>
-            </SelectContent>
-          </Select>
+            <Select value={sourceFilter} onValueChange={setSourceFilter}>
+              <SelectTrigger className="w-[150px] border-gray-300">
+                <SelectValue placeholder="Source" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All sources</SelectItem>
+                {sources.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
-            className="border-gray-300"
-          >
-            <ArrowUpDown className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2 md:ml-auto">
+            <Select value={sortBy} onValueChange={(v: SortBy) => setSortBy(v)}>
+              <SelectTrigger className="w-[140px] border-gray-300">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_at">Date Added</SelectItem>
+                <SelectItem value="full_name">Name</SelectItem>
+                <SelectItem value="total_spent">Revenue</SelectItem>
+              </SelectContent>
+            </Select>
 
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
-              <X className="h-4 w-4" />
-              Clear
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setSortDir((d) => (d === "asc" ? "desc" : "asc"))}
+              className="border-gray-300"
+            >
+              <ArrowUpDown className="h-4 w-4" />
             </Button>
-          )}
+
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1">
+                <X className="h-4 w-4" />
+                Clear
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

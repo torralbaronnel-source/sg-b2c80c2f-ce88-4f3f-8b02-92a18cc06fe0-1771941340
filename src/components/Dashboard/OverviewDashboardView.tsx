@@ -12,6 +12,7 @@ import {
   Layers
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import Image from "next/image";
 
 export function OverviewDashboardView() {
   const { user } = useAuth();
@@ -80,7 +81,18 @@ export function OverviewDashboardView() {
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-7">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-4 overflow-hidden border-none bg-slate-50/50 dark:bg-slate-900/50">
+          <div className="relative aspect-video w-full">
+            <img 
+              src="/dashboard_1.png" 
+              alt="Dashboard Analytics" 
+              className="h-full w-full object-cover opacity-90 hover:opacity-100 transition-opacity"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
+          </div>
+        </Card>
+
         {/* Recent Events / Schedule */}
         <Card className="md:col-span-4 border-none shadow-sm bg-white">
           <CardHeader className="flex flex-row items-center justify-between">

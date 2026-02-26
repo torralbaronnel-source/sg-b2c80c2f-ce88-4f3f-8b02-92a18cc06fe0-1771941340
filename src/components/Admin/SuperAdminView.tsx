@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { 
   Building2, 
   Users, 
@@ -61,6 +61,19 @@ import { OrgManagementView } from "./OrgManagementView";
 import { RoleAnalyticsView } from "./RoleAnalyticsView";
 import { bugService, type BugReport } from "@/services/bugService";
 import { format } from "date-fns";
+import { 
+  BarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip as RechartsTooltip, 
+  ResponsiveContainer, 
+  Cell, 
+  PieChart, 
+  Pie,
+  Legend
+} from "recharts";
 
 export function SuperAdminView() {
   const [organizations, setOrganizations] = useState<any[]>([]);
@@ -188,6 +201,30 @@ export function SuperAdminView() {
     const matchesSeverity = severityFilter === "all" || bug.priority === severityFilter;
     return matchesSearch && matchesSeverity;
   });
+
+  // Prepare Chart Data
+  const urlData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    bugs.forEach(bug => {
+      const path = bug.url?.split('?')[0] || "Unknown";
+      counts[path] = (counts[path] || 0) + 1;
+    });
+    return Object.entries(counts)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }, [bugs]);
+
+  const severityData = useMemo(() => {
+    const counts: Record<string, number> = { critical: 0, high: 0, medium: 0, low: 0 };
+    bugs.forEach(bug => {
+      const p = bug.priority?.toLowerCase() || "medium";
+      if (counts[p] !== undefined) counts[p]++;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [bugs]);
+
+  const COLORS = ['#ef4444', '#f97316', '#eab308', '#3b82f6'];
 
   const isDev = (role as any)?.hierarchy_level === 0;
 
@@ -480,6 +517,52 @@ export function SuperAdminView() {
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">Interaction Intensity by Path</CardTitle>
+                <CardDescription>Identifying highest-friction neural routes.</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={urlData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" width={100} tick={{ fontSize: 10 }} />
+                    <RechartsTooltip />
+                    <Bar dataKey="value" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">Friction Severity Distribution</CardTitle>
+                <CardDescription>Breakdown of critical vs routine flags.</CardDescription>
+              </CardHeader>
+              <CardContent className="h-[300px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={severityData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {severityData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
           <RoleAnalyticsView />
         </TabsContent>
       </Tabs>

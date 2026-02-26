@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 import { Bell, Search, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { NeuralProxy } from "@/components/Modules/NeuralProxy";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -62,6 +63,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           </div>
         </main>
       </SidebarInset>
+      <NeuralProxy />
       <Toaster />
     </SidebarProvider>
   );

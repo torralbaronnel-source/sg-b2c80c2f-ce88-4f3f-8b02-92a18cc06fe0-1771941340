@@ -1,69 +1,94 @@
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * 🎓 ORCHESTRIX SPECIALIST KERNEL (VERSION: 1.1 - SELF-LEARNING LEDGER)
+ * 🎓 ORCHESTRIX SPECIALIST KERNEL V1.1
+ * Refined Intent Routing & Industry Knowledge Base
+ * RUNS ENTIRELY ON CLIENT RAM
  */
 
 export interface AIAction {
-  type: 'PRODUCTION_CONFLICT' | 'GUEST_MANIFEST_UPDATE' | 'FINANCIAL_ALERT' | 'TECHNICAL_ADVICE' | 'PROACTIVE_SUGGESTION';
-  payload: any;
+  intent: string;
+  resolution: string;
+  action_type: "NAVIGATION" | "GUIDANCE" | "CREATION" | "UNKNOWN";
+  target_url?: string;
+  confidence: number;
 }
+
+const KNOWLEDGE_BASE: Record<string, { resolution: string; type: AIAction["action_type"]; url?: string }> = {
+  "create_event": {
+    resolution: "To create a new event, head to the 'Events Dashboard' and click the '+' icon in the top right. You'll need the Event Name and Venue details to start.",
+    type: "NAVIGATION",
+    url: "/events"
+  },
+  "guest_manifest": {
+    resolution: "The Guest Manifest is located in the Event Hub. You can upload CSV files or add guests manually to manage entry permissions.",
+    type: "GUIDANCE",
+    url: "/guests"
+  },
+  "finance": {
+    resolution: "Finance tracking is available in the 'Finance Hub'. You can monitor invoices, quotes, and event budgets in real-time.",
+    type: "NAVIGATION",
+    url: "/finance"
+  },
+  "show_flow": {
+    resolution: "Show Flow (Run of Show) can be managed per event. Select your event from the dashboard to access the minute-by-minute timeline.",
+    type: "GUIDANCE",
+    url: "/timelines"
+  },
+  "inventory": {
+    resolution: "Manage your gear and backline in the 'Inventory' module. You can track status and assignments for all production equipment.",
+    type: "NAVIGATION",
+    url: "/inventory"
+  }
+};
 
 export const aiService = {
   /**
-   * SPECIALIST INTENT PARSING (Client-Side RAM)
+   * Parses user input in Client RAM and routes to the Specialist Knowledge Base
    */
-  async executeKernelAction(input: { payload: { intent: string, metadata?: any } }): Promise<{ success: boolean; action?: AIAction; message?: string }> {
-    const intent = input.payload.intent.toLowerCase();
-    let resolution = "I'm trained for Event Production. How can I help with your Manifest, Finance, or Show Flow?";
-    let type: AIAction['type'] | 'UNKNOWN' = 'UNKNOWN';
-    let action: AIAction | undefined;
+  async executeKernelAction(payload: { input: string; context?: any }): Promise<AIAction> {
+    const input = payload.input.toLowerCase();
+    let detectedIntent = "unknown";
+    
+    // Simple Keyword Intent Routing (RAM Efficient)
+    if (input.includes("event") || input.includes("create")) detectedIntent = "create_event";
+    if (input.includes("guest") || input.includes("manifest") || input.includes("people")) detectedIntent = "guest_manifest";
+    if (input.includes("money") || input.includes("finance") || input.includes("invoice") || input.includes("quote")) detectedIntent = "finance";
+    if (input.includes("flow") || input.includes("timeline") || input.includes("schedule")) detectedIntent = "show_flow";
+    if (input.includes("inventory") || input.includes("gear") || input.includes("equipment")) detectedIntent = "inventory";
 
-    // 1. GUEST/MANIFEST
-    if (intent.includes("guest") || intent.includes("invite") || intent.includes("manifest")) {
-      type = 'GUEST_MANIFEST_UPDATE';
-      resolution = "I see you're managing the Guest Manifest. Should I filter by VVIP or General Admission?";
-      action = { type, payload: { context: 'EVENT_HUB' } };
-    }
-    // 2. PRODUCTION/TECH
-    else if (intent.includes("stage") || intent.includes("production") || intent.includes("show") || intent.includes("load")) {
-      type = 'TECHNICAL_ADVICE';
-      resolution = "Production Hub active. I can help sync the Run of Show or check equipment inventory.";
-      action = { type, payload: { phase: 'PRODUCTION' } };
-    }
-    // 3. CONFLICTS
-    else if (intent.includes("schedule") || intent.includes("time") || intent.includes("date")) {
-      type = 'PRODUCTION_CONFLICT';
-      resolution = "Scanning for scheduling collisions... All Stage Timelines appear clear.";
-      action = { type, payload: { check: 'TIME_SLOT' } };
-    }
+    const knowledge = KNOWLEDGE_BASE[detectedIntent];
 
-    // 💾 SAVE TO NEURAL TRAINING LEDGER (Async, don't block UI)
-    this.saveToLedger(input.payload.intent, resolution, type, input.payload.metadata);
-
-    return {
-      success: type !== 'UNKNOWN',
-      action,
-      message: resolution
+    const result: AIAction = {
+      intent: detectedIntent,
+      resolution: knowledge 
+        ? knowledge.resolution 
+        : "I'm currently trained for Event Production tasks. Try asking about 'Creating Events', 'Guest Manifests', 'Finance', or 'Equipment Inventory'.",
+      action_type: knowledge ? knowledge.type : "UNKNOWN",
+      target_url: knowledge?.url,
+      confidence: knowledge ? 0.95 : 0.2
     };
+
+    // Log to Training Ledger for future refinement
+    await this.logToLedger(payload.input, result);
+
+    return result;
   },
 
-  /**
-   * SAVES INTERACTION FOR FUTURE TRAINING
-   */
-  async saveToLedger(query: string, resolution: string, type: string, metadata?: any) {
+  async logToLedger(query: string, result: AIAction) {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       await supabase.from("ai_training_logs").insert([{
         client_query: query,
-        kernel_resolution: resolution,
-        intent_type: type,
-        metadata: metadata || {},
-        user_id: user?.id
+        kernel_resolution: result.resolution,
+        intent_type: result.intent,
+        metadata: {
+          confidence: result.confidence,
+          type: result.action_type,
+          runtime: "CLIENT_RAM"
+        }
       }]);
     } catch (err) {
-      console.error("NANO LEDGER ERROR:", err);
+      console.error("NANO Ledger Error:", err);
     }
   }
 };

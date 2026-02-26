@@ -14,10 +14,7 @@ export function PortalAdminView() {
   const handleTestAI = async () => {
     try {
       const result = await aiService.executeKernelAction({
-        payload: { 
-          intent: "Portal Diagnostic",
-          metadata: { context: "SUPERADMIN" }
-        }
+        input: "Run high-level system check for SUPERADMIN"
       });
       console.log("AI Result:", result);
     } catch (error) {

@@ -20,11 +20,16 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { aiService, type AIAction } from "@/services/aiService";
 import { cn } from "@/lib/utils";
 import { fingerprintService } from "@/services/fingerprintService";
+import Link from "next/link";
 
 interface Message {
   role: "user" | "nano";
   content: string;
-  action?: AIAction;
+  action?: { payload: { table: string } };
+  metadata?: {
+    url?: string;
+    intent?: string;
+  };
 }
 
 export function NeuralProxy() {
@@ -105,28 +110,19 @@ export function NeuralProxy() {
       const fullFingerprint = { ...techInfo, ...geoInfo };
 
       // Step 1: Parse intent via Client-Side Kernel
-      const actionResult = await aiService.executeKernelAction({
-        payload: { 
-          intent: currentMessage,
-          metadata: {
-            url: window.location.href,
-            fingerprint: fullFingerprint
-          }
-        }
+      const kernelResult = await aiService.executeKernelAction({
+        input: currentMessage
       });
 
-      if (actionResult.success) {
-        setHistory(prev => [...prev, { 
-          role: "nano", 
-          content: actionResult.message || "NANO: Intent captured.",
-          action: actionResult.action 
-        }]);
-      } else {
-        setHistory(prev => [...prev, { 
-          role: "nano", 
-          content: actionResult.message || "NANO: Processing within the local fortress environment..." 
-        }]);
-      }
+      // Step 2: Update UI with specialized resolution
+      setHistory(prev => [...prev, { 
+        role: "nano", 
+        content: kernelResult.resolution,
+        metadata: {
+          url: kernelResult.target_url,
+          intent: kernelResult.intent
+        }
+      }]);
     } catch (error) {
       setHistory(prev => [...prev, { 
         role: "nano", 
@@ -207,11 +203,14 @@ export function NeuralProxy() {
                       className="absolute -top-1 -right-1 h-2 w-2 bg-green-400 rounded-full border border-primary"
                     />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-sm tracking-tight uppercase">NANO Production Assistant</h3>
-                    <p className="text-[10px] opacity-70 flex items-center gap-1">
-                      <Zap className="h-2 w-2 text-yellow-400" /> INDUSTRY KERNEL V1.0 ACTIVE
-                    </p>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-sm">NANO Assistant</h3>
+                    <div className="flex items-center gap-1.5">
+                      <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">
+                        Data Fortress Active • Client RAM
+                      </p>
+                    </div>
                   </div>
                 </div>
                 <Badge variant="outline" className="text-[10px] bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground uppercase px-1">
@@ -232,13 +231,25 @@ export function NeuralProxy() {
                         msg.role === 'user' ? "ml-auto items-end" : "mr-auto items-start"
                       )}
                     >
-                      <div className={cn(
-                        "p-3 rounded-2xl text-sm shadow-sm",
-                        msg.role === 'user' 
-                          ? "bg-primary text-primary-foreground rounded-tr-none" 
-                          : "bg-card border border-primary/10 rounded-tl-none"
-                      )}>
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm ${
+                          msg.role === "user"
+                            ? "bg-primary text-primary-foreground ml-auto"
+                            : "bg-muted border border-border"
+                        }`}
+                      >
                         {msg.content}
+                        
+                        {msg.metadata?.url && (
+                          <div className="mt-3 pt-3 border-t border-border/50">
+                            <Link 
+                              href={msg.metadata.url}
+                              className="inline-flex items-center gap-2 text-xs font-semibold text-primary hover:underline"
+                            >
+                              Go to {msg.metadata.intent.replace('_', ' ')} →
+                            </Link>
+                          </div>
+                        )}
                       </div>
                       
                       {msg.action && (

@@ -51,15 +51,15 @@ export function OverviewDashboardView() {
 
   return (
     <div className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border bg-slate-950/50 p-8 shadow-2xl">
+      <div className="relative overflow-hidden rounded-2xl border bg-slate-950/50 p-6 md:p-8 shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight text-white">Mission Control</h1>
-            <p className="text-slate-400 max-w-md">
-              Welcome back, {userName.split(' ')[0]}. Your production ecosystem is fully synchronized and ready for execution.
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-white">Mission Control</h1>
+            <p className="text-slate-400 text-sm md:text-base max-w-md">
+              Welcome back, {userName.split(' ')[0]}. Your production ecosystem is fully synchronized.
             </p>
           </div>
-          <div className="relative h-40 w-64 rounded-xl border border-white/10 bg-black/40 p-2 shadow-2xl backdrop-blur-sm overflow-hidden group">
+          <div className="relative h-32 md:h-40 w-full md:w-64 rounded-xl border border-white/10 bg-black/40 p-2 shadow-2xl backdrop-blur-sm overflow-hidden group">
             <img 
               src="/Capture.PNG" 
               alt="System Overview" 
@@ -92,8 +92,8 @@ export function OverviewDashboardView() {
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4 overflow-hidden border-none shadow-sm bg-white">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">
+        <Card className="col-span-1 md:col-span-2 lg:col-span-4 overflow-hidden border-none shadow-sm bg-white">
           <CardHeader>
             <CardTitle className="text-lg">System Performance</CardTitle>
             <CardDescription>Live telemetry from active production nodes</CardDescription>
@@ -111,7 +111,7 @@ export function OverviewDashboardView() {
         </Card>
 
         {/* Infrastructure Summary */}
-        <Card className="md:col-span-3 border-none shadow-sm bg-white overflow-hidden">
+        <Card className="col-span-1 md:col-span-2 lg:col-span-3 border-none shadow-sm bg-white overflow-hidden">
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Server className="h-5 w-5 text-blue-600" />

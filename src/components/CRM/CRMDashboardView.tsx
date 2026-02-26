@@ -21,13 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -665,8 +665,8 @@ export function CRMDashboardView() {
         </div>
       </div>
 
-      {/* Clients Table */}
-      <div className="rounded-lg border bg-white overflow-hidden shadow-sm">
+      {/* Clients Table - Desktop */}
+      <div className="hidden md:block rounded-lg border bg-white overflow-hidden shadow-sm">
         {loading ? (
           <div className="p-12 text-center">
             <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
@@ -1021,6 +1021,69 @@ export function CRMDashboardView() {
           </Table>
         )}
       </div>
+
+      {/* Clients Card List - Mobile */}
+      <div className="md:hidden space-y-4">
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="animate-spin inline-block w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full"></div>
+          </div>
+        ) : filteredClients.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-xl border border-dashed">
+            <Users className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No clients found</p>
+          </div>
+        ) : (
+          filteredClients.map((client) => (
+            <Card key={client.id} className="border-slate-200 shadow-sm overflow-hidden">
+              <CardHeader className="p-4 pb-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="text-base font-bold text-slate-900">{client.full_name}</CardTitle>
+                    <CardDescription className="text-xs truncate max-w-[200px]">{client.email}</CardDescription>
+                  </div>
+                  <Badge className={cn("text-[10px] px-2", getStatusBadgeVariant(client.status))}>
+                    {client.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 pt-0 space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div>
+                    <span className="text-slate-400 block font-medium uppercase tracking-wider">Company</span>
+                    <span className="text-slate-700 font-semibold">{client.company_name || "-"}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-slate-400 block font-medium uppercase tracking-wider">Revenue</span>
+                    <span className="text-emerald-600 font-bold">₱{(client.total_spent || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                   <div className="flex items-center gap-1.5 text-slate-500">
+                     <Calendar className="h-3 w-3" />
+                     <span className="text-[10px] font-medium">{client.total_events || 0} Events</span>
+                   </div>
+                   <Button 
+                     variant="ghost" 
+                     size="sm" 
+                     className="h-8 text-xs text-blue-600 font-bold gap-1"
+                     onClick={() => {
+                        setSelectedClient(client);
+                        loadClientDetails(client.id);
+                        setDetailsTab("profile");
+                        setIsDetailsOpen(true);
+                     }}
+                   >
+                     View Profile
+                     <ChevronRight className="h-3 w-3" />
+                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+
       <Card className="border-none shadow-sm bg-white overflow-hidden">
         <div className="relative aspect-video w-full bg-slate-100">
           <img 

@@ -47,6 +47,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
+import { motion, AnimatePresence } from "framer-motion";
 import { useEvent } from "@/contexts/EventContext";
 import { productionService, type RunOfShowItem, type ResourceAllocation } from "@/services/productionService";
 import { cn } from "@/lib/utils";
@@ -69,6 +70,14 @@ export function ProductionHubView() {
   const [resources, setResources] = useState<ResourceAllocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState<Record<number, boolean>>({});
+
+  const toggleTask = (id: number) => {
+    setCompletedTasks(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
 
   const handleGenerateBlueprint = async () => {
     if (!activeEvent) return;
@@ -179,21 +188,43 @@ export function ProductionHubView() {
             <CardContent className="p-0 md:p-6 md:pt-0">
               {/* Mobile Card View */}
               <div className="divide-y divide-zinc-800 md:hidden">
-                {mockChecklist.map((item) => (
-                  <div key={item.id} className="p-4 flex items-start gap-3 active:bg-zinc-900 transition-colors">
-                    <Checkbox className="mt-1 border-zinc-700" />
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium text-zinc-200 text-sm">{item.title}</span>
-                        <Badge variant="secondary" className="text-[9px] bg-zinc-800">{item.team}</Badge>
+                <AnimatePresence>
+                  {mockChecklist.map((item, index) => (
+                    <motion.div 
+                      key={item.id} 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className={cn(
+                        "p-4 flex items-start gap-3 transition-colors",
+                        completedTasks[item.id] ? "bg-emerald-500/5" : "active:bg-zinc-900"
+                      )}
+                    >
+                      <Checkbox 
+                        className="mt-1 border-zinc-700 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500" 
+                        onCheckedChange={() => toggleTask(item.id)}
+                      />
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center justify-between">
+                          <motion.span 
+                            animate={{ 
+                              textDecoration: completedTasks[item.id] ? "line-through" : "none",
+                              opacity: completedTasks[item.id] ? 0.5 : 1
+                            }}
+                            className="font-medium text-zinc-200 text-sm"
+                          >
+                            {item.title}
+                          </motion.span>
+                          <Badge variant="secondary" className="text-[9px] bg-zinc-800">{item.team}</Badge>
+                        </div>
+                        <div className="flex items-center text-[10px] text-zinc-500 gap-3">
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {item.time}</span>
+                          {item.critical && <span className="text-red-500 font-bold uppercase">Critical</span>}
+                        </div>
                       </div>
-                      <div className="flex items-center text-[10px] text-zinc-500 gap-3">
-                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {item.time}</span>
-                        {item.critical && <span className="text-red-500 font-bold uppercase">Critical</span>}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               </div>
               
               {/* Desktop Table View */}
@@ -209,22 +240,46 @@ export function ProductionHubView() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockChecklist.map((item) => (
-                      <TableRow key={item.id} className="border-zinc-800 hover:bg-zinc-900/40">
-                        <TableCell><Checkbox className="border-zinc-700" /></TableCell>
-                        <TableCell>
-                          <div className="font-medium text-zinc-200">{item.title}</div>
-                          {item.critical && <div className="text-[10px] text-red-500 font-bold uppercase mt-0.5">Mandatory Compliance</div>}
-                        </TableCell>
-                        <TableCell><Badge variant="secondary" className="bg-zinc-800 text-zinc-300 border-zinc-700 font-normal">{item.team}</Badge></TableCell>
-                        <TableCell className="text-zinc-400 font-mono text-xs">{item.time}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-white">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    <AnimatePresence>
+                      {mockChecklist.map((item, index) => (
+                        <motion.tr 
+                          key={item.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className={cn(
+                            "border-zinc-800 transition-colors",
+                            completedTasks[item.id] ? "bg-emerald-500/5 hover:bg-emerald-500/10" : "hover:bg-zinc-900/40"
+                          )}
+                        >
+                          <TableCell>
+                            <Checkbox 
+                              className="border-zinc-700 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500" 
+                              onCheckedChange={() => toggleTask(item.id)}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <motion.div 
+                              animate={{ 
+                                textDecoration: completedTasks[item.id] ? "line-through" : "none",
+                                opacity: completedTasks[item.id] ? 0.5 : 1
+                              }}
+                              className="font-medium text-zinc-200"
+                            >
+                              {item.title}
+                            </motion.div>
+                            {item.critical && <div className="text-[10px] text-red-500 font-bold uppercase mt-0.5">Mandatory Compliance</div>}
+                          </TableCell>
+                          <TableCell><Badge variant="secondary" className="bg-zinc-800 text-zinc-300 border-zinc-700 font-normal">{item.team}</Badge></TableCell>
+                          <TableCell className="text-zinc-400 font-mono text-xs">{item.time}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-white">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </motion.tr>
+                      ))}
+                    </AnimatePresence>
                   </TableBody>
                 </Table>
               </div>

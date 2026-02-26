@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { 
   Search, 
   QrCode, 
@@ -7,10 +7,13 @@ import {
   Users, 
   MoreHorizontal,
   X,
-  UserCheck,
-  Clock,
   Loader2,
-  RefreshCcw
+  RefreshCcw,
+  Filter,
+  Check,
+  UserCheck,
+  UserMinus,
+  Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,8 +24,20 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+  SheetFooter,
+  SheetClose
+} from "@/components/ui/sheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,31 +53,37 @@ interface Guest {
   is_vip: boolean;
 }
 
+type FilterStatus = "all" | "arrived" | "waiting";
+type FilterTier = "all" | "vip" | "standard";
+
 export function MobileCheckInView() {
   const [search, setSearch] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [guests, setGuests] = useState<Guest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  
+  // Advanced Filter State
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>("all");
+  const [tierFilter, setTierFilter] = useState<FilterTier>("all");
+  const [tableFilter, setTableFilter] = useState<string>("all");
+
   const { toast } = useToast();
 
   const fetchGuests = useCallback(async () => {
     try {
       setIsLoading(true);
-      
-      // Get current profile to find the active server/event context
-      const { data: profile } = await supabase.auth.getUser();
-      if (!profile.user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
       const { data: userProfile } = await supabase
         .from("profiles")
         .select("current_server_id")
-        .eq("id", profile.user.id)
+        .eq("id", user.id)
         .single();
 
       if (!userProfile?.current_server_id) return;
 
-      // For this view, we'll fetch guests for the latest event in the current server
       const { data: latestEvent } = await supabase
         .from("events")
         .select("id")
@@ -87,7 +108,7 @@ export function MobileCheckInView() {
       const formattedGuests: Guest[] = (guestData || []).map(g => ({
         id: g.id,
         name: g.name,
-        organization: g.notes || "Individual", // Using notes as a fallback for org for now
+        organization: g.notes || "Individual",
         type: g.ticket_type || "General",
         status: g.attendance_status || "waiting",
         table: g.table_number ? `T-${g.table_number}` : undefined,
@@ -99,7 +120,7 @@ export function MobileCheckInView() {
       console.error("Error fetching guests:", error);
       toast({
         title: "Connection Error",
-        description: "Failed to load guest list. Please check your connection.",
+        description: "Failed to load guest list.",
         variant: "destructive"
       });
     } finally {
@@ -130,12 +151,11 @@ export function MobileCheckInView() {
 
       toast({
         title: "Checked In",
-        description: "Guest has been successfully marked as arrived.",
+        description: "Guest marked as arrived.",
       });
     } catch (error) {
       toast({
         title: "Update Failed",
-        description: "Could not update check-in status.",
         variant: "destructive"
       });
     } finally {
@@ -162,12 +182,10 @@ export function MobileCheckInView() {
 
       toast({
         title: "Status Reset",
-        description: "Guest status reset to waiting.",
       });
     } catch (error) {
       toast({
         title: "Update Failed",
-        description: "Could not reset guest status.",
         variant: "destructive"
       });
     } finally {
@@ -175,23 +193,47 @@ export function MobileCheckInView() {
     }
   };
 
-  const filteredGuests = guests.filter(g => 
-    g.name.toLowerCase().includes(search.toLowerCase()) || 
-    g.organization.toLowerCase().includes(search.toLowerCase())
-  );
+  // Get unique tables for filtering
+  const uniqueTables = useMemo(() => {
+    const tables = new Set<string>();
+    guests.forEach(g => {
+      if (g.table) tables.add(g.table);
+    });
+    return Array.from(tables).sort();
+  }, [guests]);
+
+  const filteredGuests = useMemo(() => {
+    return guests.filter(g => {
+      const matchesSearch = g.name.toLowerCase().includes(search.toLowerCase()) || 
+                           g.organization.toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = statusFilter === "all" || g.status === statusFilter;
+      const matchesTier = tierFilter === "all" || (tierFilter === "vip" ? g.is_vip : !g.is_vip);
+      const matchesTable = tableFilter === "all" || g.table === tableFilter;
+
+      return matchesSearch && matchesStatus && matchesTier && matchesTable;
+    });
+  }, [guests, search, statusFilter, tierFilter, tableFilter]);
 
   const checkedInCount = guests.filter(g => g.status === "arrived").length;
   const occupancyRate = guests.length > 0 ? Math.round((checkedInCount / guests.length) * 100) : 0;
+  
+  const hasActiveFilters = statusFilter !== "all" || tierFilter !== "all" || tableFilter !== "all";
+
+  const clearFilters = () => {
+    setStatusFilter("all");
+    setTierFilter("all");
+    setTableFilter("all");
+  };
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      {/* Header with Stats */}
-      <div className="p-4 border-b bg-card/50 sticky top-0 z-10">
+    <div className="flex flex-col h-full bg-background overflow-hidden">
+      {/* Header */}
+      <div className="p-4 border-b bg-card/50">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <h2 className="font-bold text-lg">Live Check-In</h2>
-            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={fetchGuests} disabled={isLoading}>
-              <RefreshCcw className={cn("h-3 w-3", isLoading && "animate-spin")} />
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={fetchGuests} disabled={isLoading}>
+              <RefreshCcw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
           </div>
           <Badge variant="outline" className="font-mono bg-primary/10 text-primary border-primary/20">
@@ -208,38 +250,153 @@ export function MobileCheckInView() {
         </div>
       </div>
 
-      {/* Search & Actions */}
-      <div className="p-4 space-y-3 bg-background/95 sticky top-[113px] z-10 border-b">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input 
-            placeholder="Search guests..." 
-            className="pl-10 bg-muted/50"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {search && (
-            <button 
-              onClick={() => setSearch("")}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          )}
+      {/* Search & Advanced Filters */}
+      <div className="p-4 space-y-3 bg-background border-b">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input 
+              placeholder="Search guests..." 
+              className="pl-10 bg-muted/50 h-10"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+            {search && (
+              <button 
+                onClick={() => setSearch("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant={hasActiveFilters ? "default" : "outline"} size="icon" className="h-10 w-10 relative">
+                <Filter className="h-4 w-4" />
+                {hasActiveFilters && (
+                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-destructive rounded-full border-2 border-background" />
+                )}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="h-[70vh] rounded-t-3xl p-6">
+              <SheetHeader className="mb-6">
+                <div className="flex items-center justify-between">
+                  <SheetTitle>Filter Guests</SheetTitle>
+                  {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8 px-2">
+                      Clear All
+                    </Button>
+                  )}
+                </div>
+              </SheetHeader>
+
+              <div className="space-y-6">
+                <section>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">Attendance Status</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["all", "arrived", "waiting"] as const).map((status) => (
+                      <Button
+                        key={status}
+                        variant={statusFilter === status ? "default" : "outline"}
+                        className="capitalize h-12"
+                        onClick={() => setStatusFilter(status)}
+                      >
+                        {status}
+                      </Button>
+                    ))}
+                  </div>
+                </section>
+
+                <section>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">Guest Tier</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["all", "vip", "standard"] as const).map((tier) => (
+                      <Button
+                        key={tier}
+                        variant={tierFilter === tier ? "default" : "outline"}
+                        className="capitalize h-12"
+                        onClick={() => setTierFilter(tier)}
+                      >
+                        {tier}
+                      </Button>
+                    ))}
+                  </div>
+                </section>
+
+                <section>
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 block">Table Assignment</label>
+                  <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1">
+                    <Button
+                      variant={tableFilter === "all" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setTableFilter("all")}
+                    >
+                      All Tables
+                    </Button>
+                    {uniqueTables.map((table) => (
+                      <Button
+                        key={table}
+                        variant={tableFilter === table ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setTableFilter(table)}
+                      >
+                        {table}
+                      </Button>
+                    ))}
+                  </div>
+                </section>
+              </div>
+
+              <SheetFooter className="mt-8 pt-4 border-t">
+                <SheetClose asChild>
+                  <Button className="w-full h-12 text-lg">Apply Filters</Button>
+                </SheetClose>
+              </SheetFooter>
+            </SheetContent>
+          </Sheet>
         </div>
+
         <div className="flex gap-2">
           <Button 
-            className="flex-1 gap-2"
+            className="flex-1 gap-2 h-10 shadow-sm"
             onClick={() => setIsScanning(true)}
           >
             <QrCode className="h-4 w-4" />
             Scan QR
           </Button>
-          <Button variant="outline" className="flex-1 gap-2">
+          <Button variant="outline" className="flex-1 gap-2 h-10 shadow-sm">
             <UserPlus className="h-4 w-4" />
-            Add
+            Manual Add
           </Button>
         </div>
+        
+        {hasActiveFilters && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+            <Badge variant="secondary" className="bg-destructive/10 text-destructive border-none whitespace-nowrap">
+              Active Filters
+            </Badge>
+            {statusFilter !== "all" && (
+              <Badge variant="outline" className="capitalize whitespace-nowrap">
+                {statusFilter}
+                <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => setStatusFilter("all")} />
+              </Badge>
+            )}
+            {tierFilter !== "all" && (
+              <Badge variant="outline" className="capitalize whitespace-nowrap">
+                {tierFilter}
+                <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => setTierFilter("all")} />
+              </Badge>
+            )}
+            {tableFilter !== "all" && (
+              <Badge variant="outline" className="whitespace-nowrap">
+                {tableFilter}
+                <X className="ml-1 h-3 w-3 cursor-pointer" onClick={() => setTableFilter("all")} />
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Guest List */}
@@ -247,44 +404,48 @@ export function MobileCheckInView() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="h-8 w-8 animate-spin mb-4" />
-            <p>Syncing guest list...</p>
+            <p className="animate-pulse">Syncing guest list...</p>
           </div>
         ) : filteredGuests.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center text-muted-foreground">
             <Users className="h-12 w-12 mb-4 opacity-20" />
-            <p>{search ? "No matching guests found" : "Guest list is empty"}</p>
+            <p className="font-medium">No matching guests found</p>
+            {hasActiveFilters && (
+              <Button variant="link" onClick={clearFilters} className="mt-2 h-auto p-0">
+                Clear all filters
+              </Button>
+            )}
           </div>
         ) : (
           filteredGuests.map((guest) => (
             <motion.div
               key={guest.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
               layout
             >
               <Card className={cn(
-                "p-4 transition-colors",
-                guest.status === "arrived" ? "bg-primary/5 border-primary/20" : "bg-card"
+                "p-4 border-l-4 transition-all duration-200",
+                guest.status === "arrived" 
+                  ? "border-l-green-500 bg-green-50/5 shadow-sm" 
+                  : "border-l-transparent"
               )}>
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold truncate">{guest.name}</span>
+                      <span className="font-bold text-[15px] truncate">{guest.name}</span>
                       {guest.is_vip && (
-                        <Badge variant="default" className="text-[10px] h-4 px-1.5 bg-amber-500 hover:bg-amber-600 border-none">
-                          VIP
-                        </Badge>
+                        <div className="bg-amber-100 text-amber-700 p-0.5 rounded">
+                          <Star className="h-3 w-3 fill-current" />
+                        </div>
                       )}
-                      <Badge variant="secondary" className="text-[10px] h-4 px-1.5 uppercase tracking-tighter">
-                        {guest.type}
-                      </Badge>
                     </div>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <span className="truncate">{guest.organization}</span>
                       {guest.table && (
                         <>
                           <span className="opacity-30">•</span>
-                          <span className="font-mono text-primary">{guest.table}</span>
+                          <span className="font-mono text-primary font-bold">{guest.table}</span>
                         </>
                       )}
                     </div>
@@ -292,16 +453,18 @@ export function MobileCheckInView() {
 
                   <div className="flex items-center gap-2">
                     {guest.status === "arrived" ? (
-                      <div className="flex items-center text-green-500 gap-1 pr-2">
-                        <CheckCircle2 className="h-5 w-5" />
-                        <span className="text-[10px] font-bold">IN</span>
+                      <div className="flex flex-col items-end">
+                        <Badge className="bg-green-500 hover:bg-green-600 border-none h-7 px-3">
+                          <Check className="h-3.5 w-3.5 mr-1" />
+                          IN
+                        </Badge>
                       </div>
                     ) : (
                       <Button 
                         size="sm" 
                         disabled={isUpdating === guest.id}
                         onClick={() => handleCheckIn(guest.id)}
-                        className="h-8 px-3"
+                        className="h-8 px-4 font-bold shadow-sm"
                       >
                         {isUpdating === guest.id ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
@@ -313,19 +476,32 @@ export function MobileCheckInView() {
                     
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground">
+                          <MoreHorizontal className="h-5 w-5" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel>Guest Actions</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                          <UserCheck className="mr-2 h-4 w-4" />
+                          View Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          <Users className="mr-2 h-4 w-4" />
+                          Edit Group
+                        </DropdownMenuItem>
                         {guest.status === "arrived" && (
-                          <DropdownMenuItem 
-                            className="text-destructive"
-                            onClick={() => resetCheckIn(guest.id)}
-                          >
-                            Reset Check-in
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem 
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => resetCheckIn(guest.id)}
+                            >
+                              <UserMinus className="mr-2 h-4 w-4" />
+                              Reset Status
+                            </DropdownMenuItem>
+                          </>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -349,7 +525,7 @@ export function MobileCheckInView() {
             <Button 
               variant="outline" 
               size="icon" 
-              className="absolute top-6 right-6 rounded-full bg-white/10 text-white hover:bg-white/20"
+              className="absolute top-6 right-6 rounded-full bg-white/10 text-white border-white/20"
               onClick={() => setIsScanning(false)}
             >
               <X className="h-6 w-6" />
@@ -369,7 +545,7 @@ export function MobileCheckInView() {
               <p className="text-zinc-400 text-sm">Align the digital ticket within the frame</p>
               <Button 
                 variant="ghost" 
-                className="mt-8 text-primary"
+                className="mt-8 text-primary font-bold"
                 onClick={() => setIsScanning(false)}
               >
                 Cancel Scanning
@@ -388,6 +564,13 @@ export function MobileCheckInView() {
         }
         .animate-scan-line {
           animation: scan-line 2s linear infinite;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>

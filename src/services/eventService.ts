@@ -1,28 +1,29 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
-import { clientService } from "./clientService";
 
 export type Event = {
   id: string;
+  coordinator_id: string;
   title: string;
-  description: string | null;
   event_date: string;
-  call_time: string | null;
   location: string | null;
-  status: string;
-  type: string;
   client_name: string;
   client_email: string | null;
   client_phone: string | null;
+  status: 'Planning' | 'Confirmed' | 'Live' | 'Completed' | 'Cancelled';
+  package_type: string | null;
   budget: number;
-  coordinator_id: string;
+  description: string | null;
+  call_time: string | null;
   server_id: string | null;
+  type: string | null;
+  production_status: string | null;
+  delivery_status: string | null;
+  billing_status: string | null;
   created_at: string;
   updated_at: string;
 };
 
 export type CreateEvent = Omit<Event, "id" | "created_at" | "updated_at">;
-export type UpdateEvent = Partial<CreateEvent>;
 
 export const eventService = {
   async getEvents() {
@@ -36,61 +37,35 @@ export const eventService = {
   },
 
   async createEvent(event: CreateEvent) {
-    // 1. First, create the event
-    const { data: newEvent, error: eventError } = await supabase
+    const { data, error } = await supabase
       .from("events")
       .insert(event)
       .select()
       .single();
 
-    if (eventError) throw eventError;
-
-    // 2. PIPELINE: Automatic CRM Synchronization
-    // If we have client details, check if they exist in CRM, otherwise create them
-    if (newEvent && event.client_name) {
-      try {
-        const clients = await clientService.getClients();
-        const existingClient = clients.find(c => 
-          c.email === event.client_email || c.full_name === event.client_name
-        );
-
-        if (!existingClient) {
-          await clientService.createClient({
-            full_name: event.client_name,
-            email: event.client_email || undefined,
-            phone: event.client_phone || undefined,
-            status: "Lead",
-            source: "Event Creation",
-            notes: `Auto-generated from event: ${event.title}`,
-            total_events: 1
-          });
-          console.log("PIPELINE: New CRM Client created automatically.");
-        } else {
-          // Update existing client stats
-          await clientService.updateClient(existingClient.id, {
-            total_events: (existingClient.total_events || 0) + 1
-          });
-          console.log("PIPELINE: Event linked to existing CRM Client.");
-        }
-      } catch (crmError) {
-        console.error("PIPELINE ERROR: CRM Sync failed but event was created.", crmError);
-      }
-    }
-
-    return newEvent as Event;
+    if (error) throw error;
+    return data as Event;
   },
 
-  async updateEvent(id: string, updates: UpdateEvent) {
-    return await supabase
+  async updateEvent(id: string, updates: Partial<CreateEvent>) {
+    const { data, error } = await supabase
       .from("events")
       .update(updates)
-      .eq("id", id);
+      .eq("id", id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as Event;
   },
 
   async deleteEvent(id: string) {
-    return await supabase
+    const { error } = await supabase
       .from("events")
       .delete()
       .eq("id", id);
+
+    if (error) throw error;
+    return true;
   }
 };

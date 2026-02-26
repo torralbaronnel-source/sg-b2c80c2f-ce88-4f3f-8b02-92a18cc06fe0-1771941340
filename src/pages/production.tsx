@@ -1,29 +1,24 @@
 import React from "react";
 import dynamic from "next/dynamic";
-import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { SEO } from "@/components/SEO";
-import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Optimization: Dynamic import for Production Hub
 const ProductionHubView = dynamic(
   () => import("@/components/Production/ProductionHubView").then(mod => mod.ProductionHubView),
   { 
+    ssr: false,
     loading: () => (
-      <div className="flex h-[60vh] w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500/20" />
+      <div className="p-8 space-y-6">
+        <Skeleton className="h-10 w-1/4" />
+        <div className="grid gap-6 md:grid-cols-2">
+          <Skeleton className="h-[300px]" />
+          <Skeleton className="h-[300px]" />
+        </div>
+        <Skeleton className="h-[200px] w-full" />
       </div>
-    ),
-    ssr: false 
+    )
   }
 );
 
 export default function ProductionPage() {
-  return (
-    <ProtectedRoute>
-      <SEO title="Production Hub | Orchestrix" description="Strategic production workflows." />
-      <div className="p-4 md:p-6">
-        <ProductionHubView />
-      </div>
-    </ProtectedRoute>
-  );
+  return <ProductionHubView />;
 }

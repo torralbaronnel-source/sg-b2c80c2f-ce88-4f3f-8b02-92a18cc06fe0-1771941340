@@ -33,7 +33,7 @@ export default function App({ Component, pageProps }: AppProps) {
         <EventProvider>
           <ProtectedRoute>
             <AppLayout>
-              <Component {...pageProps} />
+              <Component {...pageProps} key={router.pathname} />
             </AppLayout>
           </ProtectedRoute>
           <Toaster />

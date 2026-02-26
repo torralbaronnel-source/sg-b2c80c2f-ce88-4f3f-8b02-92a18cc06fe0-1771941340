@@ -47,12 +47,13 @@ export const clientService = {
         .eq("id", user.id)
         .single();
 
-      if (!profile?.current_server_id) return [];
+      const profileData = profile as any;
+      if (!profileData?.current_server_id) return [];
 
       const { data } = await supabase
         .from("clients")
         .select("*")
-        .eq("server_id", profile.current_server_id)
+        .eq("server_id", profileData.current_server_id)
         .order("created_at", { ascending: false });
 
       return (data as any[]) || [];
@@ -72,12 +73,13 @@ export const clientService = {
       .eq("id", user.id)
       .single();
 
-    if (!profile?.current_server_id) throw new Error("No active server");
+    const profileData = profile as any;
+    if (!profileData?.current_server_id) throw new Error("No active server");
 
     const { data } = await supabase
       .from("clients")
       .insert({
-        server_id: profile.current_server_id,
+        server_id: profileData.current_server_id,
         coordinator_id: user.id,
         full_name: clientData.full_name,
         email: clientData.email,
@@ -132,19 +134,15 @@ export const clientService = {
         .eq("id", user.id)
         .single();
 
-      if (!profile?.current_server_id) {
+      const profileData = profile as any;
+      if (!profileData?.current_server_id) {
         return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
       }
 
-      const clientsRes = await supabase
-        .from("clients")
-        .select("*")
-        .eq("server_id", profile.current_server_id);
-
-      const eventsRes = await supabase
-        .from("events")
-        .select("*")
-        .eq("server_id", profile.current_server_id);
+      const [clientsRes, eventsRes] = await Promise.all([
+        supabase.from("clients").select("*").eq("server_id", profileData.current_server_id),
+        supabase.from("events").select("*").eq("server_id", profileData.current_server_id)
+      ]);
 
       const clientList = (clientsRes.data || []) as any[];
       const eventList = (eventsRes.data || []) as any[];
@@ -190,8 +188,8 @@ export const clientService = {
 
       return {
         eventCount: eventList.length,
-        totalRevenue: invoiceList.reduce((acc, inv) => acc + (Number(inv.amount) || 0), 0),
-        activeEvents: eventList.filter(e => e.status === "active").length
+        totalRevenue: invoiceList.reduce((acc: number, inv: any) => acc + (Number(inv.amount) || 0), 0),
+        activeEvents: eventList.filter((e: any) => e.status === "active").length
       };
     } catch (err) {
       return { eventCount: 0, totalRevenue: 0, activeEvents: 0 };
@@ -216,11 +214,10 @@ export const clientService = {
       ]);
 
       const eventList = (eventsRes.data || []) as any[];
-      const eventIds = eventList.map(e => e.id);
+      const eventIds = eventList.map((e: any) => e.id);
 
       let filteredTasks: any[] = [];
       if (eventIds.length > 0) {
-        // Use a simpler approach to fetch tasks for those events
         const { data: tasks } = await supabase
           .from("tasks")
           .select("*")
@@ -231,9 +228,9 @@ export const clientService = {
       return {
         client,
         events: eventList,
-        quotes: quotesRes.data || [],
-        invoices: invoicesRes.data || [],
-        communications: communicationsRes.data || [],
+        quotes: (quotesRes.data || []) as any[],
+        invoices: (invoicesRes.data || []) as any[],
+        communications: (communicationsRes.data || []) as any[],
         tasks: filteredTasks
       };
     } catch (err) {

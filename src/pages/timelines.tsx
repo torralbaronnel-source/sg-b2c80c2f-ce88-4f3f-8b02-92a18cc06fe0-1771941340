@@ -1,18 +1,17 @@
-import React from "react";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RunOfShowView } from "@/components/Events/RunOfShowView";
 import { SEO } from "@/components/SEO";
 
 export default function TimelinesPage() {
   return (
     <ProtectedRoute>
-      <SEO title="Event Timelines | Orchestrix" />
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Event Timelines</h1>
-          <p className="text-muted-foreground">Manage event schedules and production timelines</p>
+      <AppLayout>
+        <SEO title="Master Run of Show | Orchestrix" description="Live minute-by-minute event timeline." />
+        <div className="p-4 md:p-8">
+         <RunOfShowView />
         </div>
-        {/* Timeline management interface will be built here */}
-      </div>
+      </AppLayout>
     </ProtectedRoute>
   );
 }

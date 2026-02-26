@@ -1,5 +1,5 @@
 import React from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { Button } from "@/components/ui/button";
@@ -28,21 +28,30 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut, profile } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <div className="flex min-h-screen w-full bg-background overflow-hidden">
+    <SidebarProvider defaultOpen={true} open={isSidebarOpen} onOpenChange={setIsSidebarOpen}>
+      <div className="flex h-screen w-full bg-background overflow-hidden">
+        {/* Sidebar Zone - Fixed height with internal scroll */}
         <AppSidebar />
-        <main className="flex-1 flex flex-col min-w-0 relative">
+        
+        {/* MainZone - Separate Scroll Zone */}
+        <main className="flex-1 flex flex-col min-w-0 relative h-screen">
+          {/* Header - Fixed at top of main zone */}
           <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sticky top-0 z-[40] shadow-sm">
             <div className="flex items-center gap-2">
-              <SidebarTrigger className="h-9 w-9 flex items-center justify-center rounded-md border bg-card text-card-foreground hover:bg-accent transition-colors">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-9 w-9 flex items-center justify-center rounded-md border bg-card text-card-foreground hover:bg-accent transition-colors"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              >
                 <Menu className="h-5 w-5" />
-              </SidebarTrigger>
+              </Button>
               <Separator orientation="vertical" className="h-6 mx-1" />
               <div className="flex items-center gap-2">
-                <span className="text-xl font-black tracking-tighter text-[#6264a7]">ORCHESTRIX</span>
-                <span className="hidden md:inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary">
+                <span className="hidden sm:inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary">
                   DATA FORTRESS
                 </span>
               </div>
@@ -102,8 +111,11 @@ export function AppLayout({ children }: AppLayoutProps) {
             </div>
           </header>
           
-          <div className="flex-1 overflow-auto">
-            {children}
+          {/* Dashboard Content Scroll Zone */}
+          <div className="flex-1 overflow-y-auto bg-[#F8F9FA] dark:bg-black p-4 lg:p-6 custom-scrollbar">
+            <div className="max-w-[1600px] mx-auto min-h-full">
+              {children}
+            </div>
           </div>
         </main>
       </div>

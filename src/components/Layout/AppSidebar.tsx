@@ -1,291 +1,169 @@
-import React from "react";
+import * as React from "react";
+import { 
+  LayoutDashboard, 
+  Calendar, 
+  Users, 
+  Settings, 
+  Package, 
+  Shield, 
+  HelpCircle,
+  FileText,
+  CreditCard,
+  MessageSquare,
+  Globe,
+  Database,
+  Briefcase,
+  Zap,
+  ClipboardList,
+  MapPin,
+  TrendingUp,
+  Box,
+  Server,
+  Fingerprint
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarFooter,
-  SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  LayoutDashboard,
-  Users,
-  Calendar,
-  Settings,
-  MessageSquare,
-  DollarSign,
-  Package,
-  FileText,
-  Clock,
-  MapPin,
-  ClipboardList,
-  CreditCard,
-  Briefcase,
-  ChevronDown,
-  LayoutGrid,
-  Zap,
-  PlayCircle,
-  Shield,
-  Cpu,
-  LucideIcon,
-  PieChart,
-  MessageCircle,
-} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
 
-interface NavItem {
-  title: string;
-  url: string;
-  icon?: LucideIcon;
-}
-
-interface NavGroup {
-  title: string;
-  icon?: LucideIcon;
-  items: NavItem[];
-}
-
-const navigationItems: NavGroup[] = [
+const NAV_GROUPS = [
   {
     title: "Main Platforms",
     items: [
-      {
-        title: "Dashboard",
-        icon: LayoutDashboard,
-        url: "/",
-      },
-    ],
-  },
-  {
-    title: "CRM & Clients",
-    icon: Users,
-    items: [
-      { title: "Clients", url: "/crm", icon: Users },
-      { title: "Leads & Pipeline", url: "/leads", icon: Zap },
-      { title: "Communication Log", url: "/communication", icon: MessageSquare },
+      { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
+      { title: "Production Hub", url: "/production", icon: Briefcase },
+      { title: "Communication", url: "/communication", icon: MessageSquare },
     ],
   },
   {
     title: "Event Management",
-    icon: Calendar,
     items: [
-      { title: "All Events", url: "/events", icon: Calendar },
-      { title: "Production Hub", url: "/production", icon: PlayCircle },
-      { title: "Event Timelines", url: "/timelines", icon: Clock },
-      { title: "Venues", url: "/venues", icon: MapPin },
-      { title: "Guest Lists", url: "/guests", icon: Users },
-    ],
-  },
-  {
-    title: "Production Tools",
-    icon: Briefcase,
-    items: [
-      { title: "Production Hub", url: "/production", icon: LayoutDashboard },
-      { title: "Asset Inventory", url: "/inventory", icon: Package },
-      { title: "Run of Show", url: "/timelines", icon: Clock },
+      { title: "Events Hub", url: "/events", icon: Calendar },
+      { title: "Itineraries", url: "/itineraries", icon: ClipboardList },
+      { title: "Timelines", url: "/timelines", icon: Zap },
       { title: "Guest Manifest", url: "/guests", icon: Users },
+      { title: "Venues", url: "/venues", icon: MapPin },
     ],
   },
   {
-    title: "Finance",
-    icon: DollarSign,
+    title: "CRM & Sales",
     items: [
+      { title: "CRM Dashboard", url: "/crm", icon: Globe },
+      { title: "Leads", url: "/leads", icon: Zap },
       { title: "Quotes", url: "/quotes", icon: FileText },
-      { title: "Invoices", url: "/invoices", icon: CreditCard },
-      { title: "Payments", url: "/finance", icon: DollarSign },
-      { title: "Contracts", url: "/terms", icon: Shield },
     ],
   },
   {
-    title: "Resources",
-    icon: Package,
+    title: "Finance & Data",
     items: [
-      { title: "Staff & Teams", url: "/admin", icon: Users },
-      { title: "Vendor Directory", url: "/crm", icon: Briefcase },
-      { title: "Global Modules", url: "/modules", icon: LayoutGrid },
+      { title: "Finance", url: "/finance", icon: CreditCard },
+      { title: "Invoices", url: "/invoices", icon: TrendingUp },
+      { title: "Inventory", url: "/inventory", icon: Box },
     ],
   },
   {
-    title: "System",
-    icon: Cpu,
+    title: "System & Admin",
     items: [
-      {
-        title: "NANO Core",
-        url: "/nano",
-      },
-      {
-        title: "Admin Portal",
-        url: "/admin",
-      },
+      { title: "Nodes & Servers", url: "/servers", icon: Server },
+      { title: "Modules", url: "/modules", icon: Fingerprint },
+      { title: "Super Admin", url: "/admin", icon: Shield },
+      { title: "Portal Settings", url: "/admin/settings", icon: Settings },
     ],
   },
 ];
 
 export function AppSidebar() {
   const router = useRouter();
-  const { user, profile, role } = useAuth();
-  
-  const isSuperAdmin = (role as any)?.hierarchy_level === 0;
-
-  const hasAccess = (url: string, groupTitle?: string) => {
-    if (!role) return false;
-    const r = role as any;
-    
-    // RELAXED: If SuperAdmin (0) or Admin (1), show everything
-    if (r.hierarchy_level === 0 || r.hierarchy_level === 1) return true;
-    
-    // Map URL to permission key
-    const pageKey = url === "/" ? "dashboard" : url.replace("/", "");
-    const perms = r.permissions || {};
-    return perms[pageKey]?.view !== false;
-  };
+  const { open } = useSidebar();
 
   return (
-    <Sidebar className="border-r border-slate-200 bg-white">
-      <SidebarHeader className="p-6">
+    <Sidebar collapsible="none" className="border-r bg-sidebar-background w-64 h-screen flex flex-col shrink-0 sticky top-0">
+      <SidebarHeader className="border-b h-16 flex items-center px-6 shrink-0 bg-sidebar-background z-10">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-slate-50 overflow-hidden p-1 shadow-sm border border-slate-100">
-            <img 
-              src="/LOGO_BRAND_ORCHESTRIX.PNG" 
-              alt="Orchestrix Logo" 
-              className="h-full w-full object-contain"
-            />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#6264a7] text-white shadow-lg ring-1 ring-white/20">
+            <Shield className="h-5 w-5" />
           </div>
           <div className="flex flex-col">
-            <span className="text-xl font-black tracking-tight text-slate-900 leading-none">ORCHESTRIX</span>
-            <span className="text-[10px] font-bold text-blue-600 uppercase tracking-[0.2em] mt-1">Management Suite</span>
+            <span className="text-sm font-black leading-none text-[#6264a7] tracking-tight">ORCHESTRIX</span>
+            <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest">Management Suite</span>
           </div>
         </div>
       </SidebarHeader>
+      
+      <SidebarContent className="flex-1 overflow-y-auto scrollbar-hide hover:scrollbar-default py-4">
+        <style jsx global>{`
+          .scrollbar-hide::-webkit-scrollbar {
+            width: 4px;
+          }
+          .scrollbar-hide::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .scrollbar-hide::-webkit-scrollbar-thumb {
+            background: rgba(98, 100, 167, 0.1);
+            border-radius: 10px;
+          }
+          .scrollbar-hide:hover::-webkit-scrollbar-thumb {
+            background: rgba(98, 100, 167, 0.2);
+          }
+        `}</style>
+        
+        {NAV_GROUPS.map((group) => (
+          <div key={group.title} className="mb-6">
+            <h2 className="px-6 mb-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">
+              {group.title}
+            </h2>
+            <nav className="space-y-1 px-2">
+              {group.items.map((item) => {
+                const isActive = router.pathname === item.url;
+                return (
+                  <Link 
+                    key={item.title} 
+                    href={item.url}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-200 group",
+                      isActive 
+                        ? "bg-[#6264a7]/10 text-[#6264a7] font-semibold" 
+                        : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                    )}
+                  >
+                    <item.icon className={cn(
+                      "h-4 w-4 shrink-0", 
+                      isActive ? "text-[#6264a7]" : "text-muted-foreground/80 group-hover:text-accent-foreground"
+                    )} />
+                    <span className="truncate">{item.title}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        ))}
 
-      <SidebarContent className="px-4 pb-4">
-        <SidebarMenu>
-          {navigationItems.map((group, idx) => {
-            // Filter group items based on access
-            const accessibleItems = group.items.filter(item => hasAccess(item.url, group.title));
-            if (accessibleItems.length === 0) return null;
-
-            // Dashboard is top-level, not collapsible
-            if (group.title === "Main Platforms") {
-              return (
-                <SidebarGroup key={idx}>
-                  <SidebarGroupLabel className="px-2 text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2">
-                    {group.title}
-                  </SidebarGroupLabel>
-                  <SidebarGroupContent>
-                    {accessibleItems.map((item) => (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={router.pathname === item.url}
-                          className={cn(
-                            "h-11 transition-all duration-200 rounded-xl px-3",
-                            router.pathname === item.url
-                              ? "bg-blue-50 text-blue-700 font-bold shadow-sm ring-1 ring-blue-100"
-                              : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                          )}
-                        >
-                          <Link href={item.url} className="flex items-center gap-3">
-                            <item.icon className={cn("h-5 w-5", router.pathname === item.url ? "text-blue-600" : "text-slate-400")} />
-                            <span className="text-sm">{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarGroupContent>
-                </SidebarGroup>
-              );
-            }
-
-            // Other groups are collapsible
-            const isGroupActive = accessibleItems.some(item => router.pathname === item.url);
-
-            return (
-              <Collapsible
-                key={group.title}
-                defaultOpen={isGroupActive}
-                className="group/collapsible w-full mb-2"
-              >
-                <SidebarMenuItem className="list-none">
-                  <CollapsibleTrigger asChild>
-                    <SidebarMenuButton 
-                      className={cn(
-                        "w-full h-11 justify-between transition-all duration-200 rounded-xl px-3",
-                        isGroupActive ? "text-slate-900 font-bold" : "text-slate-600 hover:bg-slate-50"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        {group.icon && <group.icon className={cn("h-5 w-5", isGroupActive ? "text-blue-600" : "text-slate-400")} />}
-                        <span className="text-sm">{group.title}</span>
-                      </div>
-                      <ChevronDown className="h-4 w-4 text-slate-400 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-180" />
-                    </SidebarMenuButton>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="animate-in slide-in-from-top-1 duration-200">
-                    <SidebarMenu className="mt-1 space-y-1 pl-4 border-l border-slate-100 ml-5">
-                      {accessibleItems.map((item) => (
-                        <SidebarMenuItem key={item.title}>
-                          <SidebarMenuButton
-                            asChild
-                            isActive={router.pathname === item.url}
-                            className={cn(
-                              "h-9 transition-all duration-200 rounded-lg px-3",
-                              router.pathname === item.url
-                                ? "bg-blue-50 text-blue-700 font-bold"
-                                : "text-slate-500 hover:bg-slate-50 hover:text-slate-900"
-                            )}
-                          >
-                            <Link href={item.url} className="flex items-center gap-3">
-                              {item.icon && <item.icon className={cn("h-4 w-4", router.pathname === item.url ? "text-blue-600" : "text-slate-400")} />}
-                              <span className="text-xs">{item.title}</span>
-                            </Link>
-                          </SidebarMenuButton>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </CollapsibleContent>
-                </SidebarMenuItem>
-              </Collapsible>
-            );
-          })}
-        </SidebarMenu>
+        {/* Extra space to ensure the scroll is visible if content is long */}
+        <div className="h-20" />
       </SidebarContent>
 
-      <SidebarSeparator className="mx-4 opacity-50" />
-
-      <SidebarFooter className="p-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="h-12 w-full justify-start gap-4 rounded-xl px-4 hover:bg-slate-50 transition-colors"
-            >
-              <Link href="/profile">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 font-bold">
-                  RT
-                </div>
-                <div className="flex flex-col items-start overflow-hidden">
-                  <span className="text-sm font-bold text-slate-900 truncate w-full">Ronnel Torralba</span>
-                  <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Super Admin</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
+      <div className="mt-auto border-t p-4 bg-sidebar-background shrink-0">
+        <div className="rounded-xl bg-gradient-to-br from-[#6264a7]/5 to-transparent p-4 border border-[#6264a7]/10">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Fortress Health</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+              <Database className="h-4 w-4 text-[#6264a7]" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-semibold">Active Node</span>
+              <span className="text-[10px] text-muted-foreground">RED_PROD_MAIN</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </Sidebar>
   );
 }

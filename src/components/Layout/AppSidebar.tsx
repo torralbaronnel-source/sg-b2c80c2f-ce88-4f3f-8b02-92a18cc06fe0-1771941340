@@ -138,9 +138,17 @@ export function AppSidebar() {
   const router = useRouter();
   const { user, profile, role } = useAuth();
   
-  const hasAccess = (url: string) => {
-    if (!role) return true;
+  const isSuperAdmin = (role as any)?.hierarchy_level === 0;
+
+  const hasAccess = (url: string, groupTitle?: string) => {
+    if (!role) return false;
     const r = role as any;
+    
+    // STRICT: Only Super Admin sees System/Admin tools
+    if (groupTitle === "System" || url.includes("/admin")) {
+      return r.hierarchy_level === 0;
+    }
+
     if (r.hierarchy_level === 0) return true;
     
     // Map URL to permission key
@@ -171,7 +179,7 @@ export function AppSidebar() {
         <SidebarMenu>
           {navigationItems.map((group, idx) => {
             // Filter group items based on access
-            const accessibleItems = group.items.filter(item => hasAccess(item.url));
+            const accessibleItems = group.items.filter(item => hasAccess(item.url, group.title));
             if (accessibleItems.length === 0) return null;
 
             // Dashboard is top-level, not collapsible

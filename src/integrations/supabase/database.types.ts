@@ -84,6 +84,45 @@ export type Database = {
         }
         Relationships: []
       }
+      bug_reports: {
+        Row: {
+          component_stack: string | null
+          created_at: string | null
+          error_message: string
+          id: string
+          priority: string | null
+          stack_trace: string | null
+          status: string | null
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          component_stack?: string | null
+          created_at?: string | null
+          error_message: string
+          id?: string
+          priority?: string | null
+          stack_trace?: string | null
+          status?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          component_stack?: string | null
+          created_at?: string | null
+          error_message?: string
+          id?: string
+          priority?: string | null
+          stack_trace?: string | null
+          status?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       call_sheets: {
         Row: {
           created_at: string | null

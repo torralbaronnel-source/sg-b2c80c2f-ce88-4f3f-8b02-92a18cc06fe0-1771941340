@@ -10,7 +10,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCcw, MessageSquareWarning } from "lucide-react";
+import { AlertTriangle, RefreshCcw, MessageSquareWarning, Check } from "lucide-react";
+import { bugService } from "@/services/bugService";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 // Global Progress Bar Styling
 if (typeof window !== "undefined") {
@@ -18,12 +21,36 @@ if (typeof window !== "undefined") {
 }
 
 function ErrorFallback({ error, resetErrorBoundary }: any) {
-  const handleReport = () => {
-    const subject = encodeURIComponent("Orchestrix System Alert Report");
-    const body = encodeURIComponent(
-      `User Report from Orchestrix\n\nError Message: ${error?.message || "Unknown"}\n\nStack Trace (Optional):\n${error?.stack || "N/A"}\n\nContext: ${window.location.href}`
-    );
-    window.location.href = `mailto:support@orchestrix.ai?subject=${subject}&body=${body}`;
+  const { user } = useAuth();
+  const [isReporting, setIsReporting] = React.useState(false);
+  const [reportSent, setReportSent] = React.useState(false);
+
+  // Auto-log the error when it happens
+  React.useEffect(() => {
+    bugService.logError({
+      error_message: error?.message || "Unknown Error",
+      stack_trace: error?.stack,
+      user_id: user?.id
+    });
+  }, [error, user]);
+
+  const handleManualReport = async () => {
+    setIsReporting(true);
+    // Even though we auto-log, manual report adds user intent/priority
+    const success = await bugService.logError({
+      error_message: `USER_REPORTED: ${error?.message || "Unknown"}`,
+      stack_trace: error?.stack,
+      user_id: user?.id
+    });
+
+    if (success !== null) {
+      setReportSent(true);
+      toast({
+        title: "Report Sent",
+        description: "Our engineering team has been notified. Thank you for your help!",
+      });
+    }
+    setIsReporting(false);
   };
 
   return (
@@ -33,7 +60,7 @@ function ErrorFallback({ error, resetErrorBoundary }: any) {
       </div>
       <h2 className="mb-2 text-2xl font-bold text-slate-900">System Alert</h2>
       <p className="mb-8 max-w-md text-slate-600">
-        A component in Orchestrix encountered an unexpected error. Don't worry, your session is still secure.
+        A component in Orchestrix encountered an unexpected error. Don't worry, your session is secure and the team has been notified.
       </p>
       <div className="flex flex-col sm:flex-row gap-4">
         <Button 
@@ -44,12 +71,22 @@ function ErrorFallback({ error, resetErrorBoundary }: any) {
           Reload Orchestrix
         </Button>
         <Button 
-          onClick={handleReport}
+          onClick={handleManualReport}
+          disabled={isReporting || reportSent}
           variant="outline"
           className="border-slate-300 text-slate-700 hover:bg-slate-100"
         >
-          <MessageSquareWarning className="mr-2 h-4 w-4 text-orange-500" />
-          Report Issue
+          {reportSent ? (
+            <>
+              <Check className="mr-2 h-4 w-4 text-green-500" />
+              Report Sent
+            </>
+          ) : (
+            <>
+              <MessageSquareWarning className="mr-2 h-4 w-4 text-orange-500" />
+              {isReporting ? "Sending..." : "Report Issue"}
+            </>
+          )}
         </Button>
       </div>
       <pre className="mt-8 max-w-lg overflow-auto rounded-lg bg-slate-200 p-4 text-left text-[10px] text-slate-800">

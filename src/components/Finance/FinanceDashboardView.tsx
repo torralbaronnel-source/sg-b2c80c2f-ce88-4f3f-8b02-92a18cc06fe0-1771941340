@@ -1,97 +1,115 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { 
+  Wallet, 
+  Receipt, 
+  TrendingUp, 
+  ShieldAlert, 
+  Clock, 
+  ArrowRight,
+  Calculator,
+  FileSpreadsheet,
+  Lock
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, DollarSign, Wallet, Receipt, ArrowUpRight } from "lucide-react";
-
-const formatPHP = (amount: number) => {
-  return new Intl.NumberFormat("en-PH", {
-    style: "currency",
-    currency: "PHP",
-  }).format(amount);
-};
+import { motion } from "framer-motion";
 
 export function FinanceDashboardView() {
-  const stats = [
-    { title: "Total Revenue", value: formatPHP(1250000), icon: Wallet, trend: "+12.5%", color: "text-emerald-600" },
-    { title: "Pending Invoices", value: formatPHP(450000), icon: Receipt, trend: "5 items", color: "text-amber-600" },
-    { title: "Operating Expenses", value: formatPHP(280000), icon: TrendingDown, trend: "-4.2%", color: "text-rose-600" },
-    { title: "Net Profit", value: formatPHP(970000), icon: TrendingUp, trend: "+18.2%", color: "text-blue-600" },
-  ];
-
-  const transactions = [
-    { id: "TX-001", client: "Solaire Resort", event: "Grand Ballroom Gala", amount: 450000, status: "Paid", date: "2026-02-20" },
-    { id: "TX-002", client: "Ayala Land", event: "Corporate Launch", amount: 250000, status: "Pending", date: "2026-02-22" },
-    { id: "TX-003", client: "Okada Manila", event: "Wedding Production", amount: 180000, status: "Paid", date: "2026-02-18" },
-    { id: "TX-004", client: "Marriott Clark", event: "Tech Summit", amount: 320000, status: "Overdue", date: "2026-02-10" },
+  const upcomingFeatures = [
+    {
+      title: "Automated Invoicing",
+      description: "Generate and track client payments directly from event quotes.",
+      icon: Receipt,
+      status: "In Development"
+    },
+    {
+      title: "Budget Reconciliation",
+      description: "Real-time tracking of production expenses vs. event budget.",
+      icon: Calculator,
+      status: "Alpha"
+    },
+    {
+      title: "Vendor Payouts",
+      description: "Secure, audited payment workflows for event contractors.",
+      icon: Wallet,
+      status: "Backlog"
+    }
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="border-stone-100 shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <stat.icon className="h-5 w-5 text-stone-400" />
-                <span className={`text-xs font-bold ${stat.color}`}>{stat.trend}</span>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-stone-500 uppercase tracking-wider">{stat.title}</p>
-                <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <div className="relative min-h-[80vh] flex flex-col items-center justify-center p-4 md:p-8 overflow-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10 animate-pulse" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl -z-10" />
 
-      <Card className="border-stone-100 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-lg font-bold uppercase tracking-widest text-brand-primary">Recent Transactions</CardTitle>
-          <Badge variant="outline" className="text-[10px] font-bold tracking-widest uppercase">All Activities (PHP)</Badge>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-stone-100">
-                <TableHead className="text-xs uppercase font-bold text-stone-400">Transaction ID</TableHead>
-                <TableHead className="text-xs uppercase font-bold text-stone-400">Client / Event</TableHead>
-                <TableHead className="text-xs uppercase font-bold text-stone-400 text-right">Amount</TableHead>
-                <TableHead className="text-xs uppercase font-bold text-stone-400 text-center">Status</TableHead>
-                <TableHead className="text-xs uppercase font-bold text-stone-400 text-right">Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {transactions.map((tx) => (
-                <TableRow key={tx.id} className="group hover:bg-stone-50/50 border-stone-100 transition-colors">
-                  <TableCell className="font-mono text-xs text-stone-500">{tx.id}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-sm text-brand-primary">{tx.client}</span>
-                      <span className="text-xs text-stone-400">{tx.event}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right font-bold text-brand-primary">
-                    {formatPHP(tx.amount)}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge 
-                      className={`text-[10px] font-bold tracking-widest uppercase px-2 py-0.5 rounded-full ${
-                        tx.status === "Paid" ? "bg-emerald-50 text-emerald-700 border-emerald-100" :
-                        tx.status === "Pending" ? "bg-amber-50 text-amber-700 border-amber-100" :
-                        "bg-rose-50 text-rose-700 border-rose-100"
-                      }`}
-                    >
-                      {tx.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-stone-500">{tx.date}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-3xl w-full text-center space-y-8"
+      >
+        {/* Main Status Header */}
+        <div className="space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-widest mb-4">
+            <Lock className="h-3 w-3" /> Under Development
+          </div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-foreground">
+            Financial <span className="text-primary">Intelligence</span>
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+            We're currently fine-tuning our fiscal management engine to ensure bank-grade security and precision for your event budgets.
+          </p>
+        </div>
+
+        {/* Feature Preview Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
+          {upcomingFeatures.map((feature, i) => (
+            <Card key={i} className="bg-background/50 backdrop-blur-sm border-dashed relative group overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                <feature.icon className="h-12 w-12" />
+              </div>
+              <CardHeader className="pb-2">
+                <Badge variant="outline" className="w-fit text-[10px] mb-2 border-primary/20 bg-primary/5">
+                  {feature.status}
+                </Badge>
+                <CardTitle className="text-base font-bold">{feature.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Action Callouts */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <Button size="lg" className="w-full sm:w-auto font-bold shadow-lg shadow-primary/20">
+            Notify Me on Launch
+            <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+          <Button variant="outline" size="lg" className="w-full sm:w-auto border-dashed">
+            View Roadmap
+          </Button>
+        </div>
+
+        {/* Live Status Ticker */}
+        <div className="pt-8 flex items-center justify-center gap-6 border-t border-border/50">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-emerald-500" />
+            <span className="text-xs font-medium text-muted-foreground">Security Audited</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-blue-500" />
+            <span className="text-xs font-medium text-muted-foreground">Q3 2026 Target</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <FileSpreadsheet className="h-4 w-4 text-purple-500" />
+            <span className="text-xs font-medium text-muted-foreground">Beta Phase</span>
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 }

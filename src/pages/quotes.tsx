@@ -1,18 +1,16 @@
 import React from "react";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { SEO } from "@/components/SEO";
+import { FinanceDashboardView } from "@/components/Finance/FinanceDashboardView";
 
 export default function QuotesPage() {
   return (
     <ProtectedRoute>
-      <SEO title="Quotes | Orchestrix" />
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Quotes</h1>
-          <p className="text-muted-foreground">Create and manage client quotes</p>
-        </div>
-        {/* Quote management interface will be built here */}
-      </div>
+      <AppLayout>
+        <SEO title="Quotes | Orchestrix" />
+        <FinanceDashboardView />
+      </AppLayout>
     </ProtectedRoute>
   );
 }

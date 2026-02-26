@@ -90,6 +90,43 @@ export const lifecycleService = {
       .select()
       .single();
     return { data, error };
+  },
+
+  async getEventGuestStats(eventId: string) {
+    const { data, error } = await supabase
+      .from("guests")
+      .select("attendance_status, is_vip, table_number")
+      .eq("event_id", eventId);
+
+    if (error) return { data: null, error };
+
+    const total = data.length;
+    const checkedIn = data.filter(g => g.attendance_status === 'checked-in').length;
+    const vips = data.filter(g => g.is_vip).length;
+    const vipsArrived = data.filter(g => g.is_vip && g.attendance_status === 'checked-in').length;
+    const seated = data.filter(g => g.table_number !== null).length;
+
+    // Group by table for occupancy chart
+    const tableOccupancy: Record<string, number> = {};
+    data.forEach(g => {
+      if (g.table_number) {
+        tableOccupancy[g.table_number] = (tableOccupancy[g.table_number] || 0) + 1;
+      }
+    });
+
+    return {
+      data: {
+        total,
+        checkedIn,
+        pending: total - checkedIn,
+        vips,
+        vipsArrived,
+        seated,
+        unseated: total - seated,
+        tableOccupancy
+      },
+      error: null
+    };
   }
 };
 

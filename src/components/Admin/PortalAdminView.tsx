@@ -16,9 +16,9 @@ export function PortalAdminView() {
     
     setIsTesting(true);
     try {
-      const response = await aiService.generateResponse(
+      const response = await aiService.getNanoResponse(
         testPrompt, 
-        "You are an AI assistant helping a portal administrator manage their event production platform."
+        [] // Pass empty array for history to match expected type any[]
       );
       setAiResponse(response || "No response received.");
     } catch (error: any) {

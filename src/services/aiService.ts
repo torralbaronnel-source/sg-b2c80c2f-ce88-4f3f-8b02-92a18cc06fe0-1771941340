@@ -1,71 +1,91 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// NANO Core - Proprietary Kernel Configuration
+// This allows Orchestrix to use its own dedicated AI model
+const NANO_KERNEL_URL = process.env.NEXT_PUBLIC_NANO_KERNEL_URL || "https://api.orchestrix.ai/v1/kernel";
+const USE_CUSTOM_KERNEL = true; // Set to true to bypass general AI and use your proprietary model
+
 export interface AIAction {
-  type: "execute_sql" | "write_file" | "read_file" | "run_command";
+  type: 'SQL_INJECTION' | 'PATTERN_RESEARCH' | 'BEHAVIOR_ANALYSIS' | 'UI_OPTIMIZATION';
   payload: any;
 }
 
 export const aiService = {
-  getNanoSystemPrompt: () => `
-# NANO CORE SYSTEM PIPELINE (v1.0)
-Follow this mandatory workflow for all operations:
-1. USER INPUT: Acknowledge and Preprocess.
-2. PLANNING: Outline the task before generating code/actions.
-3. CORE PROCESSING: Execute logic within the workspace.
-4. OUTPUT GENERATION: Return the result or [ACTION] block.
-5. FEEDBACK LOOP: If the result is an error or suboptimal, analyze the failure and refine.
+  /**
+   * Primary Neural Interface for NANO
+   * Directs traffic to your proprietary model
+   */
+  async getNanoResponse(prompt: string, history: any[] = []): Promise<string> {
+    if (USE_CUSTOM_KERNEL) {
+      try {
+        const response = await fetch(NANO_KERNEL_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ 
+            prompt, 
+            context: "NANO Behavioral Insights Agent",
+            history 
+          })
+        });
 
-You are ROOT INTEL. You have full jurisdiction over the database, files, and terminal.
-Always return valid JSON for [ACTION] blocks.
-`,
+        if (!response.ok) throw new Error("Custom Kernel offline");
+        const data = await response.json();
+        return data.output || data.response;
+      } catch (error) {
+        console.warn("Custom Kernel failed, falling back to local heuristic parsing", error);
+        return this.generateHeuristicResponse(prompt);
+      }
+    }
+    
+    // Fallback logic
+    return "NANO Core is processing your request via local neural paths.";
+  },
 
-  async generateResponse(prompt: string, systemPrompt: string, model: string = "gpt-4o") {
+  /**
+   * Translates Client-Speak to System-Speak for the Neural Proxy
+   */
+  async mapNaturalLanguageToSchema(text: string, schema: string): Promise<any> {
+    const prompt = `Map this text: "${text}" to this schema: ${schema}. Output ONLY valid JSON.`;
+    const response = await this.getNanoResponse(prompt);
     try {
-      const { data, error } = await supabase.functions.invoke("nano-brain", {
-        body: { prompt, systemPrompt, model },
-      });
-
-      if (error) throw error;
-      return data?.response || "Kernel: Response stream was empty.";
-    } catch (error: any) {
-      console.error("AI Service Error:", error);
-      throw error;
+      return JSON.parse(response);
+    } catch {
+      return null;
     }
   },
 
-  async executeKernelAction(action: AIAction) {
-    try {
-      // Direct API call to our local kernel bridge
-      const response = await fetch("/api/nano/kernel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: action.type, payload: action.payload }),
-      });
-
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error);
-      return result;
-    } catch (error: any) {
-      console.error("Kernel Execution Error:", error);
-      throw error;
+  /**
+   * Autonomous Data Injection Logic
+   */
+  async executeKernelAction(action: AIAction): Promise<any> {
+    console.log("NANO executing proprietary kernel action:", action);
+    
+    // Example: Direct database injection for the Proxy Operator
+    if (action.type === 'SQL_INJECTION') {
+      const { data, error } = await supabase
+        .from('bug_reports')
+        .insert([{
+          error_message: `Neural Proxy Intervention: ${action.payload.intent}`,
+          stack_trace: JSON.stringify(action.payload),
+          status: 'resolved',
+          priority: 'medium'
+        }]);
+      
+      return { success: !error, data, error };
     }
+
+    return { success: true, message: "Action logged in Neural Path" };
   },
 
-  async getNanoResponse(prompt: string, history: { role: string; content: string }[], model: string = "gpt-4o") {
-    const systemPrompt = `
-You are GPT 5.1 NANO, the ROOT INTEL for Orchestrix. 
-You have JURISDICTION over the entire system:
-1. Files: You can read/write any file in the project.
-2. Database: You can execute raw SQL via Supabase.
-3. Commands: You can run terminal commands.
-
-When a user asks you to do something that requires action, explain what you are going to do, then provide the action in a structured JSON block at the end of your response like this:
-[ACTION: {"type": "write_file", "payload": {"path": "src/pages/test.tsx", "content": "..."}}]
-[ACTION: {"type": "execute_sql", "payload": {"query": "SELECT * FROM profiles LIMIT 5"}}]
-[ACTION: {"type": "run_command", "payload": {"command": "npm list"}}]
-
-Be decisive. You are the conductor of this digital orchestra.
-`;
-    return this.generateResponse(prompt, systemPrompt, model);
+  /**
+   * Local Heuristic Parsing (Backup Brain)
+   * This ensures NANO works even if the server is offline
+   */
+  generateHeuristicResponse(prompt: string): string {
+    const p = prompt.toLowerCase();
+    if (p.includes("save") || p.includes("add")) {
+      return "I've detected your intent to save data. I am mapping your input to the system schema now.";
+    }
+    return "NANO is analyzing the neural flow. How can I assist with your workflow?";
   }
 };

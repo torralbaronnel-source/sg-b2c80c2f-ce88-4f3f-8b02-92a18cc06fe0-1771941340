@@ -51,32 +51,36 @@ export function NeuralProxy({ isOpen: controlledOpen, onClose, context = "Genera
     setIsProcessing(true);
 
     try {
-      // Step 1: Parse intent via AI Service (Simulated NL2S)
-      // In a real scenario, this would call a specific 'proxy-parse' endpoint
-      const response = await aiService.generateBlueprint({
-        type: 'proxy_injection',
-        input: userMsg,
-        context: context
+      // Step 1: Parse intent and execute kernel action via AI Service
+      const actionResult = await aiService.executeKernelAction({
+        type: 'SQL_INJECTION',
+        payload: {
+          intent: message,
+          timestamp: new Date().toISOString(),
+          userAgent: navigator.userAgent
+        }
       });
 
-      // Step 2: Log the intervention for Research
-      await supabase.from('bug_reports').insert({
-        title: `NANO Proxy Intervention: ${context}`,
-        description: `User provided: "${userMsg}". NANO parsed and processed this on behalf of user.`,
-        status: 'resolved',
-        priority: 'low',
-        url: window.location.href
-      });
+      if (actionResult.success) {
+        // Step 2: Log the intervention for Research (Corrected Mapping)
+        await supabase.from('bug_reports').insert({
+          error_message: `NANO Proxy Intervention: ${context} | User: "${userMsg}"`,
+          status: 'resolved',
+          priority: 'low',
+          url: window.location.href,
+          user_agent: navigator.userAgent
+        });
 
-      setHistory(prev => [...prev, { 
-        role: 'nano', 
-        content: `Neural mapping complete. I've successfully injected the data into the ${context} registry. The disruption has been bypassed.` 
-      }]);
+        setHistory(prev => [...prev, { 
+          role: 'nano', 
+          content: `Neural mapping complete. I've successfully injected the data into the ${context} registry. The disruption has been bypassed.` 
+        }]);
 
-      toast({
-        title: "NANO Proxy Success",
-        description: "Data has been injected into the system on your behalf.",
-      });
+        toast({
+          title: "NANO Proxy Success",
+          description: "Data has been injected into the system on your behalf.",
+        });
+      }
 
     } catch (error) {
       console.error("Proxy Error:", error);

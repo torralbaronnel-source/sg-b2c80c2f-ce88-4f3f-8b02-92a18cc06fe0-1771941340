@@ -9,10 +9,18 @@ import {
   Server
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function OverviewDashboardView() {
   const { user } = useAuth();
   const userName = user?.user_metadata?.full_name || "Ronnel Torralba";
+  const [loading, setLoading] = React.useState(true);
+  
+  // Simulate rapid data arrival after mount
+  React.useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
 
   const stats = [
     {
@@ -50,7 +58,7 @@ export function OverviewDashboardView() {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-500">
       <div className="relative overflow-hidden rounded-2xl border bg-slate-950/50 p-6 md:p-8 shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div className="space-y-2">
@@ -73,23 +81,29 @@ export function OverviewDashboardView() {
 
       {/* Stats Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat, index) => (
-          <Card key={index} className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-              <CardTitle className="text-sm font-semibold text-slate-600">{stat.title}</CardTitle>
-              <div className={`p-2 rounded-lg ${stat.bgColor}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-              <div className="flex items-center gap-1 mt-1">
-                <span className="text-xs font-medium text-emerald-600">{stat.change}</span>
-                <span className="text-[10px] text-slate-400 font-medium italic">vs last period</span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {loading ? (
+          Array(4).fill(0).map((_, i) => (
+            <Skeleton key={i} className="h-32 w-full rounded-xl bg-muted/50" />
+          ))
+        ) : (
+          stats.map((stat, index) => (
+            <Card key={index} className="border-none shadow-sm bg-white hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                <CardTitle className="text-sm font-semibold text-slate-600">{stat.title}</CardTitle>
+                <div className={`p-2 rounded-lg ${stat.bgColor}`}>
+                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
+                <div className="flex items-center gap-1 mt-1">
+                  <span className="text-xs font-medium text-emerald-600">{stat.change}</span>
+                  <span className="text-[10px] text-slate-400 font-medium italic">vs last period</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-7">

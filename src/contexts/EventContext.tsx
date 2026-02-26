@@ -1,157 +1,122 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { useAuth } from "./AuthContext";
-import { eventService, type Event, type CreateEvent, type UpdateEvent } from "@/services/eventService";
-import { useToast } from "@/hooks/use-toast";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface EventContextType {
-  events: Event[];
+  events: any[];
+  currentEvent: any | null;
+  setCurrentEvent: (event: any) => void;
   loading: boolean;
-  createEvent: (eventData: CreateEvent) => Promise<Event | null>;
-  updateEvent: (id: string, updates: UpdateEvent) => Promise<void>;
-  activeEvent: Event | null;
-  setActiveEvent: (event: Event | null) => void;
-  refreshEvents: () => Promise<void>;
+  currentServer: any | null;
+  setCurrentServer: (server: any) => void;
+  createEvent: (eventData: any) => Promise<any>;
+  subscribeToLiveUpdates: (eventId: string, callback: (payload: any) => void) => () => void;
   isCreateDialogOpen: boolean;
   setIsCreateDialogOpen: (open: boolean) => void;
-  subscribeToLiveUpdates: (eventId: string, callback: (payload: any) => void) => () => void;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
 
 export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [events, setEvents] = useState<Event[]>([]);
+  const { user } = useAuth();
+  const [events, setEvents] = useState<any[]>([]);
+  const [currentEvent, setCurrentEvent] = useState<any | null>(null);
+  const [currentServer, setCurrentServer] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const { user, currentServer } = useAuth();
-  const { toast } = useToast();
 
-  const fetchEvents = useCallback(async () => {
-    if (!currentServer) {
+  useEffect(() => {
+    if (!user) {
       setEvents([]);
+      setCurrentEvent(null);
       setLoading(false);
       return;
     }
 
-    try {
+    const fetchEvents = async () => {
       setLoading(true);
-      const data = await eventService.getEvents();
-      setEvents(data);
-    } catch (error) {
-      console.error("Error fetching events:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentServer?.id]);
+      try {
+        const { data, error } = await supabase
+          .from("events")
+          .select("*")
+          .order("created_at", { ascending: false });
 
-  useEffect(() => {
+        if (error) throw error;
+        setEvents(data || []);
+        if (data && data.length > 0 && !currentEvent) {
+          setCurrentEvent(data[0]);
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchEvents();
-  }, [fetchEvents]);
+  }, [user]);
 
-  const subscribeToLiveUpdates = useCallback((eventId: string, callback: (payload: any) => void) => {
+  const createEvent = async (eventData: any) => {
+    try {
+      const { data, error } = await supabase
+        .from("events")
+        .insert([eventData])
+        .select()
+        .single();
+
+      if (error) throw error;
+      setEvents(prev => [data, ...prev]);
+      return data;
+    } catch (error) {
+      console.error("Error creating event:", error);
+      return null;
+    }
+  };
+
+  const subscribeToLiveUpdates = (eventId: string, callback: (payload: any) => void) => {
     const channel = supabase
-      .channel(`live_updates_${eventId}`)
+      .channel(`event-updates-${eventId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'guests',
-          filter: `event_id=eq.${eventId}`,
+          event: "*",
+          schema: "public",
+          table: "events",
+          filter: `id=eq.${eventId}`,
         },
-        (payload) => callback(payload)
+        callback
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
-
-  const createEvent = async (eventData: CreateEvent) => {
-    if (!currentServer?.id || !user?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in and have an active organization selected.",
-        variant: "destructive",
-      });
-      return null;
-    }
-
-    try {
-      const newEvent = await eventService.createEvent(eventData);
-      
-      if (newEvent) {
-        await fetchEvents();
-        toast({
-          title: "Success",
-          description: "Event scheduled successfully!",
-        });
-        return newEvent;
-      }
-      return null;
-    } catch (error: any) {
-      console.error("Error creating event:", error);
-      toast({
-        title: "Creation Failed",
-        description: error.message || "Failed to create event. Please check all fields.",
-        variant: "destructive",
-      });
-      return null;
-    }
-  };
-
-  const updateEvent = async (id: string, updates: UpdateEvent) => {
-    try {
-      const { error } = await eventService.updateEvent(id, updates);
-      if (error) throw error;
-      
-      await fetchEvents();
-      
-      if (activeEvent?.id === id) {
-        const updated = events.find(e => e.id === id);
-        if (updated) {
-          setActiveEvent({ ...updated, ...updates } as Event);
-        }
-      }
-
-      toast({
-        title: "Success",
-        description: "Event updated successfully!",
-      });
-    } catch (error: any) {
-      console.error("Error updating event:", error);
-      toast({
-        title: "Update Failed",
-        description: error.message || "Could not update event.",
-        variant: "destructive",
-      });
-    }
   };
 
   return (
-    <EventContext.Provider value={{ 
-      events, 
-      loading, 
-      createEvent, 
-      updateEvent,
-      activeEvent, 
-      setActiveEvent,
-      refreshEvents: fetchEvents,
-      isCreateDialogOpen,
-      setIsCreateDialogOpen,
-      subscribeToLiveUpdates
-    }}>
+    <EventContext.Provider 
+      value={{ 
+        events, 
+        currentEvent, 
+        setCurrentEvent, 
+        loading,
+        currentServer,
+        setCurrentServer,
+        createEvent,
+        subscribeToLiveUpdates,
+        isCreateDialogOpen,
+        setIsCreateDialogOpen
+      }}
+    >
       {children}
     </EventContext.Provider>
   );
-}
+};
 
-export const useEvent = () => {
+export const useEvents = () => {
   const context = useContext(EventContext);
   if (context === undefined) {
-    throw new Error("useEvent must be used within an EventProvider");
+    throw new Error("useEvents must be used within an EventProvider");
   }
   return context;
 };

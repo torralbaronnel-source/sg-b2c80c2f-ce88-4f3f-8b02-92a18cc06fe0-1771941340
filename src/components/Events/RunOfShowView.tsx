@@ -14,7 +14,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvents } from "@/contexts/EventContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -34,23 +34,23 @@ interface ROSCue {
 }
 
 export function RunOfShowView() {
-  const { activeEvent } = useEvent();
+  const { currentEvent } = useEvents();
   const { toast } = useToast();
   const [cues, setCues] = useState<ROSCue[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (activeEvent?.id) {
+    if (currentEvent?.id) {
       fetchCues();
     }
-  }, [activeEvent?.id]);
+  }, [currentEvent?.id]);
 
   const fetchCues = async () => {
     try {
       const { data, error } = await supabase
         .from("event_cues")
         .select("*")
-        .eq("event_id", activeEvent.id)
+        .eq("event_id", currentEvent.id)
         .order("start_time", { ascending: true });
 
       if (error) throw error;

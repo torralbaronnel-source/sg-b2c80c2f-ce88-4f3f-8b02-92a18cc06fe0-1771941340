@@ -2,37 +2,40 @@ import type { AppProps } from "next/app";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { EventProvider } from "@/contexts/EventContext";
-import { Toaster } from "@/components/ui/toaster";
-import { SEO } from "@/components/SEO";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { Toaster } from "@/components/ui/toaster";
 import { useRouter } from "next/router";
 import "@/styles/globals.css";
 
-// Pages that should NOT have the AppLayout (Auth pages, Landing, etc.)
-const PUBLIC_PAGES = ["/login", "/signup", "/forgot-password", "/reset-password", "/terms", "/privacy"];
-
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
-  const isPublicPage = PUBLIC_PAGES.includes(router.pathname);
+  
+  // Public pages that don't need the persistent layout or auth check
+  const isPublicPage = ["/login", "/signup", "/forgot-password", "/reset-password", "/terms", "/privacy"].includes(router.pathname);
+
+  if (isPublicPage) {
+    return (
+      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <AuthProvider>
+          <EventProvider>
+            <Component {...pageProps} />
+            <Toaster />
+          </EventProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    );
+  }
 
   return (
-    <ThemeProvider defaultTheme="dark" storageKey="orchestrix-theme">
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <AuthProvider>
         <EventProvider>
-          <SEO 
-            title="Orchestrix | Neural Production Management"
-            description="High-performance event production and logistics orchestration."
-          />
-          {isPublicPage ? (
-            <Component {...pageProps} />
-          ) : (
-            <ProtectedRoute>
-              <AppLayout>
-                <Component {...pageProps} />
-              </AppLayout>
-            </ProtectedRoute>
-          )}
+          <ProtectedRoute>
+            <AppLayout>
+              <Component {...pageProps} />
+            </AppLayout>
+          </ProtectedRoute>
           <Toaster />
         </EventProvider>
       </AuthProvider>

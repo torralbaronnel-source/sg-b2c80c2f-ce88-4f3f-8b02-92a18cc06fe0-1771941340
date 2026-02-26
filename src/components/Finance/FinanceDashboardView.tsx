@@ -14,6 +14,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const upcomingModules = [
   {
@@ -51,8 +52,18 @@ const upcomingModules = [
 ];
 
 export function FinanceDashboardView() {
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    setLoading(false);
+  }, []);
+
   return (
-    <div className="min-h-[80vh] flex flex-col items-center justify-center p-4 md:p-8 space-y-12">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight">Finance</h1>
+        <p className="text-muted-foreground text-sm uppercase tracking-widest font-medium">Neural Revenue Streams</p>
+      </div>
       {/* Hero Section */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}

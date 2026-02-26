@@ -48,12 +48,13 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { motion, AnimatePresence } from "framer-motion";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvents } from "@/contexts/EventContext";
 import { productionService, type RunOfShowItem, type ResourceAllocation } from "@/services/productionService";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const mockChecklist = [
   { id: 1, title: "LGU/Barangay Permit Review", team: "Admin", time: "14 Days Before", critical: true },
@@ -64,7 +65,7 @@ const mockChecklist = [
 ];
 
 export function ProductionHubView() {
-  const { activeEvent } = useEvent();
+  const { currentEvent } = useEvents();
   const { toast } = useToast();
   const [runOfShow, setRunOfShow] = useState<RunOfShowItem[]>([]);
   const [resources, setResources] = useState<ResourceAllocation[]>([]);
@@ -80,18 +81,18 @@ export function ProductionHubView() {
   };
 
   const handleGenerateBlueprint = async () => {
-    if (!activeEvent) return;
+    if (!currentEvent) return;
     setIsGenerating(true);
     try {
       await productionService.generateBlueprint(
-        activeEvent.id, 
-        activeEvent.type || 'Corporate', 
-        activeEvent.event_date
+        currentEvent.id, 
+        currentEvent.type || 'Corporate', 
+        currentEvent.event_date
       );
       await loadProductionData();
       toast({
         title: "Blueprint Generated",
-        description: `PH-Specific production timeline created for ${activeEvent.type}.`,
+        description: `PH-Specific production timeline created for ${currentEvent.type}.`,
       });
     } catch (error) {
       toast({
@@ -105,18 +106,18 @@ export function ProductionHubView() {
   };
 
   useEffect(() => {
-    if (activeEvent) {
+    if (currentEvent) {
       loadProductionData();
     }
-  }, [activeEvent]);
+  }, [currentEvent]);
 
   const loadProductionData = async () => {
-    if (!activeEvent) return;
+    if (!currentEvent) return;
     setLoading(true);
     try {
       const [rosData, resData] = await Promise.all([
-        productionService.getRunOfShow(activeEvent.id),
-        productionService.getResourceAllocations(activeEvent.id)
+        productionService.getRunOfShow(currentEvent.id),
+        productionService.getResourceAllocations(currentEvent.id)
       ]);
       setRunOfShow(rosData);
       setResources(resData);
@@ -127,7 +128,7 @@ export function ProductionHubView() {
     }
   };
 
-  if (!activeEvent) {
+  if (!currentEvent) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] text-center p-8 bg-zinc-950/20 rounded-3xl border-2 border-dashed border-zinc-800">
         <div className="w-16 h-16 bg-blue-500/10 text-blue-500 rounded-full flex items-center justify-center mb-4">
@@ -152,7 +153,7 @@ export function ProductionHubView() {
         <div className="flex flex-wrap gap-2">
           <Button 
             onClick={handleGenerateBlueprint}
-            disabled={isGenerating || !activeEvent}
+            disabled={isGenerating || !currentEvent}
             className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white border-b-4 border-blue-800 active:border-b-0 transition-all"
           >
             {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Zap className="mr-2 h-4 w-4" />}

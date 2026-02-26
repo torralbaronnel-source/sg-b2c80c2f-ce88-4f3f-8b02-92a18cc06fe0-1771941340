@@ -30,6 +30,7 @@ import { cn } from "@/lib/utils";
 import { communicationService, type Communication } from "@/services/communicationService";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type TabType = "Chat" | "Files" | "Tasks" | "AI Insights";
 type ViewMode = "List" | "Chat";

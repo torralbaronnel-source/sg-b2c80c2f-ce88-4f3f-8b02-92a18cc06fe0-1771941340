@@ -25,7 +25,7 @@ import { Button } from "@/components/ui/button";
 import { lifecycleService } from "@/services/lifecycleService";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvents } from "@/contexts/EventContext";
 import {
   PieChart,
   Pie,
@@ -60,7 +60,7 @@ export function LiveEventDashboard({ eventId }: LiveDashboardProps) {
   const [exporting, setExporting] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const isMobile = useIsMobile();
-  const { subscribeToLiveUpdates } = useEvent();
+  const { subscribeToLiveUpdates } = useEvents();
 
   const fetchDashboardData = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);

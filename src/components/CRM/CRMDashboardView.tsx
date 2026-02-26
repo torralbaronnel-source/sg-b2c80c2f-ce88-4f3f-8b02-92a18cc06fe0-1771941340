@@ -66,6 +66,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type SortBy = "full_name" | "created_at" | "total_spent";
 type SortDir = "asc" | "desc";

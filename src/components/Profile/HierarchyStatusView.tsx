@@ -2,14 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Users, TreePine, Lock, CheckCircle2, XCircle, Zap } from "lucide-react";
+import { Shield, Users, TreePine, Lock, CheckCircle2, XCircle, Zap, ChevronLeft, ChevronRight, Search, Filter } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { motion, AnimatePresence } from "framer-motion";
 import { Input } from "@/components/ui/input";
-import { Search, Filter } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -29,25 +27,31 @@ interface ExtendedRole {
 }
 
 export function HierarchyStatusView() {
-  const { role } = useAuth();
+  const { user, profile } = useAuth();
   const [animatedProgress, setAnimatedProgress] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
   
-  const roleData = role as unknown as ExtendedRole;
+  // Safely derive role data
+  const roleData = (profile?.role as unknown as ExtendedRole) || {
+    name: "Guest",
+    hierarchy_level: 10,
+    permissions: {},
+    role_type: "Internal"
+  };
+
   const hierarchyLevel = roleData?.hierarchy_level ?? 10;
   const powerLevel = Math.max(0, (10 - hierarchyLevel) * 10);
 
   useEffect(() => {
-    // Small delay to ensure the tab transition is smooth before filling the bar
     const timer = setTimeout(() => {
       setAnimatedProgress(powerLevel);
     }, 300);
     return () => clearTimeout(timer);
   }, [powerLevel]);
 
-  if (!role) return null;
+  if (!user) return null;
 
   const permissions = roleData.permissions || {};
   const permissionEntries = Object.entries(permissions);
@@ -61,12 +65,10 @@ export function HierarchyStatusView() {
     return matchesSearch;
   });
 
-  // Pagination Logic
   const totalPages = Math.ceil(filteredPermissions.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedPermissions = filteredPermissions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
-  // Reset page when filtering changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter]);
@@ -87,7 +89,6 @@ export function HierarchyStatusView() {
       className="space-y-6"
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Tier Card */}
         <Card className="border-primary/20 bg-primary/5 overflow-hidden relative">
           <motion.div 
             className="absolute top-0 right-0 p-4 opacity-10"
@@ -103,15 +104,9 @@ export function HierarchyStatusView() {
                 <Shield className="h-5 w-5 text-primary" />
                 Current Tier
               </CardTitle>
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
-              >
-                <Badge variant="outline" className="text-primary border-primary bg-primary/10">
-                  Tier {hierarchyLevel}
-                </Badge>
-              </motion.div>
+              <Badge variant="outline" className="text-primary border-primary bg-primary/10">
+                Tier {hierarchyLevel}
+              </Badge>
             </div>
             <CardDescription>{getTierLabel(hierarchyLevel)}</CardDescription>
           </CardHeader>
@@ -123,25 +118,11 @@ export function HierarchyStatusView() {
                 </span>
                 <span>{powerLevel}% Access</span>
               </div>
-              <div className="relative pt-1">
-                <Progress value={animatedProgress} className="h-3 transition-all duration-1000 ease-out" />
-                {/* Glow effect for high authority tiers */}
-                {powerLevel > 70 && (
-                  <motion.div 
-                    className="absolute inset-0 bg-primary/20 blur-md -z-10 rounded-full"
-                    animate={{ opacity: [0.2, 0.5, 0.2] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                  />
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground italic">
-                {hierarchyLevel === 0 ? "You have unrestricted system-wide overrides." : `Level ${hierarchyLevel} clearance active.`}
-              </p>
+              <Progress value={animatedProgress} className="h-3 transition-all duration-1000 ease-out" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Role Identity */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -154,17 +135,16 @@ export function HierarchyStatusView() {
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Type</span>
-                <Badge variant="secondary" className="capitalize">{role.role_type || 'Internal'}</Badge>
+                <Badge variant="secondary" className="capitalize">{roleData.role_type || 'Internal'}</Badge>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">Title</span>
-                <span className="text-sm font-semibold">{role.name}</span>
+                <span className="text-sm font-semibold">{roleData.name}</span>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Structure Status */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -185,7 +165,6 @@ export function HierarchyStatusView() {
         </Card>
       </div>
 
-      {/* Permission Matrix Preview */}
       <Card>
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -222,78 +201,41 @@ export function HierarchyStatusView() {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 min-h-[200px]">
             <AnimatePresence mode="popLayout" initial={false}>
-              {paginatedPermissions.length > 0 ? (
-                paginatedPermissions.map(([key, value]: [string, any]) => {
-                  const isAuthorized = value?.view !== false;
-                  return (
-                    <motion.div
-                      key={key}
-                      layout
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.2 }}
-                      className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                        isAuthorized 
-                          ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-700 dark:text-emerald-400" 
-                          : "bg-destructive/5 border-destructive/20 text-destructive"
-                      }`}
-                    >
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold capitalize">
-                          {key.replace(/([A-Z])/g, ' $1').trim()}
-                        </span>
-                        <span className="text-[10px] opacity-70">
-                          {isAuthorized ? "View & Access Enabled" : "Access Restricted"}
-                        </span>
-                      </div>
-                      {isAuthorized ? (
-                        <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      ) : (
-                        <XCircle className="h-4 w-4 shrink-0" />
-                      )}
-                    </motion.div>
-                  );
-                })
-              ) : (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="col-span-full py-8 text-center text-muted-foreground text-sm flex flex-col items-center gap-2"
-                >
-                  <Filter className="h-8 w-8 opacity-20" />
-                  No modules match your current filters.
-                </motion.div>
-              )}
+              {paginatedPermissions.map(([key, value]: [string, any]) => {
+                const isAuthorized = value?.view !== false;
+                return (
+                  <motion.div
+                    key={key}
+                    layout
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                      isAuthorized 
+                        ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-700 dark:text-emerald-400" 
+                        : "bg-destructive/5 border-destructive/20 text-destructive"
+                    }`}
+                  >
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold capitalize">
+                        {key.replace(/([A-Z])/g, ' $1').trim()}
+                      </span>
+                    </div>
+                    {isAuthorized ? <CheckCircle2 className="h-4 w-4 shrink-0" /> : <XCircle className="h-4 w-4 shrink-0" />}
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </div>
-
-          {/* Pagination Controls */}
+          
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t">
-              <p className="text-xs text-muted-foreground">
-                Showing {startIndex + 1} to {Math.min(startIndex + ITEMS_PER_PAGE, filteredPermissions.length)} of {filteredPermissions.length} modules
-              </p>
+              <p className="text-xs text-muted-foreground">Page {currentPage} of {totalPages}</p>
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1}>
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
-                <div className="text-xs font-medium w-12 text-center">
-                  {currentPage} / {totalPages}
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
+                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>
                   <ChevronRight className="h-4 w-4" />
                 </Button>
               </div>

@@ -29,13 +29,14 @@ import {
   ArrowUpDown,
   X
 } from "lucide-react";
+import { useEvents } from "@/contexts/EventContext";
 
 type SortBy = "name" | "created_at" | "updated_at";
 type SortDir = "asc" | "desc";
 type StatusFilter = "all" | "active" | "available";
 
 export default function ServersPage() {
-  const { currentServer, setCurrentServer } = useAuth();
+  const { currentServer, setCurrentServer } = useEvents();
   const [servers, setServers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingServer, setLoadingServer] = useState<string | null>(null);

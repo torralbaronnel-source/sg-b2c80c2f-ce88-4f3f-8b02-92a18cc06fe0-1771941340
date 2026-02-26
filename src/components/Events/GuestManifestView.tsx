@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvents } from "@/contexts/EventContext";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Users, 
@@ -114,9 +114,9 @@ const mockGuests = [
 ];
 
 export function GuestManifestView() {
-  const context = useEvent();
+  const { currentEvent } = useEvents();
   // Falling back to a safe check since the linter is reporting a mismatch
-  const selectedEvent = (context as any).state?.selectedEvent || (context as any).selectedEvent;
+  const selectedEvent = (currentEvent as any).state?.selectedEvent || (currentEvent as any).selectedEvent;
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");

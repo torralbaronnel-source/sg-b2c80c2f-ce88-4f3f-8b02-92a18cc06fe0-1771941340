@@ -26,7 +26,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvents } from "@/contexts/EventContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 
 export function EventsDashboardView() {
-  const { events, loading, createEvent, isCreateDialogOpen, setIsCreateDialogOpen } = useEvent();
+  const { events, createEvent, isCreateDialogOpen, setIsCreateDialogOpen } = useEvents();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -50,6 +50,13 @@ export function EventsDashboardView() {
     budget: 0,
     description: ""
   });
+
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    // Immediate shell paint
+    setLoading(false);
+  }, []);
 
   const filteredEvents = useMemo(() => {
     return events.filter(event => {
@@ -97,7 +104,11 @@ export function EventsDashboardView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold tracking-tight">Events Hub</h1>
+        <p className="text-muted-foreground text-sm uppercase tracking-widest font-medium">Global Operation Scheduler</p>
+      </div>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

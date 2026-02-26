@@ -15,12 +15,12 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { useEvent } from "@/contexts/EventContext";
+import { useEvents } from "@/contexts/EventContext";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 
 export function EventSelector() {
-  const { events, activeEvent, setActiveEvent } = useEvent();
+  const { events, currentEvent, setCurrentEvent } = useEvents();
   const [open, setOpen] = React.useState(false);
 
   return (
@@ -35,7 +35,7 @@ export function EventSelector() {
           <div className="flex items-center gap-2 truncate">
             <Calendar className="h-4 w-4 text-purple-400" />
             <span className="truncate">
-              {activeEvent ? activeEvent.title : "Select Event..."}
+              {currentEvent ? currentEvent.title : "Select Event..."}
             </span>
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -52,7 +52,7 @@ export function EventSelector() {
                   key={event.id}
                   value={event.title}
                   onSelect={() => {
-                    setActiveEvent(event);
+                    setCurrentEvent(event);
                     setOpen(false);
                   }}
                   className="flex flex-col items-start gap-1 py-3 cursor-pointer"

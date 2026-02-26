@@ -1,15 +1,16 @@
 import React from "react";
+import { AppLayout } from "@/components/Layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { SEO } from "@/components/SEO";
-import FinanceDashboardView from "@/components/Finance/FinanceDashboardView";
+import { FinanceDashboardView } from "@/components/Finance/FinanceDashboardView";
 
 export default function InvoicesPage() {
   return (
     <ProtectedRoute>
-      <SEO title="Invoices | Orchestrix" />
-      <div className="p-4 md:p-6">
+      <AppLayout>
+        <SEO title="Invoices | Orchestrix" />
         <FinanceDashboardView />
-      </div>
+      </AppLayout>
     </ProtectedRoute>
   );
 }

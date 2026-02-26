@@ -1,58 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { useAuth } from '@/contexts/AuthContext';
-import { Loader2 } from "lucide-react";
+import React, { useEffect } from "react";
+import { useRouter } from "next/router";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredPermission?: string;
+  allowedRoles?: string[];
 }
 
-export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteProps) {
-  const { user, isLoading, role } = useAuth();
+export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const { user, profile, isLoading } = useAuth();
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
     if (!isLoading) {
-      // ONLY redirect if there is NO user. 
-      // Do not redirect on other errors.
       if (!user) {
-        console.log("No user session found, redirecting to login...");
         router.push("/login");
-        return;
+      } else if (allowedRoles && profile && !allowedRoles.includes(profile.role || "")) {
+        // If user is logged in but doesn't have the required role, redirect to dashboard
+        router.push("/dashboard");
       }
-
-      if (requiredPermission && role) {
-        const r = role as any;
-        if (r.hierarchy_level !== 0) {
-          const perms = r.permissions || {};
-          if (perms[requiredPermission]?.view === false) {
-            router.push("/");
-            return;
-          }
-        }
-      }
-      
-      setIsAuthorized(true);
     }
-  }, [user, isLoading, role, router, requiredPermission]);
+  }, [user, profile, isLoading, router, allowedRoles]);
 
-  if (isLoading || (!isAuthorized && user)) {
+  if (isLoading) {
     return (
-      <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center bg-background/50 backdrop-blur-sm">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
-          <div className="flex flex-col items-center text-center">
-            <p className="text-base font-bold text-slate-900">Synchronizing Orchestrix</p>
-            <p className="text-xs text-slate-500">Securing your session...</p>
-          </div>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
   }
 
-  if (!user || !isAuthorized) {
+  // Only render children if user is logged in and has the required role (if specified)
+  if (!user || (allowedRoles && profile && !allowedRoles.includes(profile.role || ""))) {
     return null;
   }
 

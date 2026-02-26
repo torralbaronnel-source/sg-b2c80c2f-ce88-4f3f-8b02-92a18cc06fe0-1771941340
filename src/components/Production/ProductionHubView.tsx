@@ -38,13 +38,41 @@ import { useEvent } from "@/contexts/EventContext";
 import { productionService, type RunOfShowItem, type ResourceAllocation } from "@/services/productionService";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 export function ProductionHubView() {
   const { activeEvent } = useEvent();
+  const { toast } = useToast();
   const [runOfShow, setRunOfShow] = useState<RunOfShowItem[]>([]);
   const [resources, setResources] = useState<ResourceAllocation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [activeWorkflow, setActiveWorkflow] = useState<string>("general");
+
+  const handleGenerateBlueprint = async () => {
+    if (!activeEvent) return;
+    setIsGenerating(true);
+    try {
+      await productionService.generateBlueprint(
+        activeEvent.id, 
+        activeEvent.type || 'Corporate', 
+        activeEvent.event_date
+      );
+      await loadProductionData();
+      toast({
+        title: "Blueprint Generated",
+        description: `Production timeline created for ${activeEvent.type}.`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Generation Failed",
+        description: "Could not create production blueprint."
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   useEffect(() => {
     if (activeEvent) {
@@ -127,6 +155,14 @@ export function ProductionHubView() {
           </div>
 
           <div className="flex flex-wrap gap-3">
+            <Button 
+              size="lg" 
+              onClick={handleGenerateBlueprint}
+              disabled={isGenerating || runOfShow.length > 0}
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-8 font-bold"
+            >
+              {isGenerating ? "Generating..." : "Generate AI Blueprint"}
+            </Button>
             <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white rounded-2xl px-8 font-bold shadow-lg shadow-red-500/20 border-b-4 border-red-800 active:border-b-0 transition-all">
               <Zap className="w-4 h-4 mr-2" /> Start Live Production
             </Button>

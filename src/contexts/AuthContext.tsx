@@ -5,7 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Role = Database["public"]["Tables"]["roles"]["Row"];
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   profile: any | null;
   role: Role | null;

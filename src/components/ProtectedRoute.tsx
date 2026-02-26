@@ -1,47 +1,55 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Lock } from 'lucide-react';
+import { Loader2 } from "lucide-react";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  redirectTo?: string;
+  requiredPermission?: string;
 }
 
-export function ProtectedRoute({ children, requiredPermission }: { children: React.ReactNode, requiredPermission?: string }) {
+export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteProps) {
   const { user, isLoading, role } = useAuth();
   const router = useRouter();
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login");
-    }
-    
-    if (!isLoading && user && role && requiredPermission) {
-      const r = role as any;
-      if (r.hierarchy_level !== 0) {
-        const perms = r.permissions || {};
-        if (perms[requiredPermission]?.view === false) {
-          router.push("/");
+    if (!isLoading) {
+      if (!user) {
+        router.push("/login");
+        return;
+      }
+
+      if (requiredPermission && role) {
+        const r = role as any;
+        if (r.hierarchy_level !== 0) {
+          const perms = r.permissions || {};
+          if (perms[requiredPermission]?.view === false) {
+            router.push("/");
+            return;
+          }
         }
       }
+      
+      setIsAuthorized(true);
     }
   }, [user, isLoading, role, router, requiredPermission]);
 
-  if (isLoading) {
+  if (isLoading || (!isAuthorized && user)) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#FDFCFB]">
+      <div className="flex h-[calc(100vh-4rem)] w-full items-center justify-center bg-background/50 backdrop-blur-sm">
         <div className="flex flex-col items-center gap-4">
-          <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-          <p className="text-sm font-medium text-muted-foreground">Orchestrix is loading...</p>
+          <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+          <div className="flex flex-col items-center text-center">
+            <p className="text-base font-bold text-slate-900">Synchronizing Orchestrix</p>
+            <p className="text-xs text-slate-500">Securing your session...</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  if (!user) {
+  if (!user || !isAuthorized) {
     return null;
   }
 

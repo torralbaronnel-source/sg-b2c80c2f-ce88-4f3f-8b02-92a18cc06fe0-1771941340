@@ -1,6 +1,6 @@
 import type { AppProps } from "next/app";
 import React, { useEffect } from "react";
-import Router, { useRouter } from "next/router";
+import { useRouter } from "next/router";
 import "@/styles/globals.css";
 import NProgress from "nprogress";
 import { ThemeProvider } from "@/contexts/ThemeProvider";
@@ -8,13 +8,17 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { EventProvider } from "@/contexts/EventContext";
 import { Toaster } from "@/components/ui/toaster";
 import { AppLayout } from "@/components/Layout/AppLayout";
+import { SEO } from "@/components/SEO";
+
+// Global Progress Bar Styling
+if (typeof window !== "undefined") {
+  NProgress.configure({ showSpinner: false, trickleSpeed: 150 });
+}
 
 function RouteProgress() {
   const router = useRouter();
 
   useEffect(() => {
-    NProgress.configure({ showSpinner: false, trickleSpeed: 120 });
-
     const handleStart = () => NProgress.start();
     const handleStop = () => NProgress.done();
 
@@ -35,7 +39,7 @@ function RouteProgress() {
 export default function App({ Component, pageProps }: AppProps) {
   const router = useRouter();
   
-  // Public pages that don't need the dashboard layout
+  // Public routes that don't require the dashboard layout
   const publicPages = ["/login", "/signup", "/forgot-password", "/reset-password", "/404", "/terms", "/privacy"];
   const isPublicPage = publicPages.includes(router.pathname);
 
@@ -43,6 +47,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <ThemeProvider>
       <AuthProvider>
         <EventProvider>
+          <SEO />
           <RouteProgress />
           {isPublicPage ? (
             <Component {...pageProps} />

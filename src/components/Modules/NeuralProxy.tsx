@@ -108,13 +108,26 @@ export function NeuralProxy() {
       const actionResult = await aiService.executeKernelAction({
         type: "SQL_INJECTION",
         payload: { 
-          intent: userMessage,
+          intent: currentMessage,
           metadata: {
             url: window.location.href,
             fingerprint: fullFingerprint
           }
         }
       });
+
+      if (actionResult.success) {
+        setHistory(prev => [...prev, { 
+          role: "nano", 
+          content: `NANO: Action processed internally. Data secured in table: ${actionResult.action?.payload?.table || "system"}.`,
+          action: actionResult.action 
+        }]);
+      } else {
+        setHistory(prev => [...prev, { 
+          role: "nano", 
+          content: "NANO: Intent captured. Processing within the local fortress environment..." 
+        }]);
+      }
     } catch (error) {
       setHistory(prev => [...prev, { 
         role: "nano", 
@@ -255,11 +268,11 @@ export function NeuralProxy() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-between"
+                    className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-between mx-4"
                   >
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Sparkles className="w-3 h-3 text-primary" />
-                      <span>Ghost memory found: "{ghostDraft.substring(0, 20)}..."</span>
+                      <span className="truncate max-w-[150px]">Restore: "{ghostDraft.substring(0, 20)}..."</span>
                     </div>
                     <Button 
                       variant="ghost" 

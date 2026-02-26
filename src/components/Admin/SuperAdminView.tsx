@@ -5,35 +5,18 @@ import {
   Calendar, 
   ShieldCheck, 
   Search,
-  MoreVertical,
   CheckCircle2,
-  XCircle,
-  AlertTriangle,
-  Zap,
-  CreditCard,
-  PlusCircle,
-  LayoutDashboard,
-  Star,
-  Shield,
-  Server,
   Activity,
-  Filter,
-  Download,
   Settings,
-  Plus,
   Wand2,
-  FileCode,
-  AlertCircle,
-  Clock,
-  ShieldAlert,
   Terminal,
   Database,
   Cpu,
   Bug,
-  ExternalLink,
   ChevronRight,
   ChevronDown,
-  RefreshCcw
+  RefreshCcw,
+  ShieldAlert
 } from "lucide-react";
 import { 
   Card, 
@@ -53,14 +36,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { 
   Tabs, 
   TabsContent, 
@@ -80,7 +55,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import { ConciergeManager } from "./ConciergeManager";
 import { RolesManagementView } from "./RolesManagementView";
 import { UserManagementView } from "./UserManagementView";
 import { OrgManagementView } from "./OrgManagementView";
@@ -88,17 +62,8 @@ import { RoleAnalyticsView } from "./RoleAnalyticsView";
 import { bugService, type BugReport } from "@/services/bugService";
 import { format } from "date-fns";
 
-interface Organization {
-  id: string;
-  name: string;
-  logo_url: string | null;
-  subscription_tier: string;
-  subscription_status: string;
-  created_at: string;
-}
-
 export function SuperAdminView() {
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [organizations, setOrganizations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [stats, setStats] = useState({
@@ -111,10 +76,7 @@ export function SuperAdminView() {
   const [wizardStep, setWizardStep] = useState(1);
   const [blueprintData, setBlueprintData] = useState({
     business_name: "",
-    primary_services: "",
-    target_market: "",
-    operational_needs: "",
-    special_requirements: ""
+    operational_needs: ""
   });
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedBlueprint, setGeneratedBlueprint] = useState<any>(null);
@@ -185,38 +147,14 @@ export function SuperAdminView() {
     try {
       await bugService.resolveBug(id);
       toast({
-        title: "Bug resolved",
-        description: "Status updated to resolved.",
+        title: "Insight Archived",
+        description: "Interaction pattern has been noted.",
       });
       loadBugs();
     } catch (error) {
       toast({
         title: "Error",
         description: "Failed to resolve bug.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateSubscription = async (orgId: string, tier: string) => {
-    try {
-      const { error } = await supabase
-        .from("organizations")
-        .update({ subscription_tier: tier })
-        .eq("id", orgId);
-
-      if (error) throw error;
-      
-      toast({
-        title: "Subscription updated",
-        description: `Organization tier changed to ${tier.toUpperCase()}`,
-      });
-      
-      fetchOrganizations();
-    } catch (error: any) {
-      toast({
-        title: "Failed to update subscription",
-        description: error.message,
         variant: "destructive",
       });
     }
@@ -243,10 +181,6 @@ export function SuperAdminView() {
     }
   };
 
-  const filteredOrgs = organizations.filter(org => 
-    org.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   const filteredBugs = bugs.filter(bug => {
     const matchesSearch = 
       bug.error_message?.toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -263,7 +197,7 @@ export function SuperAdminView() {
         <div className="flex flex-col items-center gap-2">
           <ShieldAlert className="h-10 w-10 text-red-600" />
           <h3 className="text-lg font-bold text-red-900">Access Restricted</h3>
-          <p className="max-w-xs text-sm text-red-600">This console is reserved for System Developers only. Unauthorized access is logged.</p>
+          <p className="max-w-xs text-sm text-red-600">This console is reserved for System Researchers only. Unauthorized access is logged.</p>
         </div>
       </div>
     );
@@ -273,17 +207,17 @@ export function SuperAdminView() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">NANO Core Console</h1>
-          <p className="text-muted-foreground">Global infrastructure, bug tracking, and tenant provisioning.</p>
+          <h1 className="text-3xl font-bold tracking-tight">Behavioral Insights Core</h1>
+          <p className="text-muted-foreground">AI-Driven User Research & Behavioral Pattern Analysis.</p>
         </div>
         <div className="flex items-center gap-2">
           <Button onClick={fetchOrganizations} variant="outline" size="sm">
             <RefreshCcw className="mr-2 h-4 w-4" />
-            Refresh Data
+            Sync Nodes
           </Button>
           <Button size="sm" onClick={() => setIsWizardOpen(true)} className="bg-purple-600 hover:bg-purple-700">
             <Wand2 className="mr-2 h-4 w-4" />
-            Business Intake
+            Research Intake
           </Button>
         </div>
       </div>
@@ -291,69 +225,69 @@ export function SuperAdminView() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tenants</CardTitle>
+            <CardTitle className="text-sm font-medium">Research Tenants</CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.organizations}</div>
-            <p className="text-xs text-muted-foreground">Across all regions</p>
+            <p className="text-xs text-muted-foreground">Active production nodes</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Global Users</CardTitle>
+            <CardTitle className="text-sm font-medium">User Cohorts</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.users}</div>
-            <p className="text-xs text-muted-foreground">Active ecosystem</p>
+            <p className="text-xs text-muted-foreground">Global behavior pool</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Open Incidents</CardTitle>
-            <Bug className="h-4 w-4 text-red-500" />
+            <CardTitle className="text-sm font-medium">Interaction Flags</CardTitle>
+            <Bug className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{bugs.filter(b => b.status === "new").length}</div>
-            <p className="text-xs text-muted-foreground">Requiring attention</p>
+            <div className="text-2xl font-bold text-amber-600">{bugs.filter(b => b.status === "new").length}</div>
+            <p className="text-xs text-muted-foreground">Patterns needing review</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">System Health</CardTitle>
+            <CardTitle className="text-sm font-medium">Core Integrity</CardTitle>
             <Activity className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">99.9%</div>
-            <p className="text-xs text-green-500">All nodes operational</p>
+            <div className="text-2xl font-bold">Optimal</div>
+            <p className="text-xs text-green-500">Neural paths established</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="bg-slate-100 p-1">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="incidents" className="flex items-center gap-2">
-            <Bug className="h-4 w-4" />
-            Incident Logs
+          <TabsTrigger value="overview">Executive View</TabsTrigger>
+          <TabsTrigger value="research" className="flex items-center gap-2">
+            <Database className="h-4 w-4" />
+            Interaction Research
             {bugs.filter(b => b.status === "new").length > 0 && (
               <Badge variant="destructive" className="ml-1 h-5 min-w-[20px] px-1 justify-center">
                 {bugs.filter(b => b.status === "new").length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="tenants">Tenants & Billing</TabsTrigger>
+          <TabsTrigger value="tenants">Tenants</TabsTrigger>
           <TabsTrigger value="users">Global Users</TabsTrigger>
-          <TabsTrigger value="roles">Roles & Sec</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="roles">Permissions</TabsTrigger>
+          <TabsTrigger value="analytics">Research Data</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
+                <CardTitle>Recent Research Events</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -376,21 +310,21 @@ export function SuperAdminView() {
             </Card>
             <Card className="col-span-3">
               <CardHeader>
-                <CardTitle>Infrastructure Status</CardTitle>
+                <CardTitle>Neural Infrastructure</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4 text-sm">
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2"><Database className="h-4 w-4" /> Supabase Storage</span>
+                    <span className="flex items-center gap-2"><Database className="h-4 w-4" /> Cognitive Storage</span>
+                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Stable</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2"><Cpu className="h-4 w-4" /> Processing Nodes</span>
                     <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Online</Badge>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2"><Cpu className="h-4 w-4" /> Edge Functions</span>
-                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Online</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-2"><Terminal className="h-4 w-4" /> API Engine</span>
-                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Healthy</Badge>
+                    <span className="flex items-center gap-2"><Terminal className="h-4 w-4" /> Research Engine</span>
+                    <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">Active</Badge>
                   </div>
                 </div>
               </CardContent>
@@ -398,19 +332,19 @@ export function SuperAdminView() {
           </div>
         </TabsContent>
 
-        <TabsContent value="incidents" className="space-y-4">
+        <TabsContent value="research" className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <CardTitle>System Incident Logs</CardTitle>
-                  <CardDescription>Real-time technical errors across all tenants.</CardDescription>
+                  <CardTitle>Interaction Research Logs</CardTitle>
+                  <CardDescription>Studying user behavior and friction points across the ecosystem.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative w-64">
                     <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input 
-                      placeholder="Search error..." 
+                      placeholder="Search patterns..." 
                       className="pl-8" 
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
@@ -441,8 +375,8 @@ export function SuperAdminView() {
               ) : filteredBugs.length === 0 ? (
                 <div className="flex h-64 flex-col items-center justify-center text-center">
                   <CheckCircle2 className="mb-2 h-10 w-10 text-green-500" />
-                  <h3 className="text-lg font-medium">Clear Skies</h3>
-                  <p className="text-sm text-muted-foreground">No matching incident reports found.</p>
+                  <h3 className="text-lg font-medium">System in Equilibrium</h3>
+                  <p className="text-sm text-muted-foreground">No irregular interaction patterns detected.</p>
                 </div>
               ) : (
                 <div className="rounded-md border">
@@ -450,10 +384,10 @@ export function SuperAdminView() {
                     <TableHeader>
                       <TableRow>
                         <TableHead className="w-[40px]"></TableHead>
-                        <TableHead>Priority</TableHead>
-                        <TableHead>Error Message</TableHead>
-                        <TableHead>Location</TableHead>
-                        <TableHead>Time</TableHead>
+                        <TableHead>Research Priority</TableHead>
+                        <TableHead>Behavior Observation</TableHead>
+                        <TableHead>Context URL</TableHead>
+                        <TableHead>Timestamp</TableHead>
                         <TableHead className="text-right">Action</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -470,7 +404,6 @@ export function SuperAdminView() {
                             <TableCell>
                               <Badge 
                                 variant={bug.priority === "critical" ? "destructive" : "secondary"}
-                                className={bug.priority === "critical" ? "animate-pulse" : ""}
                               >
                                 {bug.priority?.toUpperCase()}
                               </Badge>
@@ -495,7 +428,7 @@ export function SuperAdminView() {
                                     handleResolve(bug.id!);
                                   }}
                                 >
-                                  Resolve
+                                  Note Pattern
                                 </Button>
                               )}
                             </TableCell>
@@ -506,18 +439,18 @@ export function SuperAdminView() {
                                 <div className="space-y-4">
                                   <div className="grid grid-cols-2 gap-4 text-xs">
                                     <div>
-                                      <span className="font-bold text-slate-500">USER AGENT:</span>
+                                      <span className="font-bold text-slate-500">CLIENT AGENT:</span>
                                       <p className="mt-1 break-all">{bug.user_agent || "N/A"}</p>
                                     </div>
                                     <div>
-                                      <span className="font-bold text-slate-500">USER ID:</span>
+                                      <span className="font-bold text-slate-500">SUBJECT ID:</span>
                                       <p className="mt-1 font-mono">{bug.user_id || "Anonymous"}</p>
                                     </div>
                                   </div>
                                   <div>
-                                    <span className="text-xs font-bold text-slate-500">STACK TRACE:</span>
+                                    <span className="text-xs font-bold text-slate-500">BEHAVIORAL TRACE:</span>
                                     <pre className="mt-2 max-h-60 overflow-auto rounded bg-slate-950 p-3 font-mono text-[10px] text-purple-400">
-                                      {bug.stack_trace || "No stack trace provided."}
+                                      {bug.stack_trace || "No detailed trace provided."}
                                     </pre>
                                   </div>
                                 </div>
@@ -551,26 +484,17 @@ export function SuperAdminView() {
         </TabsContent>
       </Tabs>
 
-      {/* Blueprint Wizard Dialog */}
       <Dialog open={isWizardOpen} onOpenChange={setIsWizardOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
-            <DialogTitle>
-              {wizardStep === 1 && "Business Intake"}
-              {wizardStep === 2 && "Analyzing Requirements"}
-              {wizardStep === 3 && "Blueprint Generated"}
-            </DialogTitle>
-            <DialogDescription>
-              {wizardStep === 1 && "Gathering architectural requirements for a new production node."}
-              {wizardStep === 2 && "Our AI is architecting the server blueprint..."}
-              {wizardStep === 3 && "Review the generated configuration for the new node."}
-            </DialogDescription>
+            <DialogTitle>Research Intake</DialogTitle>
+            <DialogDescription>Analyzing client requirements for new nodes.</DialogDescription>
           </DialogHeader>
 
           {wizardStep === 1 && (
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <Label>Business Name</Label>
+                <Label>Research Subject (Business Name)</Label>
                 <Input 
                   value={blueprintData.business_name}
                   onChange={(e) => setBlueprintData({...blueprintData, business_name: e.target.value})}
@@ -578,23 +502,23 @@ export function SuperAdminView() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Operational Needs</Label>
+                <Label>Operational Parameters</Label>
                 <Textarea 
                   value={blueprintData.operational_needs}
                   onChange={(e) => setBlueprintData({...blueprintData, operational_needs: e.target.value})}
-                  placeholder="Describe the main workflows..."
+                  placeholder="What behaviors should NANO observe?"
                 />
               </div>
-              <Button onClick={() => setWizardStep(2)} className="w-full">Next Step</Button>
+              <Button onClick={() => setWizardStep(2)} className="w-full">Initialize Research</Button>
             </div>
           )}
 
           {wizardStep === 2 && (
             <div className="py-12 flex flex-col items-center justify-center space-y-4">
               <div className="h-12 w-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin" />
-              <p className="text-sm text-muted-foreground">Synthesizing server architecture...</p>
+              <p className="text-sm text-muted-foreground">Synthesizing behavioral patterns...</p>
               <Button onClick={handleGenerateBlueprint} disabled={isGenerating}>
-                {isGenerating ? "Synthesizing..." : "Simulate Generation"}
+                {isGenerating ? "Synthesizing..." : "Generate Analysis"}
               </Button>
             </div>
           )}
@@ -606,7 +530,7 @@ export function SuperAdminView() {
                   {JSON.stringify(generatedBlueprint, null, 2)}
                 </pre>
               </div>
-              <Button onClick={() => setIsWizardOpen(false)} className="w-full">Finalize & Close</Button>
+              <Button onClick={() => setIsWizardOpen(false)} className="w-full">Close Research</Button>
             </div>
           )}
         </DialogContent>

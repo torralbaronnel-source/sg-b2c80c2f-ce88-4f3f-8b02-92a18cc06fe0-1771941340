@@ -50,16 +50,31 @@ export const productionService = {
   async generateBlueprint(eventId: string, eventType: string, eventDate: string) {
     const archetypes: Record<string, any[]> = {
       'Wedding': [
-        { title: 'HMU Start', offset_hours: -5, duration: 120, team: 'Stylists' },
-        { title: 'Photography Arrival', offset_hours: -3, duration: 60, team: 'Media' },
-        { title: 'Ceremony Start', offset_hours: 0, duration: 60, team: 'Coordinators' },
-        { title: 'Reception Kickoff', offset_hours: 1.5, duration: 240, team: 'Catering' }
+        // Compliance & Planning (PH Specific)
+        { title: 'Filscap Music Licensing', offset_hours: -720, duration: 0, team: 'Admin/Legal' }, // 30 days before
+        { title: 'LGU/Barangay Permit Review', offset_hours: -336, duration: 0, team: 'Admin' },   // 14 days before
+        { title: 'Final Guest Protocol Check (VIPs)', offset_hours: -48, duration: 60, team: 'Coordination' },
+        
+        // Day of Execution
+        { title: 'Ingress & LED Wall Setup', offset_hours: -6, duration: 180, team: 'Technical/S&L' },
+        { title: 'HMU Start - Bridal Suite', offset_hours: -5, duration: 120, team: 'Stylists' },
+        { title: 'Crew Meal Distribution (Staff Packs)', offset_hours: -3.5, duration: 30, team: 'Logistics' },
+        { title: 'Photo/Video Team Arrival', offset_hours: -3, duration: 60, team: 'Media' },
+        { title: 'Ninong/Ninang Orientation', offset_hours: -0.5, duration: 15, team: 'Coordination' },
+        { title: 'Ceremony Proper', offset_hours: 0, duration: 60, team: 'Whole Team' },
+        { title: 'Cocktail Hour & Photobooth', offset_hours: 1, duration: 60, team: 'Coordination' },
+        { title: 'Grand Reception Entrance', offset_hours: 2, duration: 180, team: 'Whole Team' },
+        { title: 'Egress & Gear Load-out', offset_hours: 5, duration: 120, team: 'Technical' }
       ],
       'Corporate': [
-        { title: 'AV & Stage Setup', offset_hours: -4, duration: 180, team: 'Technical' },
-        { title: 'Speaker Rehearsal', offset_hours: -1, duration: 45, team: 'Production' },
-        { title: 'General Session', offset_hours: 0, duration: 120, team: 'Whole Team' },
-        { title: 'Networking Mixer', offset_hours: 2.5, duration: 90, team: 'Catering' }
+        { title: 'Technical Ocular (Power/Breakers)', offset_hours: -168, duration: 120, team: 'Technical' },
+        { title: 'Ingress: Stage & Backdrop', offset_hours: -8, duration: 240, team: 'Production' },
+        { title: 'Sound & Light Check (Dry Run)', offset_hours: -4, duration: 90, team: 'Technical' },
+        { title: 'Crew Meal distribution', offset_hours: -3, duration: 45, team: 'Logistics' },
+        { title: 'Speaker Technical Rehearsal', offset_hours: -1.5, duration: 60, team: 'Production' },
+        { title: 'Main Program Start', offset_hours: 0, duration: 120, team: 'Whole Team' },
+        { title: 'Networking & Buffet', offset_hours: 2, duration: 90, team: 'Catering' },
+        { title: 'Post-Event Wrap & Egress', offset_hours: 4, duration: 60, team: 'Logistics' }
       ]
     };
 

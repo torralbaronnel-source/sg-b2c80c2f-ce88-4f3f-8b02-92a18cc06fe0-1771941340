@@ -17,10 +17,9 @@ export function PortalAdminView() {
     setIsTesting(true);
     try {
       const response = await aiService.getNanoResponse(
-        testPrompt, 
-        [] // Pass empty array for history to match expected type any[]
+        testPrompt
       );
-      setAiResponse(response || "No response received.");
+      setAiResponse(response || "No response received from internal kernel.");
     } catch (error: any) {
       setAiResponse(`Error: ${error.message}`);
     } finally {

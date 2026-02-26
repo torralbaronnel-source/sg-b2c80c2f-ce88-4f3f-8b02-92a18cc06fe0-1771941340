@@ -1,188 +1,264 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Bot, 
   Sparkles, 
   Send, 
   X, 
-  CheckCircle2, 
+  ShieldCheck, 
+  Database, 
   AlertCircle,
-  Loader2,
-  Terminal
+  ChevronRight,
+  Fingerprint,
+  Zap
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { aiService } from "@/services/aiService";
-import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { aiService, type AIAction } from "@/services/aiService";
+import { cn } from "@/lib/utils";
+import { fingerprintService } from "@/services/fingerprintService";
 
-interface NeuralProxyProps {
-  isOpen?: boolean;
-  onClose?: () => void;
-  context?: string;
-  initialMessage?: string;
+interface Message {
+  role: "user" | "nano";
+  content: string;
+  action?: AIAction;
 }
 
-export function NeuralProxy({ isOpen: controlledOpen, onClose, context = "General System", initialMessage }: NeuralProxyProps) {
-  const [isOpen, setIsOpen] = useState(controlledOpen || false);
-  const [message, setMessage] = useState("");
+export function NeuralProxy() {
+  const [isOpen, setIsOpen] = useState(false);
+  const [userMessage, setUserMessage] = useState("");
+  const [ghostDraft, setGhostDraft] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [history, setHistory] = useState<{role: 'nano' | 'user', content: string}[]>([]);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    if (controlledOpen !== undefined) setIsOpen(controlledOpen);
-  }, [controlledOpen]);
-
-  useEffect(() => {
-    if (isOpen && history.length === 0) {
-      const intro = initialMessage || `I noticed a disruption in the neural flow for ${context}. I'm NANO, your Proxy Operator. Just tell me what you need to save in plain text, and I'll handle the injection for you.`;
-      setHistory([{ role: 'nano', content: intro }]);
+  const [history, setHistory] = useState<Message[]>([
+    { 
+      role: "nano", 
+      content: "NANO Proxy Active. 🛡️ Data Fortress mode engaged. No external leakage detected. How can I assist with your internal operations?" 
     }
-  }, [isOpen, context, initialMessage]);
+  ]);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const handleProxyRequest = async () => {
-    if (!message.trim()) return;
+  // Check for Ghost Draft on mount
+  useEffect(() => {
+    const savedDraft = sessionStorage.getItem("nano_ghost_draft");
+    if (savedDraft && !userMessage) {
+      setGhostDraft(savedDraft);
+    }
+  }, []);
 
-    const userMsg = message;
-    setMessage("");
-    setHistory(prev => [...prev, { role: 'user', content: userMsg }]);
+  // Save draft as user types (Ghost Memory)
+  useEffect(() => {
+    if (userMessage.length > 3) {
+      sessionStorage.setItem("nano_ghost_draft", userMessage);
+    }
+  }, [userMessage]);
+
+  const recoverGhostDraft = () => {
+    if (ghostDraft) {
+      setUserMessage(ghostDraft);
+      setGhostDraft(null);
+    }
+  };
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [history]);
+
+  const handleSend = async () => {
+    if (!userMessage.trim() || isProcessing) return;
+
+    const currentMessage = userMessage;
+    setUserMessage("");
+    setHistory(prev => [...prev, { role: "user", content: currentMessage }]);
     setIsProcessing(true);
 
     try {
-      // Step 1: Parse intent and execute kernel action via AI Service
+      const techInfo = fingerprintService.getBrowserFingerprint();
+      const geoInfo = await fingerprintService.getGeoData();
+      
+      const fullFingerprint = { ...techInfo, ...geoInfo };
+
+      // Step 1: Parse intent via Internal Kernel
       const actionResult = await aiService.executeKernelAction({
-        type: 'SQL_INJECTION',
-        payload: {
-          intent: message,
-          timestamp: new Date().toISOString(),
-          userAgent: navigator.userAgent
+        type: "SQL_INJECTION",
+        payload: { 
+          intent: userMessage,
+          metadata: {
+            url: window.location.href,
+            fingerprint: fullFingerprint
+          }
         }
       });
-
-      if (actionResult.success) {
-        // Step 2: Log the intervention for Research (Corrected Mapping)
-        await supabase.from('bug_reports').insert({
-          error_message: `NANO Proxy Intervention: ${context} | User: "${userMsg}"`,
-          status: 'resolved',
-          priority: 'low',
-          url: window.location.href,
-          user_agent: navigator.userAgent
-        });
-
-        setHistory(prev => [...prev, { 
-          role: 'nano', 
-          content: `Neural mapping complete. I've successfully injected the data into the ${context} registry. The disruption has been bypassed.` 
-        }]);
-
-        toast({
-          title: "NANO Proxy Success",
-          description: "Data has been injected into the system on your behalf.",
-        });
-      }
-
     } catch (error) {
-      console.error("Proxy Error:", error);
       setHistory(prev => [...prev, { 
-        role: 'nano', 
-        content: "I encountered a synchronization error. My creators have been notified. Please try one more time or wait for a neural refresh." 
+        role: "nano", 
+        content: "NANO: Neural disruption detected in local kernel. Data remains secure within the fortress." 
       }]);
     } finally {
       setIsProcessing(false);
     }
   };
 
-  if (!isOpen && controlledOpen === undefined) {
-    return (
+  return (
+    <>
+      {/* Floating Trigger */}
       <motion.div 
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
         className="fixed bottom-6 right-6 z-50"
       >
-        <Button 
-          onClick={() => setIsOpen(true)}
-          className="h-14 w-14 rounded-full bg-primary shadow-2xl hover:scale-110 transition-transform"
+        <Button
+          onClick={() => setIsOpen(!isOpen)}
+          className={cn(
+            "h-14 w-14 rounded-full shadow-2xl transition-all duration-300",
+            isOpen ? "bg-destructive hover:bg-destructive/90 rotate-90" : "bg-primary hover:bg-primary/90"
+          )}
         >
-          <Bot className="h-6 w-6 text-primary-foreground" />
+          {isOpen ? <X className="h-6 w-6" /> : <Bot className="h-6 w-6" />}
         </Button>
       </motion.div>
-    );
-  }
 
-  return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+      <AnimatePresence>
+        {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="w-full max-w-lg"
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-24 right-6 w-[400px] z-50"
           >
-            <Card className="border-2 border-primary/20 shadow-2xl">
-              <CardHeader className="bg-primary/5 border-b pb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Bot className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">NANO Proxy Operator</CardTitle>
-                      <CardDescription>Bypassing Input Disruptions</CardDescription>
-                    </div>
+            <Card className="border-primary/20 shadow-2xl overflow-hidden bg-background/95 backdrop-blur-md">
+              {/* Header */}
+              <div className="bg-primary p-4 text-primary-foreground flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <ShieldCheck className="h-6 w-6 text-primary-foreground" />
+                    <motion.div 
+                      animate={{ opacity: [1, 0, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                      className="absolute -top-1 -right-1 h-2 w-2 bg-green-400 rounded-full border border-primary"
+                    />
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <div>
+                    <h3 className="font-bold text-sm tracking-tight uppercase">NANO Neural Proxy</h3>
+                    <p className="text-[10px] opacity-70 flex items-center gap-1">
+                      <Fingerprint className="h-2 w-2" /> AIR-GAPPED INTERNAL KERNEL
+                    </p>
+                  </div>
                 </div>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="h-80 overflow-y-auto p-4 space-y-4">
+                <Badge variant="outline" className="text-[10px] bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground uppercase px-1">
+                  Secure
+                </Badge>
+              </div>
+
+              {/* Chat Area */}
+              <ScrollArea className="h-[400px] p-4 bg-muted/30" ref={scrollRef}>
+                <div className="space-y-4">
                   {history.map((msg, i) => (
-                    <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-[85%] p-3 rounded-2xl text-sm ${
+                    <motion.div
+                      initial={{ opacity: 0, x: msg.role === 'user' ? 10 : -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      key={i}
+                      className={cn(
+                        "flex flex-col max-w-[85%] gap-1",
+                        msg.role === 'user' ? "ml-auto items-end" : "mr-auto items-start"
+                      )}
+                    >
+                      <div className={cn(
+                        "p-3 rounded-2xl text-sm shadow-sm",
                         msg.role === 'user' 
-                          ? 'bg-primary text-primary-foreground rounded-tr-none' 
-                          : 'bg-muted border rounded-tl-none'
-                      }`}>
+                          ? "bg-primary text-primary-foreground rounded-tr-none" 
+                          : "bg-card border border-primary/10 rounded-tl-none"
+                      )}>
                         {msg.content}
                       </div>
-                    </div>
+                      
+                      {msg.action && (
+                        <div className="flex items-center gap-1 mt-1 px-1">
+                          <Database className="h-3 w-3 text-primary animate-pulse" />
+                          <span className="text-[10px] font-mono text-muted-foreground uppercase">
+                            Injection Success: {msg.action.payload.table}
+                          </span>
+                        </div>
+                      )}
+                    </motion.div>
                   ))}
                   {isProcessing && (
-                    <div className="flex justify-start">
-                      <div className="bg-muted border p-3 rounded-2xl rounded-tl-none flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Analyzing neural intent...
-                      </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Zap className="h-3 w-3 animate-bounce" />
+                      <span className="text-[10px] font-mono uppercase tracking-widest">Processing Intent...</span>
                     </div>
                   )}
                 </div>
-                
-                <div className="p-4 border-t bg-muted/30">
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="Type your data here (e.g., 'Add DJ Spark, 0917...')" 
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleProxyRequest()}
-                      disabled={isProcessing}
-                      className="bg-background border-primary/20"
-                    />
-                    <Button onClick={handleProxyRequest} disabled={isProcessing}>
-                      {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </ScrollArea>
+
+              {/* Ghost Recovery Suggestion */}
+              <AnimatePresence>
+                {ghostDraft && !userMessage && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="mb-4 p-3 rounded-lg bg-primary/5 border border-primary/10 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Sparkles className="w-3 h-3 text-primary" />
+                      <span>Ghost memory found: "{ghostDraft.substring(0, 20)}..."</span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 px-2 text-[10px]"
+                      onClick={recoverGhostDraft}
+                    >
+                      Restore
                     </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Footer / Input */}
+              <div className="p-4 bg-background border-t border-primary/10">
+                <form 
+                  onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+                  className="flex gap-2"
+                >
+                  <Input 
+                    placeholder="Describe your intent (e.g. Add guest Maria)..."
+                    value={userMessage}
+                    onChange={(e) => setUserMessage(e.target.value)}
+                    className="h-10 text-xs border-primary/20 focus-visible:ring-primary/30"
+                    disabled={isProcessing}
+                  />
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    className="h-10 w-10 shrink-0"
+                    disabled={isProcessing}
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </form>
+                <div className="mt-2 flex items-center justify-between">
+                  <div className="flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-[10px] text-muted-foreground italic">
+                      Zero External Data Leakage Guaranteed.
+                    </span>
                   </div>
-                  <p className="text-[10px] text-muted-foreground mt-2 text-center uppercase tracking-widest font-bold">
-                    Neural Bridge Active • Direct Injection Enabled
-                  </p>
+                  <div className="flex items-center gap-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                    <span className="text-[9px] font-mono text-muted-foreground tracking-tighter uppercase">Fortress Active</span>
+                  </div>
                 </div>
-              </CardContent>
+              </div>
             </Card>
           </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

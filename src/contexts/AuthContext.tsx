@@ -13,6 +13,7 @@ interface AuthContextType {
   currentServer: { id: string; name: string } | null;
   setCurrentServer: (server: { id: string; name: string } | null) => void;
   refreshProfile: () => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -93,8 +94,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => subscription.unsubscribe();
   }, [fetchProfileAndRole]);
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
-    <AuthContext.Provider value={{ user, profile, role, isLoading, currentServer, setCurrentServer, refreshProfile }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        profile,
+        role,
+        isLoading,
+        currentServer,
+        setCurrentServer,
+        refreshProfile,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

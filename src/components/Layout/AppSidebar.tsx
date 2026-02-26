@@ -144,12 +144,8 @@ export function AppSidebar() {
     if (!role) return false;
     const r = role as any;
     
-    // STRICT: Only Super Admin sees System/Admin tools
-    if (groupTitle === "System" || url.includes("/admin")) {
-      return r.hierarchy_level === 0;
-    }
-
-    if (r.hierarchy_level === 0) return true;
+    // RELAXED: If SuperAdmin (0) or Admin (1), show everything
+    if (r.hierarchy_level === 0 || r.hierarchy_level === 1) return true;
     
     // Map URL to permission key
     const pageKey = url === "/" ? "dashboard" : url.replace("/", "");

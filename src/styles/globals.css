@@ -59,6 +59,18 @@
   }
 }
 
+/* 🛡️ Data Fortress UI Safety Layer */
+.sidebar-trigger-visible {
+  display: flex !important;
+  visibility: visible !important;
+  z-index: 50 !important;
+}
+
+[data-sidebar="trigger"] {
+  display: flex !important;
+  opacity: 1 !important;
+}
+
 @layer base {
   * {
     @apply border-border;

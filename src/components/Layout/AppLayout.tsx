@@ -1,70 +1,112 @@
 import React from "react";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
-import { Toaster } from "@/components/ui/toaster";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/router";
-import { Bell, Search, Settings } from "lucide-react";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { Button } from "@/components/ui/button";
+import { 
+  Bell, 
+  Search, 
+  Settings, 
+  User, 
+  LogOut,
+  Menu
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
 import { Separator } from "@/components/ui/separator";
-import { NeuralProxy } from "@/components/Modules/NeuralProxy";
 
 interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-function Header() {
-  return (
-    <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background px-4">
-      <div className="flex items-center gap-2">
-        <SidebarTrigger className="-ml-1" />
-        <Separator orientation="vertical" className="h-6" />
-        <h1 className="text-lg font-bold tracking-tight text-[#6264a7]">ORCHESTRIX</h1>
-      </div>
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="h-9 w-9">
-          <Search className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
-          <Bell className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-9 w-9">
-          <Settings className="h-4 w-4" />
-        </Button>
-      </div>
-    </header>
-  );
-}
-
 export function AppLayout({ children }: AppLayoutProps) {
-  const router = useRouter();
-  const isCommunicationPage = router.pathname === "/communication";
+  const { user, signOut, profile } = useAuth();
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <AppSidebar />
-      <SidebarInset className="flex flex-col overflow-hidden">
-        <Header />
-        <main
-          className={cn(
-            "flex-1",
-            isCommunicationPage
-              ? "overflow-hidden p-0"
-              : "overflow-y-auto p-4 md:p-6"
-          )}
-        >
-          <div
-            className={cn(
-              "h-full w-full",
-              !isCommunicationPage && "mx-auto max-w-7xl"
-            )}
-          >
+      <div className="flex min-h-screen w-full bg-background overflow-hidden">
+        <AppSidebar />
+        <main className="flex-1 flex flex-col min-w-0 relative">
+          <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-4 sticky top-0 z-[40] shadow-sm">
+            <div className="flex items-center gap-2">
+              <SidebarTrigger className="h-9 w-9 flex items-center justify-center rounded-md border bg-card text-card-foreground hover:bg-accent transition-colors">
+                <Menu className="h-5 w-5" />
+              </SidebarTrigger>
+              <Separator orientation="vertical" className="h-6 mx-1" />
+              <div className="flex items-center gap-2">
+                <span className="text-xl font-black tracking-tighter text-[#6264a7]">ORCHESTRIX</span>
+                <span className="hidden md:inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary">
+                  DATA FORTRESS
+                </span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-4">
+              <div className="hidden sm:flex items-center gap-1 bg-muted/50 rounded-full px-3 py-1 border focus-within:ring-2 focus-within:ring-[#6264a7] transition-all">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <input 
+                  type="text" 
+                  placeholder="Search Nodes..." 
+                  className="bg-transparent border-none text-sm focus:outline-none w-32 md:w-48 py-1"
+                />
+              </div>
+
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Button variant="ghost" size="icon" className="h-9 w-9 relative text-muted-foreground hover:text-[#6264a7]">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border-2 border-background" />
+                </Button>
+                
+                <ThemeSwitch />
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full border border-[#6264a7]/20 bg-gradient-to-br from-white to-gray-50 dark:from-gray-900 dark:to-black">
+                      <User className="h-5 w-5 text-[#6264a7]" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 mt-2">
+                    <DropdownMenuLabel>
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{profile?.full_name || user?.email}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile Settings</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Mission Control</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      className="text-red-600 focus:text-red-600 cursor-pointer"
+                      onClick={() => signOut()}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log Out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </header>
+          
+          <div className="flex-1 overflow-auto">
             {children}
           </div>
         </main>
-      </SidebarInset>
-      <NeuralProxy />
-      <Toaster />
+      </div>
     </SidebarProvider>
   );
 }

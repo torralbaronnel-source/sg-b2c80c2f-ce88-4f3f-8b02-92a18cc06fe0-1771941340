@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { lifecycleService } from "@/services/lifecycleService";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useEvent } from "@/contexts/EventContext";
 import {
   PieChart,
   Pie,
@@ -59,6 +60,7 @@ export function LiveEventDashboard({ eventId }: LiveDashboardProps) {
   const [exporting, setExporting] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const isMobile = useIsMobile();
+  const { subscribeToLiveUpdates } = useEvent();
 
   const fetchDashboardData = useCallback(async (isSilent = false) => {
     if (!isSilent) setLoading(true);
@@ -70,7 +72,7 @@ export function LiveEventDashboard({ eventId }: LiveDashboardProps) {
       ]);
 
       if (!statsRes.error && statsRes.data) setStats(statsRes.data);
-      if (!guestRes.error && guestRes.data) setGuests(guestRes.data);
+      if (!guestRes.error && guestRes.data) setGuests(guestRes.data || []);
     } catch (err) {
       console.error("Dashboard Fetch Error:", err);
     } finally {
@@ -82,15 +84,24 @@ export function LiveEventDashboard({ eventId }: LiveDashboardProps) {
 
   useEffect(() => {
     fetchDashboardData();
-    const interval = setInterval(() => fetchDashboardData(true), 45000); // 45s adaptive sync
-    return () => clearInterval(interval);
-  }, [fetchDashboardData]);
+    
+    // Subscribe to real-time changes
+    const unsubscribe = subscribeToLiveUpdates(eventId, (payload) => {
+      console.log("Real-time update received:", payload);
+      fetchDashboardData(true); // Silent refresh on change
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [eventId, fetchDashboardData, subscribeToLiveUpdates]);
 
   const checkInData = useMemo(() => {
     if (!stats) return [];
     return [
       { name: "Arrived", value: stats.checkedIn, color: "#10b981" },
-      { name: "Pending", value: stats.pending, color: "#f59e0b" },
+      { name: "Confirmed RSVP", value: stats.pending, color: "#3b82f6" },
+      { name: "No Response", value: stats.total - (stats.checkedIn + stats.pending), color: "#94a3b8" },
     ];
   }, [stats]);
 

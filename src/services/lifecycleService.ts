@@ -92,41 +92,45 @@ export const lifecycleService = {
     return { data, error };
   },
 
-  async getEventGuestStats(eventId: string) {
+  async updateRSVPStatus(guestId: string, status: 'accepted' | 'declined' | 'no_response') {
     const { data, error } = await supabase
-      .from("guests")
-      .select("attendance_status, is_vip, table_number")
-      .eq("event_id", eventId);
+      .from('guests')
+      .update({ rsvp_status: status, updated_at: new Date().toISOString() })
+      .eq('id', guestId)
+      .select()
+      .single();
+
+    if (!error && status === 'accepted') {
+      console.log("PIPELINE: RSVP Accepted - Updating Production Manifest...");
+    }
+    return { data, error };
+  },
+
+  async getEventGuestStats(eventId: string) {
+    const { data: guests, error } = await supabase
+      .from('guests')
+      .select('*')
+      .eq('event_id', eventId);
 
     if (error) return { data: null, error };
 
-    const total = data.length;
-    const checkedIn = data.filter(g => g.attendance_status === 'checked-in').length;
-    const vips = data.filter(g => g.is_vip).length;
-    const vipsArrived = data.filter(g => g.is_vip && g.attendance_status === 'checked-in').length;
-    const seated = data.filter(g => g.table_number !== null).length;
-
-    // Group by table for occupancy chart
-    const tableOccupancy: Record<string, number> = {};
-    data.forEach(g => {
-      if (g.table_number) {
-        tableOccupancy[g.table_number] = (tableOccupancy[g.table_number] || 0) + 1;
-      }
-    });
-
-    return {
-      data: {
-        total,
-        checkedIn,
-        pending: total - checkedIn,
-        vips,
-        vipsArrived,
-        seated,
-        unseated: total - seated,
-        tableOccupancy
-      },
-      error: null
+    const stats = {
+      total: guests.length,
+      checkedIn: guests.filter(g => g.attendance_status === 'checked-in').length,
+      pending: guests.filter(g => g.attendance_status === 'waiting' && g.rsvp_status === 'accepted').length,
+      vips: guests.filter(g => g.is_vip).length,
+      vipsArrived: guests.filter(g => g.is_vip && g.attendance_status === 'checked-in').length,
+      seated: guests.filter(g => g.table_number).length,
+      unseated: guests.filter(g => !g.table_number && g.attendance_status === 'checked-in').length,
+      tableOccupancy: guests.reduce((acc: any, g) => {
+        if (g.table_number) {
+          acc[g.table_number] = (acc[g.table_number] || 0) + 1;
+        }
+        return acc;
+      }, {})
     };
+
+    return { data: stats, error: null };
   }
 };
 

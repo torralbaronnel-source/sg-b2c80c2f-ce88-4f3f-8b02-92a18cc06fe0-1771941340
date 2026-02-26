@@ -12,6 +12,8 @@ export interface ClientData {
   source?: string;
   status?: string;
   assigned_user_id?: string;
+  total_events?: number;
+  total_spent?: number;
 }
 
 interface StatResponse {

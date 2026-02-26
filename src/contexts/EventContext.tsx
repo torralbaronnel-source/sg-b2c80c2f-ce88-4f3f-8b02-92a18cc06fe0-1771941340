@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useAuth } from "./AuthContext";
 import { eventService, type Event, type CreateEvent, type UpdateEvent } from "@/services/eventService";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface EventContextType {
   events: Event[];
@@ -13,6 +14,7 @@ interface EventContextType {
   refreshEvents: () => Promise<void>;
   isCreateDialogOpen: boolean;
   setIsCreateDialogOpen: (open: boolean) => void;
+  subscribeToLiveUpdates: (eventId: string, callback: (payload: any) => void) => () => void;
 }
 
 const EventContext = createContext<EventContextType | undefined>(undefined);
@@ -46,6 +48,26 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   useEffect(() => {
     fetchEvents();
   }, [fetchEvents]);
+
+  const subscribeToLiveUpdates = useCallback((eventId: string, callback: (payload: any) => void) => {
+    const channel = supabase
+      .channel(`live_updates_${eventId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'guests',
+          filter: `event_id=eq.${eventId}`,
+        },
+        (payload) => callback(payload)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const createEvent = async (eventData: CreateEvent) => {
     if (!currentServer?.id || !user?.id) {
@@ -118,7 +140,8 @@ export const EventProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setActiveEvent,
       refreshEvents: fetchEvents,
       isCreateDialogOpen,
-      setIsCreateDialogOpen
+      setIsCreateDialogOpen,
+      subscribeToLiveUpdates
     }}>
       {children}
     </EventContext.Provider>

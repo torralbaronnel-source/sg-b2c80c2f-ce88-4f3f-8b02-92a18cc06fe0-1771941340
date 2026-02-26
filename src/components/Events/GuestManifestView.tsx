@@ -66,7 +66,7 @@ interface TableInfo {
 }
 
 export function GuestManifestView() {
-  const { activeEvent } = useEvent();
+  const { activeEvent, subscribeToLiveUpdates } = useEvent();
   const currentEvent = activeEvent;
   const { toast } = useToast();
   
@@ -158,7 +158,15 @@ export function GuestManifestView() {
 
   useEffect(() => {
     loadGuests();
-  }, [loadGuests]);
+    
+    if (currentEvent?.id) {
+      const unsubscribe = subscribeToLiveUpdates(currentEvent.id, (payload) => {
+        // Only refresh if the change isn't from the current local action to avoid double-loading
+        loadGuests();
+      });
+      return () => unsubscribe();
+    }
+  }, [loadGuests, currentEvent?.id, subscribeToLiveUpdates]);
 
   // Reset to first page on filter change
   useEffect(() => {

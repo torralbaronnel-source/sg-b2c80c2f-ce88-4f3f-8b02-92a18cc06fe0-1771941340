@@ -26,8 +26,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-  DropdownMenuLabel,
-  DropdownMenuCheckboxItem
+  DropdownMenuLabel
 } from "@/components/ui/dropdown-menu";
 import { 
   Sheet,

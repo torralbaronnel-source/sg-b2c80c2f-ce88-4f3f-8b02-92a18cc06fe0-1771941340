@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
+// Simplified interfaces to prevent deep recursion in inferred Supabase types
 export interface ClientData {
   full_name: string;
   email?: string;
@@ -91,7 +92,7 @@ export const clientService = {
         assigned_user_id: clientData.assigned_user_id,
         total_spent: 0,
         total_events: 0,
-      })
+      } as any)
       .select()
       .single();
 
@@ -101,7 +102,7 @@ export const clientService = {
   async updateClient(clientId: string, clientData: Partial<ClientData>): Promise<any> {
     const { data } = await supabase
       .from("clients")
-      .update(clientData)
+      .update(clientData as any)
       .eq("id", clientId)
       .select()
       .single();
@@ -135,36 +136,39 @@ export const clientService = {
         return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
       }
 
-      const { data: clients } = await supabase
+      const clientsRes = await supabase
         .from("clients")
         .select("*")
         .eq("server_id", profile.current_server_id);
 
-      const { data: events } = await supabase
+      const eventsRes = await supabase
         .from("events")
         .select("*")
         .eq("server_id", profile.current_server_id);
 
-      const total = (clients || []).length;
+      const clientList = (clientsRes.data || []) as any[];
+      const eventList = (eventsRes.data || []) as any[];
+
+      const total = clientList.length;
       const byStatus: Record<string, number> = {};
       let totalSpent = 0;
-      let totalEvents = (events || []).length;
+      let totalEventsCount = eventList.length;
 
-      (clients || []).forEach((client: any) => {
+      clientList.forEach((client: any) => {
         const status = client.status || "Lead";
         byStatus[status] = (byStatus[status] || 0) + 1;
-        totalSpent += client.total_spent || 0;
+        totalSpent += Number(client.total_spent) || 0;
       });
 
       const activeCount = byStatus["Active"] || 0;
       const conversionRate = total > 0 ? (activeCount / total) * 100 : 0;
-      const avgEventValue = totalEvents > 0 ? totalSpent / totalEvents : 0;
+      const avgEventValue = totalEventsCount > 0 ? totalSpent / totalEventsCount : 0;
 
       return { 
         total, 
         byStatus, 
         totalSpent, 
-        totalEvents,
+        totalEvents: totalEventsCount,
         conversionRate,
         avgEventValue
       };
@@ -175,23 +179,23 @@ export const clientService = {
   },
 
   async getClientStats(clientId: string) {
-    const { data: events } = await supabase
-      .from("events")
-      .select("id, status")
-      .eq("client_id", clientId);
+    try {
+      const [eventsRes, invoicesRes] = await Promise.all([
+        supabase.from("events").select("id, status").eq("client_id", clientId),
+        supabase.from("invoices").select("amount, status").eq("client_id", clientId)
+      ]);
 
-    const { data: invoices } = await supabase
-      .from("invoices")
-      .select("*")
-      .eq("client_id", clientId);
+      const eventList = (eventsRes.data || []) as any[];
+      const invoiceList = (invoicesRes.data || []) as any[];
 
-    const typedInvoices = (invoices || []) as any[];
-
-    return {
-      eventCount: events?.length || 0,
-      totalRevenue: typedInvoices.reduce((acc, inv) => acc + (Number(inv.amount) || 0), 0),
-      activeEvents: events?.filter(e => e.status === "active").length || 0
-    };
+      return {
+        eventCount: eventList.length,
+        totalRevenue: invoiceList.reduce((acc, inv) => acc + (Number(inv.amount) || 0), 0),
+        activeEvents: eventList.filter(e => e.status === "active").length
+      };
+    } catch (err) {
+      return { eventCount: 0, totalRevenue: 0, activeEvents: 0 };
+    }
   },
 
   async getClientDetails(clientId: string): Promise<ClientDetailsResponse | null> {
@@ -199,49 +203,38 @@ export const clientService = {
       const { data: client } = await supabase
         .from("clients")
         .select("*")
-        .match({ id: clientId })
+        .eq("id", clientId)
         .maybeSingle();
 
       if (!client) return null;
 
-      const { data: events } = await supabase
-        .from("events")
-        .select("*")
-        .match({ client_id: clientId });
+      const [eventsRes, quotesRes, invoicesRes, communicationsRes] = await Promise.all([
+        supabase.from("events").select("*").eq("client_id", clientId),
+        supabase.from("quotes").select("*").eq("client_id", clientId),
+        supabase.from("invoices").select("*").eq("client_id", clientId),
+        supabase.from("communications").select("*").eq("client_id", clientId)
+      ]);
 
-      const { data: quotes } = await supabase
-        .from("quotes")
-        .select("*")
-        .match({ client_id: clientId });
+      const eventList = (eventsRes.data || []) as any[];
+      const eventIds = eventList.map(e => e.id);
 
-      const { data: invoices } = await supabase
-        .from("invoices")
-        .select("*")
-        .match({ client_id: clientId });
-
-      const { data: communications } = await supabase
-        .from("communications")
-        .select("*")
-        .match({ client_id: clientId });
-
-      const { data: tasks } = await supabase
-        .from("tasks")
-        .select("*")
-        .limit(100);
-
-      const eventList = (events || []) as any[];
-      const taskList = (tasks || []) as any[];
-      const eventIds = new Set(eventList.map(e => e.id));
-      
-      const filteredTasks = taskList.filter(t => eventIds.has(t.event_id));
+      let filteredTasks: any[] = [];
+      if (eventIds.length > 0) {
+        // Use a simpler approach to fetch tasks for those events
+        const { data: tasks } = await supabase
+          .from("tasks")
+          .select("*")
+          .in("event_id", eventIds.slice(0, 50)) as any;
+        filteredTasks = tasks || [];
+      }
 
       return {
         client,
         events: eventList,
-        quotes: quotes || [],
-        invoices: invoices || [],
-        communications: communications || [],
-        tasks: filteredTasks,
+        quotes: quotesRes.data || [],
+        invoices: invoicesRes.data || [],
+        communications: communicationsRes.data || [],
+        tasks: filteredTasks
       };
     } catch (err) {
       console.error("Error fetching client details:", err);

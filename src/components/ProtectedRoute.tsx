@@ -15,7 +15,10 @@ export function ProtectedRoute({ children, requiredPermission }: ProtectedRouteP
 
   useEffect(() => {
     if (!isLoading) {
+      // ONLY redirect if there is NO user. 
+      // Do not redirect on other errors.
       if (!user) {
+        console.log("No user session found, redirecting to login...");
         router.push("/login");
         return;
       }

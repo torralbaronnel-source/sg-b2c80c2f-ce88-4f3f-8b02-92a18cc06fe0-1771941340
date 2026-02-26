@@ -26,37 +26,46 @@ export const lifecycleService = {
     eventId: string, 
     page: number = 1, 
     pageSize: number = 25,
-    filters: { search?: string, status?: string, type?: string } = {},
+    filters: { search?: string, status?: string, type?: string, is_vip?: boolean, unseated?: boolean } = {},
     sort: { key: string, order: 'asc' | 'desc' } = { key: 'name', order: 'asc' }
   ) {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    let query = supabase
-      .from("guests")
-      .select("*", { count: 'exact' })
-      .eq("event_id", eventId);
+    // Use 'guests' as the base table (or event_guests if it exists as a view)
+    // Casting to 'any' to avoid "excessively deep" type instantiation errors
+    let query = (supabase.from('guests') as any)
+      .select('*', { count: 'exact' })
+      .eq('event_id', eventId);
 
-    // Apply Filters
     if (filters.search) {
-      query = query.or(`name.ilike.%${filters.search}%,organization.ilike.%${filters.search}%`);
+      query = query.or(`name.ilike.%${filters.search}%,organization.ilike.%${filters.search}%,group_name.ilike.%${filters.search}%`);
     }
+
     if (filters.status && filters.status !== 'all') {
       query = query.eq('attendance_status', filters.status);
     }
-    if (filters.type && filters.type !== 'all') {
-      query = query.eq('ticket_type', filters.type);
+
+    if (filters.is_vip !== undefined) {
+      query = query.eq('is_vip', filters.is_vip);
     }
 
-    // Apply Sorting
-    const sortColumn = sort.key === 'vip' ? 'is_vip' : 
-                       sort.key === 'status' ? 'attendance_status' :
-                       sort.key === 'type' ? 'ticket_type' : 'name';
+    if (filters.unseated) {
+      query = query.is('table_number', null);
+    }
+
+    // Apply sorting
+    const sortKey = sort.key === 'vip' ? 'is_vip' : sort.key;
+    const ascending = sort.order === 'asc';
     
-    query = query.order(sortColumn, { ascending: sort.order === 'asc' });
+    if (sort.key === 'vip') {
+      query = query.order('is_vip', { ascending: false }).order('name', { ascending: true });
+    } else {
+      query = query.order(sortKey, { ascending });
+    }
 
     const { data, error, count } = await query.range(from, to);
-    
+
     return { data, error, count };
   },
 
@@ -71,8 +80,17 @@ export const lifecycleService = {
       .select()
       .single();
     return { data, error };
+  },
+
+  async updateGuestTable(guestId: string, tableNumber: number | null) {
+    const { data, error } = await supabase
+      .from("guests")
+      .update({ table_number: tableNumber } as any)
+      .eq("id", guestId)
+      .select()
+      .single();
+    return { data, error };
   }
 };
 
-// Re-export ProjectStage if needed by CRM or other views
 export type ProjectStage = 'Discovery' | 'Proposal' | 'Contract' | 'Pre-Production' | 'Live' | 'Post-Show' | 'Archived';

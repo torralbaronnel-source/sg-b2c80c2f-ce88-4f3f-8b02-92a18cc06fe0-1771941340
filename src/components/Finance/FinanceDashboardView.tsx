@@ -50,7 +50,7 @@ const upcomingModules = [
   }
 ];
 
-export default function FinanceDashboardView() {
+export function FinanceDashboardView() {
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center p-4 md:p-8 space-y-12">
       {/* Hero Section */}

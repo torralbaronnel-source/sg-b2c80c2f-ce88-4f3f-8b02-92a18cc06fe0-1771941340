@@ -2,51 +2,47 @@ import React from "react";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { SEO } from "@/components/SEO";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ClipboardList, Clock, MapPin, Tag, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Calendar as CalendarIcon, Clock, MapPin } from "lucide-react";
 
 export default function ItinerariesPage() {
   return (
     <ProtectedRoute>
       <AppLayout>
         <SEO title="Itineraries | Orchestrix" />
-        <div className="p-8">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight text-[#6264a7]">Neural Itineraries</h1>
-              <p className="text-muted-foreground mt-1">Synchronized event schedules and logistics nodes.</p>
-            </div>
-            <Button className="bg-[#6264a7] hover:bg-[#6264a7]/90">
-              <Plus className="h-4 w-4 mr-2" />
-              New Itinerary Node
-            </Button>
+        <div className="flex-1 space-y-4 p-8 pt-6">
+          <div className="flex items-center justify-between space-y-2">
+            <h2 className="text-3xl font-bold tracking-tight">Itineraries</h2>
           </div>
-
-          <div className="grid gap-6">
-            <Card className="border-[#6264a7]/10 bg-gradient-to-br from-white to-[#6264a7]/5">
+          
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <Card className="col-span-4">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-[#6264a7]/10 flex items-center justify-center">
-                      <ClipboardList className="h-5 w-5 text-[#6264a7]" />
-                    </div>
-                    <div>
-                      <CardTitle>Master Itinerary View</CardTitle>
-                      <CardDescription>Visualizing event flow across all production nodes.</CardDescription>
-                    </div>
-                  </div>
-                </div>
+                <CardTitle>Master Schedule</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col items-center justify-center py-20 text-center">
-                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-                    <Clock className="h-8 w-8 text-muted-foreground/50" />
+                <div className="flex h-[450px] items-center justify-center border-2 border-dashed rounded-md">
+                  <div className="text-center">
+                    <CalendarIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-semibold">No active itinerary selected</h3>
+                    <p className="text-sm text-muted-foreground">Select an event from the Hub to view its neural timeline.</p>
                   </div>
-                  <h3 className="text-lg font-semibold">No active itinerary nodes</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mt-2">
-                    Create your first itinerary node to start synchronizing your event timing with the Data Fortress.
-                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="col-span-3">
+              <CardHeader>
+                <CardTitle>Upcoming Nodes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-8">
+                  <div className="flex items-center">
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium leading-none">No upcoming schedule items</p>
+                      <p className="text-sm text-muted-foreground">Synchronize with Event Hub to populate.</p>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

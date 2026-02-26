@@ -37,7 +37,6 @@ const NAV_GROUPS = [
     items: [
       { title: "Overview", url: "/dashboard", icon: LayoutDashboard },
       { title: "Production Hub", url: "/production", icon: Briefcase },
-      { title: "Communication", url: "/communication", icon: MessageSquare },
     ],
   },
   {

@@ -12,7 +12,9 @@ import {
   Package,
   Settings,
   Plus,
-  Eye
+  Eye,
+  CreditCard,
+  Box
 } from "lucide-react";
 import { ModuleLightbox } from "@/components/Modules/ModuleLightbox";
 
@@ -53,18 +55,6 @@ const globalModules: Module[] = [
     tagline: "Turn leads into loyal clients",
     features: ["Lead Pipeline", "Contract Signing", "Client Portal"],
     interfaceTitle: "CRM Overview"
-  },
-  {
-    id: "communication",
-    name: "Team Chats",
-    description: "Real-time team collaboration and messaging",
-    icon: MessageSquare,
-    category: "Communication",
-    status: "active",
-    title: "Team Communication Hub",
-    tagline: "Centralized chat for seamless coordination",
-    features: ["Channel Management", "Direct Messaging", "File Sharing"],
-    interfaceTitle: "Team Chats"
   },
   {
     id: "finance",

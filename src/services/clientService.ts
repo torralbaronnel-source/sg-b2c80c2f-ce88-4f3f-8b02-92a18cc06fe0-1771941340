@@ -48,13 +48,13 @@ export const clientService = {
 
       if (!profile?.current_server_id) return [];
 
-      const { data } = await (supabase
+      const { data } = await supabase
         .from("clients")
         .select("*")
         .eq("server_id", profile.current_server_id)
-        .order("created_at", { ascending: false }) as any);
+        .order("created_at", { ascending: false });
 
-      return data || [];
+      return (data as any[]) || [];
     } catch (err) {
       console.error("Error fetching clients:", err);
       return [];
@@ -73,7 +73,7 @@ export const clientService = {
 
     if (!profile?.current_server_id) throw new Error("No active server");
 
-    const { data } = await (supabase
+    const { data } = await supabase
       .from("clients")
       .insert({
         server_id: profile.current_server_id,
@@ -93,32 +93,32 @@ export const clientService = {
         total_events: 0,
       })
       .select()
-      .single() as any);
+      .single();
 
     return data;
   },
 
   async updateClient(clientId: string, clientData: Partial<ClientData>): Promise<any> {
-    const { data } = await (supabase
+    const { data } = await supabase
       .from("clients")
       .update(clientData)
       .eq("id", clientId)
       .select()
-      .single() as any);
+      .single();
 
     return data;
   },
 
   async deleteClient(clientId: string): Promise<boolean> {
-    await (supabase
+    await supabase
       .from("clients")
       .delete()
-      .eq("id", clientId) as any);
+      .eq("id", clientId);
 
     return true;
   },
 
-  async getClientStats(): Promise<StatResponse> {
+  async getGlobalClientStats(): Promise<StatResponse> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -135,15 +135,15 @@ export const clientService = {
         return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
       }
 
-      const { data: clients } = await (supabase
+      const { data: clients } = await supabase
         .from("clients")
         .select("*")
-        .eq("server_id", profile.current_server_id) as any);
+        .eq("server_id", profile.current_server_id);
 
-      const { data: events } = await (supabase
+      const { data: events } = await supabase
         .from("events")
         .select("*")
-        .eq("server_id", profile.current_server_id) as any);
+        .eq("server_id", profile.current_server_id);
 
       const total = (clients || []).length;
       const byStatus: Record<string, number> = {};
@@ -172,6 +172,26 @@ export const clientService = {
       console.error("Error calculating stats:", err);
       return { total: 0, byStatus: {}, totalSpent: 0, totalEvents: 0, conversionRate: 0, avgEventValue: 0 };
     }
+  },
+
+  async getClientStats(clientId: string) {
+    const { data: events } = await supabase
+      .from("events")
+      .select("id, status")
+      .eq("client_id", clientId);
+
+    const { data: invoices } = await supabase
+      .from("invoices")
+      .select("*")
+      .eq("client_id", clientId);
+
+    const typedInvoices = (invoices || []) as any[];
+
+    return {
+      eventCount: events?.length || 0,
+      totalRevenue: typedInvoices.reduce((acc, inv) => acc + (Number(inv.amount) || 0), 0),
+      activeEvents: events?.filter(e => e.status === "active").length || 0
+    };
   },
 
   async getClientDetails(clientId: string): Promise<ClientDetailsResponse | null> {
@@ -209,12 +229,15 @@ export const clientService = {
         .select("*")
         .limit(100);
 
-      const eventIds = (events || []).map((e: any) => e.id);
-      const filteredTasks = (tasks || []).filter((t: any) => eventIds.includes(t.event_id));
+      const eventList = (events || []) as any[];
+      const taskList = (tasks || []) as any[];
+      const eventIds = new Set(eventList.map(e => e.id));
+      
+      const filteredTasks = taskList.filter(t => eventIds.has(t.event_id));
 
       return {
         client,
-        events: events || [],
+        events: eventList,
         quotes: quotes || [],
         invoices: invoices || [],
         communications: communications || [],

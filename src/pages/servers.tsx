@@ -165,7 +165,6 @@ export default function ServersPage() {
             crm: true,
             events: true,
             finance: true,
-            communication: true,
             whatsapp: false
           },
           rules: {

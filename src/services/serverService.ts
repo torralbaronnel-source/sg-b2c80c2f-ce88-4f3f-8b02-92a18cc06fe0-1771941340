@@ -13,7 +13,6 @@ export interface ServerBlueprint {
   modules: {
     crm: boolean;
     finance: boolean;
-    communication: boolean;
     whatsapp: boolean;
     events: boolean;
   };

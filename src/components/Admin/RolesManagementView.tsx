@@ -40,10 +40,20 @@ const MODULES = [
   "Events",
   "Finance",
   "Production",
-  "Communication",
   "Admin",
   "Inventory"
 ];
+
+const DEFAULT_PERMISSIONS = {
+  dashboard: true,
+  events: true,
+  production: true,
+  finance: false,
+  crm: false,
+  inventory: false,
+  itineraries: false,
+  admin: false,
+};
 
 export function RolesManagementView() {
   const [roles, setRoles] = useState<Role[]>([]);

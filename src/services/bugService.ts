@@ -40,7 +40,11 @@ export const bugService = {
       .order("created_at", { ascending: false });
     
     if (error) throw error;
-    return data;
+    return (data as any[])?.map(report => ({
+      ...report,
+      status: report.status as BugReport["status"],
+      priority: report.priority as BugReport["priority"]
+    })) || [];
   },
 
   async resolveBug(id: string): Promise<void> {

@@ -31,6 +31,8 @@ export function NeuralProxy() {
   const [isOpen, setIsOpen] = useState(false);
   const [userMessage, setUserMessage] = useState("");
   const [ghostDraft, setGhostDraft] = useState<string | null>(null);
+  const [showHelperHint, setShowHelperHint] = useState(false);
+  const [helperMessage, setHelperMessage] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
   const [history, setHistory] = useState<Message[]>([
     { 
@@ -54,6 +56,26 @@ export function NeuralProxy() {
       sessionStorage.setItem("nano_ghost_draft", userMessage);
     }
   }, [userMessage]);
+
+  // Proactive Helper Pop-up
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const tech = fingerprintService.getBrowserFingerprint();
+      let hint = "Need help with your event production?";
+      
+      if (tech.deviceType === "ipad") hint = "I've detected your iPad. Need the touch-optimized view?";
+      if (tech.os === "Linux") hint = "Linux user detected. Need system terminal access?";
+      if (tech.deviceType === "mobile") hint = "On mobile? I can help with quick QR check-ins.";
+      
+      setHelperMessage(hint);
+      setShowHelperHint(true);
+      
+      // Auto-hide hint after 8 seconds
+      setTimeout(() => setShowHelperHint(false), 8000);
+    }, 5000); // Pop up after 5 seconds of session
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const recoverGhostDraft = () => {
     if (ghostDraft) {
@@ -105,6 +127,37 @@ export function NeuralProxy() {
 
   return (
     <>
+      {/* Proactive Helper Hint */}
+      <AnimatePresence>
+        {showHelperHint && !isOpen && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, x: 20 }}
+            animate={{ opacity: 1, scale: 1, x: 0 }}
+            exit={{ opacity: 0, scale: 0.8, x: 20 }}
+            className="fixed bottom-24 right-8 z-50 max-w-[200px]"
+          >
+            <div className="bg-background/95 backdrop-blur-md border border-primary/20 p-3 rounded-2xl shadow-xl">
+              <div className="flex items-start gap-2">
+                <div className="mt-1">
+                  <Sparkles className="w-3 h-3 text-primary animate-pulse" />
+                </div>
+                <div>
+                  <p className="text-[10px] leading-tight text-foreground/80 font-medium">
+                    {helperMessage}
+                  </p>
+                  <button 
+                    onClick={() => { setIsOpen(true); setShowHelperHint(false); }}
+                    className="text-[9px] text-primary hover:underline mt-1 font-bold"
+                  >
+                    Open NANO
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Floating Trigger */}
       <motion.div 
         initial={{ scale: 0 }}

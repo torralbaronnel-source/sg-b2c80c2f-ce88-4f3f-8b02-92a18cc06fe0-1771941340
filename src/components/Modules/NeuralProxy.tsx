@@ -104,9 +104,8 @@ export function NeuralProxy() {
       
       const fullFingerprint = { ...techInfo, ...geoInfo };
 
-      // Step 1: Parse intent via Internal Kernel
+      // Step 1: Parse intent via Client-Side Kernel
       const actionResult = await aiService.executeKernelAction({
-        type: "SQL_INJECTION",
         payload: { 
           intent: currentMessage,
           metadata: {
@@ -119,13 +118,13 @@ export function NeuralProxy() {
       if (actionResult.success) {
         setHistory(prev => [...prev, { 
           role: "nano", 
-          content: `NANO: Action processed internally. Data secured in table: ${actionResult.action?.payload?.table || "system"}.`,
+          content: actionResult.message || "NANO: Intent captured.",
           action: actionResult.action 
         }]);
       } else {
         setHistory(prev => [...prev, { 
           role: "nano", 
-          content: "NANO: Intent captured. Processing within the local fortress environment..." 
+          content: actionResult.message || "NANO: Processing within the local fortress environment..." 
         }]);
       }
     } catch (error) {
@@ -209,9 +208,9 @@ export function NeuralProxy() {
                     />
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm tracking-tight uppercase">NANO Neural Proxy</h3>
+                    <h3 className="font-bold text-sm tracking-tight uppercase">NANO Production Assistant</h3>
                     <p className="text-[10px] opacity-70 flex items-center gap-1">
-                      <Fingerprint className="h-2 w-2" /> AIR-GAPPED INTERNAL KERNEL
+                      <Zap className="h-2 w-2 text-yellow-400" /> INDUSTRY KERNEL V1.0 ACTIVE
                     </p>
                   </div>
                 </div>

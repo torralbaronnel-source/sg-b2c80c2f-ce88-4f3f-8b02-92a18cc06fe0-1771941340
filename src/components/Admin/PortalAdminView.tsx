@@ -12,15 +12,15 @@ export function PortalAdminView() {
   const [isTesting, setIsTesting] = useState(false);
 
   const handleTestAI = async () => {
-    if (!testPrompt.trim()) return;
-    
-    setIsTesting(true);
     try {
-      const response = await aiService.getNanoResponse(
-        testPrompt
-      );
-      setAiResponse(response || "No response received from internal kernel.");
-    } catch (error: any) {
+      const result = await aiService.executeKernelAction({
+        payload: { 
+          intent: "Portal Diagnostic",
+          metadata: { context: "SUPERADMIN" }
+        }
+      });
+      console.log("AI Result:", result);
+    } catch (error) {
       setAiResponse(`Error: ${error.message}`);
     } finally {
       setIsTesting(false);

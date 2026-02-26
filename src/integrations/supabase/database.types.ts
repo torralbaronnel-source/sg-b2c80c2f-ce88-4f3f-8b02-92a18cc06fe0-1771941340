@@ -15,6 +15,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_training_logs: {
+        Row: {
+          client_query: string
+          created_at: string | null
+          id: string
+          intent_type: string | null
+          kernel_resolution: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          client_query: string
+          created_at?: string | null
+          id?: string
+          intent_type?: string | null
+          kernel_resolution: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          client_query?: string
+          created_at?: string | null
+          id?: string
+          intent_type?: string | null
+          kernel_resolution?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       app_pages: {
         Row: {
           created_at: string | null
